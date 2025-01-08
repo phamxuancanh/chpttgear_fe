@@ -8,6 +8,8 @@ export default function Header() {
 
     const [isOpen, setIsOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isDropdownOpenCart, setIsDropdownOpenCart] = useState(false);
+    const [isDropdownOpenUser, setIsDropdownOpenUser] = useState(false);
     const [showProductDropdown, setShowProductDropdown] = useState(false);
     const [showCartDropdown, setShowCartDropdown] = useState(false);
     const [showUserDropdown, setShowUserDropdown] = useState(false);
@@ -63,6 +65,12 @@ export default function Header() {
     const setToggle = () => {
         setIsDropdownOpen(!isDropdownOpen)
     };
+    const setToggleCart = () => {
+        setIsDropdownOpenCart(!isDropdownOpenCart)
+    };
+    const setToggleUser = () => {
+        setIsDropdownOpenUser(!isDropdownOpenUser)
+    };
 
     return (
         <div>
@@ -100,13 +108,13 @@ export default function Header() {
                                                 </Link>
                                                 <div className="absolute left-full top-0 w-48 hidden group-hover:block rounded-md shadow-lg bg-white text-black">
                                                     {product.subItems.map((subItem, subIndex) => (
-                                                        <a
+                                                        <Link to="/products"
                                                             key={subIndex}
-                                                            href="#"
+
                                                             className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
                                                         >
                                                             {subItem}
-                                                        </a>
+                                                        </Link>
                                                     ))}
                                                 </div>
                                             </div>
@@ -126,6 +134,7 @@ export default function Header() {
                                     onClick={() => setDropdownCart()}
                                 >
                                     <FiShoppingCart className="h-6 w-6" />
+
                                 </button>
                                 {showCartDropdown && (
                                     <div
@@ -175,14 +184,14 @@ export default function Header() {
                                             {"Đăng nhập"}
                                         </Link>
                                         <Link to="/register"
-                                            href="#"
+
                                             className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
                                         >
                                             {"Đăng kí"}
                                         </Link>
 
                                         <Link to="/orders"
-                                            href="#"
+
                                             className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
                                         >
                                             {"Đơn đã đặt"}
@@ -207,12 +216,13 @@ export default function Header() {
                 {isOpen && (
                     <div className="md:hidden">
                         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                            <a
-                                href="#"
+                            <Link to="/"
+
                                 className="block px-3 py-2 rounded-md hover:bg-gray-900 transition duration-300"
                             >
                                 Trang chủ
-                            </a>
+                            </Link>
+
                             <button
                                 onClick={() => setToggle()}
                                 className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-900 transition duration-300 flex items-center justify-between"
@@ -220,25 +230,26 @@ export default function Header() {
                                 Sản phẩm
                                 <IoMdArrowDropdown />
                             </button>
+
                             {isDropdownOpen && (
                                 <div className="pl-4 space-y-1">
                                     {products.map((product, index) => (
                                         <div key={index}>
-                                            <a
+                                            <Link to="/products"
                                                 href="#"
                                                 className="block px-3 py-2 rounded-md text-gray-300 hover:bg-gray-900 transition duration-300"
                                             >
                                                 {product.name}
-                                            </a>
+                                            </Link>
                                             <div className="pl-4">
                                                 {product.subItems.map((subItem, subIndex) => (
-                                                    <a
+                                                    <Link to="/products"
                                                         key={subIndex}
-                                                        href="#"
+
                                                         className="block px-3 py-2 rounded-md text-gray-400 hover:bg-gray-900 transition duration-300"
                                                     >
                                                         {subItem}
-                                                    </a>
+                                                    </Link>
                                                 ))}
                                             </div>
                                         </div>
@@ -251,14 +262,67 @@ export default function Header() {
                             >
                                 Tin tức
                             </a>
-                            <div className="flex space-x-4 px-3 py-2">
-                                <button className="hover:text-blue-400 transition duration-300">
+                            <div className=" space-x-4 px-3 py-2">
+                                <button
+                                    onClick={() => setToggleCart()}
+                                    className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-900 transition duration-300 flex items-center justify-between"
+                                >
                                     <FiShoppingCart className="h-6 w-6" />
+                                    <IoMdArrowDropdown />
                                 </button>
-                                <button className="hover:text-blue-400 transition duration-300">
-                                    <FiUser className="h-6 w-6" />
-                                </button>
+
+                                {isDropdownOpenCart && (
+                                    <div className="pl-4 space-y-1">
+                                        {cartItems.map((item) => (
+                                            <div key={item.id} className="flex items-center gap-3 mb-3">
+                                                <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded" />
+                                                <div>
+                                                    <p className="font-medium">{item.name}</p>
+                                                    <p className="text-white">{item.price}</p>
+                                                </div>
+                                                <button className="ml-auto bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600">
+                                                    Add
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
                             </div>
+                            <div className=" space-x-4 px-3 py-2">
+                                <button
+                                    onClick={() => setToggleUser()}
+                                    className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-900 transition duration-300 flex items-center justify-between"
+                                >
+                                    <FiUser className="h-6 w-6" />
+                                    <IoMdArrowDropdown />
+                                </button>
+
+                                {isDropdownOpenUser && (
+                                    <div className="pl-4 space-y-1">
+                                        <Link to="/login"
+                                            href="#"
+                                            className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
+                                        >
+                                            {"Đăng nhập"}
+                                        </Link>
+                                        <Link to="/register"
+
+                                            className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
+                                        >
+                                            {"Đăng kí"}
+                                        </Link>
+
+                                        <Link to="/orders"
+
+                                            className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
+                                        >
+                                            {"Đơn đã đặt"}
+                                        </Link>
+                                    </div>
+                                )}
+                            </div>
+
                         </div>
                     </div>
                 )}

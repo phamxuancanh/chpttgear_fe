@@ -13,8 +13,8 @@ function App() {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <Helmet>
-          <title>Graduate Project</title>
-          <link rel="shortcut icon" href="./logo.webp" />
+          <title>CHPTT GEAR</title>
+          <link rel="shortcut icon" href="./logo192.png" />
         </Helmet>
         <AppRouter />
         <ToastContainer
