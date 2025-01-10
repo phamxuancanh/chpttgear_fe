@@ -1,0 +1,64 @@
+import { useState } from "react";
+import { FiHome, FiUsers, FiBox, FiShoppingCart, FiEdit, FiTrash2, FiLogOut, FiPackage, FiEye, FiX } from "react-icons/fi";
+import LOGO from '../assets/logo.png'
+import Employee from "../components/Dashboard/Employee";
+import Products from "../components/Dashboard/Products";
+import Order from "../components/Dashboard/Order";
+import Analysis from "../components/Dashboard/Analysis";
+import Inventory from './../components/Dashboard/Inventory';
+import { useNavigate } from "react-router-dom";
+
+
+export default function Dashboard() {
+
+    const [activeTab, setActiveTab] = useState("analysis");
+    const navigate = useNavigate(); // Initialize navigation
+
+    const logout = () => {
+        // Clear authentication tokens or other stored data
+        localStorage.removeItem("authToken");
+        sessionStorage.removeItem("user");
+
+        // Redirect to login page
+        navigate("/");
+        console.log("User logged out");
+    };
+
+    const NavItem = ({ icon: Icon, text, tabName }) => (
+        <button
+            onClick={() => setActiveTab(tabName)}
+            className={`flex items-center w-full p-3 mb-2 rounded-lg transition-colors ${activeTab === tabName ? "bg-blue-600 text-white" : "hover:bg-gray-100"}`}
+        >
+            <Icon className="w-5 h-5 mr-3 font-bold" />
+            <span>{text}</span>
+        </button>
+    );
+
+    return (
+        <div className="flex min-h-screen bg-gray-50">
+            <div className="w-64 bg-white p-4 shadow-lg">
+                <div className="mb-8">
+                    <img src={LOGO} alt="Logo" width={200} height={200} />
+                </div>
+                <nav>
+                    <NavItem icon={FiHome} text="Thống kê" tabName="analysis" />
+                    <NavItem icon={FiUsers} text="Quản lý nhân viên" tabName="employees" />
+                    <NavItem icon={FiBox} text="Quản lý sản phẩm" tabName="products" />
+                    <NavItem icon={FiShoppingCart} text="Quản lý đơn hàng" tabName="orders" />
+                    <NavItem icon={FiPackage} text="Quản lý kho" tabName="inventories" />
+                    <NavItem icon={FiLogOut} text="Đăng xuất" tabName="logout" />
+                </nav>
+            </div>
+
+            <div className="flex-1 p-8">
+                {activeTab === "employees" && <Employee />}
+                {activeTab === "products" && <Products />}
+                {activeTab === "orders" && <Order />}
+                {activeTab === "analysis" && <Analysis />}
+                {activeTab === "inventories" && <Inventory />}
+                {activeTab === "logout" && logout()}
+            </div>
+        </div>
+    );
+};
+

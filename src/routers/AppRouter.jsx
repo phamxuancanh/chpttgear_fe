@@ -13,6 +13,7 @@ import Payment from "../pages/Payment";
 import OrderTracking from "../pages/OrderTracking";
 import Order from "../pages/Order";
 import ProductDetail from "../pages/ProductDetail";
+import Dashboard from "../pages/Dashboard";
 
 const AppRouter = () => {
     return (
@@ -85,6 +86,12 @@ const AppRouter = () => {
                         <Layout>
                             <Order />
                         </Layout>
+                    }
+                />
+                <Route
+                    path={Page.DASHBOARD.path}
+                    element={
+                        <Dashboard />
                     }
                 />
             </Routes>
