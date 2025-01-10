@@ -1,4 +1,5 @@
 import Cart from "../pages/Cart";
+import Dashboard from "../pages/Dashboard";
 import Home from "../pages/Home";
 import Login from "../pages/Login";
 import Order from "../pages/Order";
@@ -67,6 +68,13 @@ const ORDER_PAGE = {
     element: <Order />,
 };
 
+const DASHBOARD = {
+    name: "DASHBOARD",
+    displayName: "Trang chủ",
+    path: "/dashboard",
+    element: <Dashboard />,
+};
+
 const Page = {
     LOGIN_PAGE,
     REGISTER_PAGE,
@@ -76,7 +84,8 @@ const Page = {
     CART_PAGE,
     PAYMENT_PAGE,
     ORDER_TRACKING_PAGE,
-    ORDER_PAGE
+    ORDER_PAGE,
+    DASHBOARD
 
 };
 export default Page;
