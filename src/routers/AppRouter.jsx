@@ -4,7 +4,7 @@ import Layout from "./Layout";
 import Page from "../constants/Page";
 import ScrollToTop from "../utils/ScrollToTop";
 import Home from "../pages/Home";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import Product from "../pages/Product";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
@@ -14,11 +14,24 @@ import OrderTracking from "../pages/OrderTracking";
 import Order from "../pages/Order";
 import ProductDetail from "../pages/ProductDetail";
 import Dashboard from "../pages/Dashboard";
+import ChatButton from "../components/ChatButton";
+
+const ChatButtonWrapper = () => {
+    const location = useLocation();
+
+    const showChatButton = [
+        Page.HOME_PAGE.path,
+
+    ].includes(location.pathname);
+
+    return showChatButton ? <ChatButton /> : null;
+};
 
 const AppRouter = () => {
     return (
         <BrowserRouter>
             <ScrollToTop />
+            <ChatButtonWrapper />
             <Routes>
                 <Route
                     path={Page.HOME_PAGE.path}

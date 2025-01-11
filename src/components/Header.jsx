@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { FiShoppingCart, FiUser, FiMenu } from "react-icons/fi";
+import { FiShoppingCart, FiUser, FiMenu, FiBell } from "react-icons/fi";
+import { FaPlus, FaMinus } from "react-icons/fa";
 import { IoMdArrowDropdown } from "react-icons/io";
 import LOGO from "../assets/logo.png"
 import { Link } from "react-router-dom";
@@ -13,6 +14,7 @@ export default function Header() {
     const [showProductDropdown, setShowProductDropdown] = useState(false);
     const [showCartDropdown, setShowCartDropdown] = useState(false);
     const [showUserDropdown, setShowUserDropdown] = useState(false);
+    const [showBellDropdown, setShowBellDropdown] = useState(false);
 
     const products = [
         {
@@ -37,29 +39,69 @@ export default function Header() {
         }
     ];
 
-    const cartItems = [
-        { id: 1, name: "Arduino UNO", price: "$24.99", image: "https://images.unsplash.com/photo-1608564697071-ddf911d81370" },
-        { id: 2, name: "Sensor Kit", price: "$34.99", image: "https://images.unsplash.com/photo-1601132359864-c974e79890ac" }
-    ];
-
+    const [cartItems, setCartItems] = useState([
+        {
+            id: 1,
+            name: "Wireless Headphones",
+            price: 199.99,
+            quantity: 1,
+            image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e"
+        },
+        {
+            id: 2,
+            name: "Smart Watch",
+            price: 299.99,
+            quantity: 1,
+            image: "https://images.unsplash.com/photo-1546868871-7041f2a55e12"
+        },
+        {
+            id: 3,
+            name: "Wireless Earbuds",
+            price: 149.99,
+            quantity: 1,
+            image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df"
+        }
+    ]);
+    const updateQuantity = (id, action) => {
+        setCartItems(prevItems =>
+            prevItems.map(item => {
+                if (item.id === id) {
+                    const newQuantity = action === "increase"
+                        ? Math.min(item.quantity + 1, 10)
+                        : Math.max(item.quantity - 1, 0);
+                    return { ...item, quantity: newQuantity };
+                }
+                return item;
+            }).filter(item => item.quantity > 0)
+        );
+    };
 
 
     const setDropdownProduct = () => {
         setShowProductDropdown(!showProductDropdown)
         setShowCartDropdown(false)
         setShowUserDropdown(false)
+        setShowBellDropdown(false)
     };
 
     const setDropdownCart = () => {
         setShowProductDropdown(false)
         setShowCartDropdown(!showCartDropdown)
         setShowUserDropdown(false)
+        setShowBellDropdown(false)
     };
 
     const setDropdownUser = () => {
         setShowProductDropdown(false)
         setShowCartDropdown(false)
         setShowUserDropdown(!showUserDropdown)
+        setShowBellDropdown(false)
+    };
+    const setDropdownBell = () => {
+        setShowProductDropdown(false)
+        setShowCartDropdown(false)
+        setShowUserDropdown(false)
+        setShowBellDropdown(!showBellDropdown)
     };
 
     const setToggle = () => {
@@ -131,27 +173,81 @@ export default function Header() {
                             <div className="relative">
                                 <button
                                     className="hover:text-blue-400 transition duration-300"
+                                    onClick={() => setDropdownBell()}
+                                >
+                                    <FiBell className="h-6 w-6" />
+
+                                </button>
+                                {showBellDropdown && (
+                                    <div
+                                        className="absolute  z-50 right-0 mt-2 w-72 rounded-md shadow-lg bg-white text-black"
+                                    >
+                                        <div className="p-4 min-h-[40vh] max-h-[40vh]">
+                                            <span className="font-bold w-full flex justify-center items-center text-[15px]">THÔNG BÁO</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="relative">
+                                <button
+                                    className="hover:text-blue-400 transition duration-300"
                                     onClick={() => setDropdownCart()}
                                 >
                                     <FiShoppingCart className="h-6 w-6" />
 
+                                    {cartItems.length > 0 && (
+                                        <span className="absolute -top-3 -right-3 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                            {cartItems.length}
+                                        </span>
+                                    )}
                                 </button>
                                 {showCartDropdown && (
                                     <div
-                                        className="absolute  z-50 right-0 mt-2 w-72 rounded-md shadow-lg bg-white text-black"
+                                        className="absolute  z-50 right-0 mt-2 w-[48vh] rounded-md shadow-lg bg-white text-black"
                                     >
                                         <div className="p-4">
                                             <h3 className="text-lg font-semibold mb-3">Shopping Cart</h3>
                                             {cartItems.map((item) => (
-                                                <div key={item.id} className="flex items-center gap-3 mb-3">
-                                                    <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded" />
-                                                    <div>
-                                                        <p className="font-medium">{item.name}</p>
-                                                        <p className="text-gray-600">{item.price}</p>
+                                                <div
+                                                    key={item.id}
+                                                    className="p-4 border-b border-gray-200 flex items-center gap-4"
+                                                >
+                                                    <img
+                                                        src={item.image}
+                                                        alt={item.name}
+                                                        className="w-20 h-20 object-cover rounded-lg"
+                                                        onError={(e) => {
+                                                            e.target.onerror = null;
+                                                            e.target.src = "https://images.unsplash.com/photo-1576566588028-4147f3842f27";
+                                                        }}
+                                                    />
+                                                    <div className="flex-1">
+                                                        <h3 className="font-medium text-gray-800">{item.name}</h3>
+                                                        <div className="mt-1 flex items-center gap-4">
+                                                            <div className="flex items-center border rounded-lg">
+                                                                <button
+                                                                    onClick={() => updateQuantity(item.id, "decrease")}
+                                                                    className="p-2 hover:bg-gray-100 transition-colors duration-200"
+                                                                    aria-label="Decrease quantity"
+                                                                >
+                                                                    <FaMinus className="w-3 h-3 text-gray-600" />
+                                                                </button>
+                                                                <span className="px-4 py-2 text-gray-700">
+                                                                    {item.quantity}
+                                                                </span>
+                                                                <button
+                                                                    onClick={() => updateQuantity(item.id, "increase")}
+                                                                    className="p-2 hover:bg-gray-100 transition-colors duration-200"
+                                                                    aria-label="Increase quantity"
+                                                                >
+                                                                    <FaPlus className="w-3 h-3 text-gray-600" />
+                                                                </button>
+                                                            </div>
+                                                            <span className="text-gray-600">
+                                                                ${(item.price * item.quantity).toFixed(2)}
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <button className="ml-auto bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600">
-                                                        Add
-                                                    </button>
                                                 </div>
                                             ))}
                                             <div className="w-full flex justify-center items-center ">
