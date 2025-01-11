@@ -1,41 +1,42 @@
-
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaPlus, FaEye, FaSearch, FaTimes } from "react-icons/fa";
+import { DateConverter } from "../../utils/DateConverter";
 
 export default function Inventory() {
 
-    const [products] = useState([
-        {
-            id: 1,
-            code: "CPU001",
-            name: "Intel i9 Processor",
-            price: 599.99,
-            image: "https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?ixlib=rb-4.0.3",
-            stock: 25
-        },
-        {
-            id: 2,
-            code: "GPU002",
-            name: "NVIDIA RTX 4080",
-            price: 899.99,
-            image: "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?ixlib=rb-4.0.3",
-            stock: 15
-        },
-        {
-            id: 3,
-            code: "RAM003",
-            name: "32GB DDR5 RAM",
-            price: 249.99,
-            image: "https://images.unsplash.com/photo-1562976540-1502c2145186?ixlib=rb-4.0.3",
-            stock: 50
-        }
-    ]);
+    const [products, setProducts] = useState(
+        [
+            {
+                id: 1,
+                code: "CPU001",
+                average_cost: 0,
+                name: "Intel i9 Processor",
+                image: "https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?ixlib=rb-4.0.3",
+                stock: 8
+            },
+            {
+                id: 2,
+                code: "GPU002",
+                name: "GPU002",
+                average_cost: 0,
+                image: "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?ixlib=rb-4.0.3",
+                stock: 2
+            },
+            {
+                id: 3,
+                code: "RAM003",
+                name: "32GB DDR5 RAM",
+                average_cost: 0,
+                image: "https://images.unsplash.com/photo-1562976540-1502c2145186?ixlib=rb-4.0.3",
+                stock: 10
+            }
+        ]);
 
-    const [purchaseHistory] = useState([
-        { productId: 1, date: "2024-01-15", quantity: 5, price: 579.99 },
-        { productId: 1, date: "2024-01-10", quantity: 3, price: 589.99 },
-        { productId: 2, date: "2024-01-12", quantity: 2, price: 879.99 },
-        { productId: 3, date: "2024-01-14", quantity: 10, price: 239.99 }
+    const [purchaseHistory, setPurchaseHistory] = useState([
+        { productId: 1, date: "2024-01-15", quantity: 5, price: 10 },
+        { productId: 1, date: "2024-01-10", quantity: 3, price: 20 },
+        { productId: 2, date: "2024-01-12", quantity: 2, price: 30 },
+        { productId: 3, date: "2024-01-14", quantity: 10, price: 40 },
     ]);
 
     const [searchQuery, setSearchQuery] = useState("");
@@ -46,6 +47,37 @@ export default function Inventory() {
         quantity: "",
         price: ""
     });
+
+    useEffect(() => {
+        // Function to recalculate the average cost for each product
+        const recalculateAverageCost = () => {
+            const updatedProducts = products.map((product) => {
+                // Get all purchase history for this product
+                const productHistory = purchaseHistory.filter(
+                    (order) => order.productId === product.id
+                );
+
+                // Calculate total quantity and total cost
+                const totalQuantity = productHistory.reduce((acc, order) => acc + order.quantity, 0);
+                const totalCost = productHistory.reduce((acc, order) => acc + order.quantity * order.price, 0);
+
+                // Calculate the new average cost
+                const newAverageCost = totalQuantity > 0 ? totalCost / totalQuantity : 0;
+
+                // Return updated product with new average cost
+                return {
+                    ...product,
+                    average_cost: newAverageCost,
+                };
+            });
+
+            // Set updated products with recalculated average costs
+            setProducts(updatedProducts);
+        };
+
+        // Call the function to recalculate average costs when the component is mounted or when purchaseHistory changes
+        recalculateAverageCost();
+    }, [purchaseHistory]);
 
     const filteredProducts = products.filter(
         (product) =>
@@ -64,15 +96,82 @@ export default function Inventory() {
     };
 
     const handleSubmitOrder = (e) => {
-        e.preventDefault();
+        e.preventDefault(); // Prevent default event behavior
+
+        // Check required fields
         if (!orderForm.quantity || !orderForm.price) {
             alert("Please fill all fields");
             return;
         }
-        // Add order logic here
+
+        const quantity = parseInt(orderForm.quantity, 10);
+        const price = parseFloat(orderForm.price);
+
+        // Validate quantity and price
+        if (isNaN(quantity) || isNaN(price) || quantity <= 0 || price <= 0) {
+            alert("Invalid quantity or price");
+            return;
+        }
+
+        // Ensure a product is selected
+        if (!selectedProduct || !selectedProduct.id) {
+            alert("Please select a product before placing an order.");
+            return;
+        }
+
+        // Update product stock
+        const updatedProducts = products.map((product) =>
+            product.id === selectedProduct.id
+                ? { ...product, stock: product.stock + quantity }
+                : product
+        );
+
+        // Update purchase history
+        const updatedHistory = [
+            ...purchaseHistory,
+            {
+                productId: selectedProduct.id,
+                date: new Date().toISOString(), // Converts the current time to a formatted string (dd/mm/yyyy hh:mm:ss)
+                quantity,
+                price,
+            },
+        ];
+
+        // Calculate new average cost
+        const totalQuantity = updatedHistory
+            .filter((order) => order.productId === selectedProduct.id) // Get orders of the selected product
+            .reduce((acc, order) => acc + order.quantity, 0); // Calculate total quantity
+
+        const totalCost = updatedHistory
+            .filter((order) => order.productId === selectedProduct.id) // Get orders of the selected product
+            .reduce((acc, order) => acc + order.quantity * order.price, 0); // Calculate total cost
+
+        const newAverageCost = totalQuantity > 0 ? totalCost / totalQuantity : 0; // Avoid division by zero
+
+        // Update the selected product's price (average cost)
+        const updatedProductWithPrice = updatedProducts.map((product) =>
+            product.id === selectedProduct.id
+                ? { ...product, average_cost: newAverageCost } // Update price to average cost
+                : product
+        );
+
+        // Set the updated state values
+        setPurchaseHistory(updatedHistory); // Set the updated purchase history
+        setProducts(updatedProductWithPrice); // Set the updated products list
+
+        // Reset the form and close modal
         setShowCreateOrder(false);
         setOrderForm({ quantity: "", price: "" });
+
+        // Update selected product and products list
+        setSelectedProduct({
+            ...selectedProduct,
+            stock: selectedProduct.stock + quantity, // Update stock
+            average_cost: newAverageCost, // Update the price with the new average cost
+        });
     };
+
+
 
     return (
         <div className="min-h-screen bg-gray-100 p-8">
@@ -96,7 +195,7 @@ export default function Inventory() {
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Average Cost</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
                                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
@@ -115,7 +214,7 @@ export default function Inventory() {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.code}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${product.price}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${product.average_cost.toFixed(2)}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.stock}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <button
@@ -211,7 +310,7 @@ export default function Inventory() {
                             </div>
                             <div>
                                 <h4 className="text-lg font-bold mb-3">Purchase History</h4>
-                                <div className="overflow-x-auto">
+                                <div className="overflow-x-auto overflow-y-auto max-h-[30vh]"> {/* Added max height for vertical scrolling */}
                                     <table className="min-w-full divide-y divide-gray-200">
                                         <thead className="bg-gray-50">
                                             <tr>
@@ -223,10 +322,10 @@ export default function Inventory() {
                                         <tbody className="bg-white divide-y divide-gray-200">
                                             {purchaseHistory
                                                 .filter((order) => order.productId === selectedProduct.id)
-                                                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                                                .sort((a, b) => new Date(b.date) - new Date(a.date)) // Sorting by most recent date first
                                                 .map((order, index) => (
                                                     <tr key={index}>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.date}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{DateConverter(order.date)}</td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.quantity}</td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${order.price}</td>
                                                     </tr>
