@@ -16,7 +16,13 @@
     "react-scripts": "5.0.1",
     "react-toastify": "^11.0.2",
     "redux-devtools-extension": "^2.13.9",
-    "redux-persist": "^6.0.0"
+    "redux-persist": "^6.0.0",
+    "react-spinners": "^0.13.8",
+    "crypto-js": "^4.2.0",
+    "env-cmd": "^10.1.0",
+    "firebase": "^10.13.1",
+    "jwt-decode": "^4.0.0",
+    "sweetalert2": "^11.12.4"
   },
   "scripts": {
     "start": "react-scripts start",
