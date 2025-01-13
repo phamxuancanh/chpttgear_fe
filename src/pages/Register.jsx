@@ -2,9 +2,13 @@ import React, { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import LOGO from "../assets/logo.png"
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { signUp } from "../routers/ApiRoutes";
+import { toast } from "react-toastify";
+import ROUTES from "../constants/Page";
 
 export default function Register() {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         username: "",
         email: "",
@@ -51,15 +55,19 @@ export default function Register() {
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (validateForm()) {
             setIsLoading(true);
             try {
                 // Simulating API call
-                await new Promise((resolve) => setTimeout(resolve, 2000));
+                // await new Promise((resolve) => setTimeout(resolve, 2000));
                 console.log("Form submitted:", formData);
+                const response = await signUp(formData);
+
+                if (response && response.status === 200) {
+                    navigate(ROUTES.EMAIL_VERIFY_SEND_PAGE.path);
+                }
             } catch (error) {
                 console.error("Registration error:", error);
             } finally {

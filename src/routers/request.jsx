@@ -1,10 +1,10 @@
 import axios from 'axios'
-import { getFromLocalStorage, setToLocalStorage, removeAllLocalStorage, reload } from 'utils/functions'
-import { refresh } from 'api/user/user.api'
+import { getFromLocalStorage, setToLocalStorage, removeAllLocalStorage, reload } from '../utils/functions'
+import { refresh } from './ApiRoutes'
 import { jwtDecode } from 'jwt-decode'
 import { toast } from 'react-toastify'
 import Swal from 'sweetalert2'
-const gatewayURL = 'http://localhost:6868'
+const gatewayURL = 'http://localhost:6868/api/v1'
 export const requestWithJwt = axios.create({
   baseURL: process.env.REACT_APP_API,
   timeout: 10000,

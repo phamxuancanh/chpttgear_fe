@@ -15,7 +15,9 @@ import Order from "../pages/Order";
 import ProductDetail from "../pages/ProductDetail";
 import Dashboard from "../pages/Dashboard";
 import ChatButton from "../components/ChatButton";
-
+import EmailVerifyPage from "../pages/EmailVerifyPage";
+import EmailVerifySendPage from "../pages/EmailVerifySendPage";
+import EmailVerifySuccessPage from "../pages/EmailVerifySuccessPage";
 const ChatButtonWrapper = () => {
     const location = useLocation();
 
@@ -67,6 +69,24 @@ const AppRouter = () => {
                     path={Page.REGISTER_PAGE.path}
                     element={
                         <Register />
+                    }
+                />
+                <Route
+                    path={Page.EMAIL_VERIFY_PAGE.path}
+                    element={
+                        <EmailVerifyPage />
+                    }
+                />
+                <Route
+                    path={Page.EMAIL_VERIFY_SEND_PAGE.path}
+                    element={
+                        <EmailVerifySendPage />
+                    }
+                />
+                <Route
+                    path={Page.EMAIL_VERIFY_SUCCESS_PAGE.path}
+                    element={
+                        <EmailVerifySuccessPage />
                     }
                 />
                 <Route
