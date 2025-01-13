@@ -30,7 +30,7 @@ const EmailVerifySendPage = () => {
                     Chúng tôi đã gửi liên kết xác minh đến email. <b className="font-bold text-gray-800">{email}</b> Vui lòng kiểm tra và xác nhận đó là bạn.
                     </p>
                     <button className="px-4 py-1.5 rounded-full bg-blue-400 text-white text-sm font-semibold mt-7">
-                    Chắc chắn!"
+                    Chắc chắn!
                     </button>
                     <p className="font-medium text-gray-600 text-sm mt-7">
                     Không nhận được email?

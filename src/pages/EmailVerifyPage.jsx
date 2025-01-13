@@ -11,23 +11,23 @@ const EmailVerifyPage = () => {
     const searchParams = new URLSearchParams(location.search);
     const token = searchParams.get('token');
 
-    // Sử dụng React Query để gọi API verifyEmail
+    const calledOnce = React.useRef(false); // Cờ kiểm tra
+
     const { mutate: sendVerifyEmailMutate } = useMutation({
-        mutationFn: (token) => verifyEmail(token), // Hàm gọi API
+        mutationFn: (token) => verifyEmail(token),
         onSuccess: (res) => {
             toast.success('Verify email success!');
             navigate(ROUTES.EMAIL_VERIFY_SUCCESS_PAGE.path, { replace: true });
         },
         onError: (error) => {
-            // Xử lý khi thất bại
             console.error(error);
             toast.error('Verify email failed!');
-        }
+        },
     });
 
-    // Gọi API xác thực email khi component mount
     useEffect(() => {
-        if (token) {
+        if (token && !calledOnce.current) {
+            calledOnce.current = true; // Đánh dấu là đã gọi API
             sendVerifyEmailMutate(token);
         }
     }, [token, sendVerifyEmailMutate]);
@@ -38,5 +38,6 @@ const EmailVerifyPage = () => {
         </div>
     );
 };
+
 
 export default EmailVerifyPage;

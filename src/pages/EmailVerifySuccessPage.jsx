@@ -5,7 +5,7 @@ const EmailVerifySuccessPage = () => {
     const navigate = useNavigate();
     const [countdown, setCountdown] = useState(10);
 
-    if(countdown === 0) navigate(ROUTES.sign_in, {replace: true});
+    if(countdown === 0) navigate(ROUTES.LOGIN_PAGE.path, {replace: true});
 
     useEffect(() => {
         const interval = setInterval(() => {
