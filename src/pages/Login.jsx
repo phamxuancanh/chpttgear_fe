@@ -107,19 +107,13 @@ export default function Login() {
                     }
                 }
                 console.log(currentUser);
-                setToLocalStorage('persist:auth', JSON.stringify(currentUser));
-    
-                if (data !== 'R1' && data !== 'R2' && currentUser.currentUser.grade === null) {
-                    navigate(ROUTES.grade_choose);
-                    return;
-                }
-    
+                setToLocalStorage('persist:auth', JSON.stringify(currentUser)); 
                 // dispatch(loginState(currentUser.currentUser));
     
                 if (data === 'R1' || data === 'R2') {
-                    navigate(ROUTES.admin);
+                    navigate(ROUTES.DASHBOARD.path);
                 } else {
-                    navigate(ROUTES.home);
+                    navigate(ROUTES.DASHBOARD.path);
                 }
     
                 // socket.on('connection', () => {
@@ -211,17 +205,14 @@ export default function Login() {
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-between">
-
-
-
+                            <Link to={ROUTES.FORGOT_PASSWORD_PAGE.path} className="flex items-center justify-between">
                                 <button
                                     type="button"
                                     className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
                                 >
                                     Forgot your password?
                                 </button>
-                            </div>
+                            </Link>
 
                             <button
                                 type="submit"

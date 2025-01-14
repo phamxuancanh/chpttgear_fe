@@ -24,6 +24,8 @@
        ROUTES.EMAIL_VERIFY_SEND_PAGE.path,
        ROUTES.EMAIL_VERIFY_SUCCESS_PAGE.path,
        ROUTES.HOME_PAGE.path,
+       ROUTES.FORGOT_PASSWORD_PAGE.path,
+       ROUTES.RESET_PASSWORD.path
      ];
    
      if (!isAuthenticated && !publicRoutes.includes(location.pathname)) {
@@ -34,7 +36,8 @@
        // Nếu người dùng đã đăng nhập mà vào Login hoặc Register, chuyển hướng về Home Page
        if (
          location.pathname === ROUTES.LOGIN_PAGE.path ||
-         location.pathname === ROUTES.REGISTER_PAGE.path
+         location.pathname === ROUTES.REGISTER_PAGE.path ||
+         location.pathname === ROUTES.EMAIL_VERIFY_PAGE.path
        ) {
          return <Navigate to={ROUTES.HOME_PAGE.path} />;
        }
