@@ -7,9 +7,10 @@ import OrderTracking from "../pages/OrderTracking";
 import Payment from "../pages/Payment";
 import Product from "../pages/Product";
 import ProductDetail from "../pages/ProductDetail";
-
 import Register from "../pages/Register";
-
+import EmailVerifyPage from "../pages/EmailVerifyPage";
+import EmailVerifySendPage from "../pages/EmailVerifySendPage";
+import EmailVerifySuccessPage from "../pages/EmailVerifySuccessPage";
 const HOME_PAGE = {
     name: "HOME_PAGE",
     displayName: "Trang chủ",
@@ -39,6 +40,24 @@ const REGISTER_PAGE = {
     displayName: "Trang chủ",
     path: "/register",
     element: <Register />,
+};
+const EMAIL_VERIFY_PAGE = {
+    name: "EMAIL_VERIFY_PAGE",
+    displayName: "Xác thực email",
+    path: "/verify/email",
+    element: <EmailVerifyPage />,
+};
+const EMAIL_VERIFY_SEND_PAGE = {
+    name: "EMAIL_VERIFY_SEND_PAGE",
+    displayName: "Trang chủ",
+    path: "/email_verify_send",
+    element: <EmailVerifySendPage />,
+};
+const EMAIL_VERIFY_SUCCESS_PAGE = {
+    name: "EMAIL_VERIFY_SUCCESS_PAGE",
+    displayName: "Trang chủ",
+    path: "/email_verify_success",
+    element: <EmailVerifySuccessPage />,
 };
 const CART_PAGE = {
     name: "CART_PAGE",
@@ -75,9 +94,13 @@ const DASHBOARD = {
     element: <Dashboard />,
 };
 
+
 const Page = {
     LOGIN_PAGE,
     REGISTER_PAGE,
+    EMAIL_VERIFY_PAGE,
+    EMAIL_VERIFY_SEND_PAGE,
+    EMAIL_VERIFY_SUCCESS_PAGE,
     HOME_PAGE,
     PRODUCT_PAGE,
     PRODUCT_DETAILS,

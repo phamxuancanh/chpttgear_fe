@@ -1,12 +1,15 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { FiShoppingCart, FiUser, FiMenu, FiBell } from "react-icons/fi";
 import { FaPlus, FaMinus } from "react-icons/fa";
 import { IoMdArrowDropdown } from "react-icons/io";
 import LOGO from "../assets/logo.png"
-import { Link } from "react-router-dom";
-
+import { Link, useNavigate } from "react-router-dom";
+import { signOut } from "../routers/ApiRoutes";
+import { removeAllLocalStorage } from "../utils/functions";
+import ROUTES from '../constants/Page';
+import { toast } from "react-toastify";
 export default function Header() {
-
+    const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isDropdownOpenCart, setIsDropdownOpenCart] = useState(false);
@@ -113,7 +116,32 @@ export default function Header() {
     const setToggleUser = () => {
         setIsDropdownOpenUser(!isDropdownOpenUser)
     };
-
+    // const handleLogout = useCallback(async () => {
+    //     try {
+    //         const response = await signOut();
+    //         if (response) {
+    //             // dispatch(logoutState());
+    //             removeAllLocalStorage();
+    //             navigate(ROUTES.LOGIN_PAGE.path);
+    //             toast.success('Đăng xuất thành công!');
+    //         }
+    //     } catch (error) {
+    //         console.error(error);
+    //     }
+    // }, [navigate]);
+    const handleLogout = async () => {
+        try {
+            const response = await signOut()
+            if (response) {
+                removeAllLocalStorage()
+                navigate(ROUTES.LOGIN_PAGE.path)
+                toast.success('Đăng xuất thành công!')
+            }
+        }
+        catch (error) {
+            console.error(error);
+        }
+    }
     return (
         <div>
             <nav className="bg-black text-white shadow-lg py-2 sticky z-10 ">
@@ -292,7 +320,12 @@ export default function Header() {
                                         >
                                             {"Đơn đã đặt"}
                                         </Link>
-
+                                        <button
+                                            onClick={handleLogout}
+                                            className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
+                                        >
+                                            {"Đăng xuất"}
+                                        </button>
                                     </div>
                                 )}
                             </div>
@@ -415,6 +448,12 @@ export default function Header() {
                                         >
                                             {"Đơn đã đặt"}
                                         </Link>
+                                        <button
+                                            onClick={handleLogout}
+                                            className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
+                                        >
+                                            {"Đăng xuất"}
+                                        </button>
                                     </div>
                                 )}
                             </div>
