@@ -6,7 +6,7 @@ import { toast } from 'react-toastify'
 import Swal from 'sweetalert2'
 const gatewayURL = 'http://localhost:6868/api/v1'
 export const requestWithJwt = axios.create({
-  baseURL: process.env.REACT_APP_API,
+  baseURL: gatewayURL,
   timeout: 10000,
   withCredentials: true
 })

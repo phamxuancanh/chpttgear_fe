@@ -64,12 +64,18 @@ export default function Register() {
                 // await new Promise((resolve) => setTimeout(resolve, 2000));
                 console.log("Form submitted:", formData);
                 const response = await signUp(formData);
-
                 if (response && response.status === 200) {
                     navigate(ROUTES.EMAIL_VERIFY_SEND_PAGE.path);
                 }
             } catch (error) {
                 console.error("Registration error:", error);
+                toast.error("Registration failed!");
+                if(error.message.includes("Username")) {
+                    setErrors({ username: "Username already exists" });
+                }
+                if(error.message.includes("Email")) {
+                    setErrors({ email: "Email already exists" });
+                }
             } finally {
                 setIsLoading(false);
             }

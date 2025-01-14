@@ -1,5 +1,5 @@
 import React from "react";
-
+import AuthRoute from "./AuthRoutes";
 import Layout from "./Layout";
 import Page from "../constants/Page";
 import ScrollToTop from "../utils/ScrollToTop";
@@ -18,118 +18,149 @@ import ChatButton from "../components/ChatButton";
 import EmailVerifyPage from "../pages/EmailVerifyPage";
 import EmailVerifySendPage from "../pages/EmailVerifySendPage";
 import EmailVerifySuccessPage from "../pages/EmailVerifySuccessPage";
+
 const ChatButtonWrapper = () => {
-    const location = useLocation();
+  const location = useLocation();
 
-    const showChatButton = [
-        Page.HOME_PAGE.path,
+  const showChatButton = [
+    Page.HOME_PAGE.path,
+    Page.PRODUCT_PAGE.path,
+    Page.CART_PAGE.path,
+  ].includes(location.pathname);
 
-    ].includes(location.pathname);
-
-    return showChatButton ? <ChatButton /> : null;
+  return showChatButton ? <ChatButton /> : null;
 };
 
 const AppRouter = () => {
-    return (
-        <BrowserRouter>
-            <ScrollToTop />
-            <ChatButtonWrapper />
-            <Routes>
-                <Route
-                    path={Page.HOME_PAGE.path}
-                    element={
-                        <Layout>
-                            <Home />
-                        </Layout>
-                    }
-                />
-                <Route
-                    path={Page.PRODUCT_PAGE.path}
-                    element={
-                        <Layout>
-                            <Product />
-                        </Layout>
-                    }
-                />
-                <Route
-                    path={Page.PRODUCT_DETAILS.path}
-                    element={
-                        <Layout>
-                            <ProductDetail />
-                        </Layout>
-                    }
-                />
-                <Route
-                    path={Page.LOGIN_PAGE.path}
-                    element={
-                        <Login />
-                    }
-                />
-                <Route
-                    path={Page.REGISTER_PAGE.path}
-                    element={
-                        <Register />
-                    }
-                />
-                <Route
-                    path={Page.EMAIL_VERIFY_PAGE.path}
-                    element={
-                        <EmailVerifyPage />
-                    }
-                />
-                <Route
-                    path={Page.EMAIL_VERIFY_SEND_PAGE.path}
-                    element={
-                        <EmailVerifySendPage />
-                    }
-                />
-                <Route
-                    path={Page.EMAIL_VERIFY_SUCCESS_PAGE.path}
-                    element={
-                        <EmailVerifySuccessPage />
-                    }
-                />
-                <Route
-                    path={Page.CART_PAGE.path}
-                    element={
-                        <Layout>
-                            <Cart />
-                        </Layout>
-                    }
-                />
-                <Route
-                    path={Page.PAYMENT_PAGE.path}
-                    element={
-                        <Layout>
-                            <Payment />
-                        </Layout>
-                    }
-                />
-                <Route
-                    path={Page.ORDER_TRACKING_PAGE.path}
-                    element={
-                        <Layout>
-                            <OrderTracking />
-                        </Layout>
-                    }
-                />
-                <Route
-                    path={Page.ORDER_PAGE.path}
-                    element={
-                        <Layout>
-                            <Order />
-                        </Layout>
-                    }
-                />
-                <Route
-                    path={Page.DASHBOARD.path}
-                    element={
-                        <Dashboard />
-                    }
-                />
-            </Routes>
-        </BrowserRouter>
-    );
+  return (
+    <BrowserRouter>
+      <ScrollToTop />
+      <ChatButtonWrapper />
+      <Routes>
+        {/* Public Routes */}
+        <Route
+          path={Page.LOGIN_PAGE.path}
+          element={
+            <AuthRoute publicOnly>
+              <Login />
+            </AuthRoute>
+          }
+        />
+        <Route
+          path={Page.REGISTER_PAGE.path}
+          element={
+            <AuthRoute publicOnly>
+              <Register />
+            </AuthRoute>
+          }
+        />
+        <Route
+          path={Page.EMAIL_VERIFY_PAGE.path}
+          element={
+            <AuthRoute publicOnly>
+              <EmailVerifyPage />
+            </AuthRoute>
+          }
+        />
+        <Route
+          path={Page.EMAIL_VERIFY_SEND_PAGE.path}
+          element={
+            <AuthRoute publicOnly>
+              <EmailVerifySendPage />
+            </AuthRoute>
+          }
+        />
+        <Route
+          path={Page.EMAIL_VERIFY_SUCCESS_PAGE.path}
+          element={
+            <AuthRoute publicOnly>
+              <EmailVerifySuccessPage />
+            </AuthRoute>
+          }
+        />
+
+        {/* Private Routes */}
+        <Route
+          path={Page.HOME_PAGE.path}
+          element={
+            <AuthRoute>
+              <Layout>
+                <Home />
+              </Layout>
+            </AuthRoute>
+          }
+        />
+        <Route
+          path={Page.PRODUCT_PAGE.path}
+          element={
+            <AuthRoute>
+              <Layout>
+                <Product />
+              </Layout>
+            </AuthRoute>
+          }
+        />
+        <Route
+          path={Page.PRODUCT_DETAILS.path}
+          element={
+            <AuthRoute>
+              <Layout>
+                <ProductDetail />
+              </Layout>
+            </AuthRoute>
+          }
+        />
+        <Route
+          path={Page.CART_PAGE.path}
+          element={
+            <AuthRoute>
+              <Layout>
+                <Cart />
+              </Layout>
+            </AuthRoute>
+          }
+        />
+        <Route
+          path={Page.PAYMENT_PAGE.path}
+          element={
+            <AuthRoute>
+              <Layout>
+                <Payment />
+              </Layout>
+            </AuthRoute>
+          }
+        />
+        <Route
+          path={Page.ORDER_TRACKING_PAGE.path}
+          element={
+            <AuthRoute>
+              <Layout>
+                <OrderTracking />
+              </Layout>
+            </AuthRoute>
+          }
+        />
+        <Route
+          path={Page.ORDER_PAGE.path}
+          element={
+            <AuthRoute>
+              <Layout>
+                <Order />
+              </Layout>
+            </AuthRoute>
+          }
+        />
+        <Route
+          path={Page.DASHBOARD.path}
+          element={
+            <AuthRoute allowedRoles={['R1', 'R2']}>
+              <Dashboard />
+            </AuthRoute>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
+  );
 };
 
 export default AppRouter;
