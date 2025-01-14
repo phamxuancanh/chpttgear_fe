@@ -57,7 +57,7 @@
            console.error('Decryption error:', error);
          }
        }
-   
+       console.log('User role:', process.env.REACT_APP_CRYPTO);
        console.log('User role:', userRole);
    
        if ((userRole === 'R1' || userRole === 'R2') && location.pathname !== ROUTES.DASHBOARD.path) {
