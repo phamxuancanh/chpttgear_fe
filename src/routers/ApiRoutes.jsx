@@ -15,6 +15,12 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 // userService
+
+export const verifyToken = async (payload) => {
+    return await requestWithoutJwt.post('/users/verifyToken', {
+        token: payload,
+    });
+};
 export const signIn = async (payload) => {
     return await requestWithoutJwt.post('/users/signIn', { data: payload }, { withCredentials: true })
 }
@@ -22,9 +28,8 @@ export const signUp = async (payload) => {
     return await requestWithoutJwt.post('/users/signUp', { data: payload }, { withCredentials: true });
 };
 export const findUserById = async (id) => {
-    console.log(id, 'id');
-    return await requestWithJwt.get(`/users/${id}`)
-}
+    return await requestWithJwt.get(`/users/${id}`);
+};
 export const refresh = async () => {
     return await requestWithJwt.post('/users/refreshToken', {}, { withCredentials: true });
 };
