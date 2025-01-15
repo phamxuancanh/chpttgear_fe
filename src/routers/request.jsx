@@ -76,9 +76,11 @@ requestWithJwt.interceptors.request.use(async (config) => {
 
 requestWithJwt.interceptors.response.use(
   (response) => {
+    console.log('day la requestWithJwt')
     return response
   },
   async (error) => {
+    console.log('day la chuan bi REFRESH')
     const originalRequest = error.config
 
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -92,6 +94,7 @@ requestWithJwt.interceptors.response.use(
           return requestWithJwt(originalRequest)
         }
       } catch (refreshError) {
+        console.error('Error refreshing token:', refreshError)
         return Promise.reject(refreshError)
       }
     }

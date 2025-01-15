@@ -13,6 +13,7 @@ import EmailVerifySendPage from "../pages/EmailVerifySendPage";
 import EmailVerifySuccessPage from "../pages/EmailVerifySuccessPage";
 import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ResetPassword";
+import Profile from "../pages/Profile";
 const HOME_PAGE = {
     name: "HOME_PAGE",
     displayName: "Trang chủ",
@@ -107,8 +108,12 @@ const DASHBOARD = {
     path: "/dashboard",
     element: <Dashboard />,
 };
-
-
+const PROFILE_PAGE = {
+    name: "PROFILE_PAGE",
+    displayName: "Trang chủ",
+    path: "/profile",
+    element: <Profile />,
+};
 const Page = {
     LOGIN_PAGE,
     REGISTER_PAGE,
@@ -124,7 +129,7 @@ const Page = {
     PAYMENT_PAGE,
     ORDER_TRACKING_PAGE,
     ORDER_PAGE,
-    DASHBOARD
-
+    DASHBOARD,
+    PROFILE_PAGE
 };
 export default Page;

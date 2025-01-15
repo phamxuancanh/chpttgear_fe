@@ -20,6 +20,7 @@ import EmailVerifySendPage from "../pages/EmailVerifySendPage";
 import EmailVerifySuccessPage from "../pages/EmailVerifySuccessPage";
 import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ResetPassword";
+import Profile from "../pages/Profile";
 const ChatButtonWrapper = () => {
     const location = useLocation();
 
@@ -172,6 +173,16 @@ const AppRouter = () => {
                     element={
                         <AuthRoute allowedRoles={['R1', 'R2']}>
                             <Dashboard />
+                        </AuthRoute>
+                    }
+                />
+                <Route
+                    path={Page.PROFILE_PAGE.path}
+                    element={
+                        <AuthRoute>
+                            <Layout>
+                                <Profile />
+                            </Layout>
                         </AuthRoute>
                     }
                 />
