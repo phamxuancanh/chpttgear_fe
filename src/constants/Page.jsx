@@ -7,9 +7,13 @@ import OrderTracking from "../pages/OrderTracking";
 import Payment from "../pages/Payment";
 import Product from "../pages/Product";
 import ProductDetail from "../pages/ProductDetail";
-
 import Register from "../pages/Register";
-
+import EmailVerifyPage from "../pages/EmailVerifyPage";
+import EmailVerifySendPage from "../pages/EmailVerifySendPage";
+import EmailVerifySuccessPage from "../pages/EmailVerifySuccessPage";
+import ForgotPassword from "../pages/ForgotPassword";
+import ResetPassword from "../pages/ResetPassword";
+import Profile from "../pages/Profile";
 const HOME_PAGE = {
     name: "HOME_PAGE",
     displayName: "Trang chủ",
@@ -30,7 +34,7 @@ const PRODUCT_DETAILS = {
 };
 const LOGIN_PAGE = {
     name: "LOGIN_PAGE",
-    displayName: "Trang chủ",
+    displayName: "Đăng nhập",
     path: "/login",
     element: <Login />,
 };
@@ -40,16 +44,46 @@ const REGISTER_PAGE = {
     path: "/register",
     element: <Register />,
 };
+const FORGOT_PASSWORD_PAGE = {
+    name: "FORGOT_PASSWORD_PAGE",
+    displayName: "Quên mật khẩu",
+    path: "/forgot_password",
+    element: <ForgotPassword />,
+};
+const RESET_PASSWORD = {
+    name: "RESET_PASSWORD",
+    displayName: "Đặt lại mật khẩu",
+    path: "/reset_password",
+    element: <ResetPassword />,
+}
+const EMAIL_VERIFY_PAGE = {
+    name: "EMAIL_VERIFY_PAGE",
+    displayName: "Xác thực email",
+    path: "/verify/email",
+    element: <EmailVerifyPage />,
+};
+const EMAIL_VERIFY_SEND_PAGE = {
+    name: "EMAIL_VERIFY_SEND_PAGE",
+    displayName: "Xác thực email",
+    path: "/email_verify_send",
+    element: <EmailVerifySendPage />,
+};
+const EMAIL_VERIFY_SUCCESS_PAGE = {
+    name: "EMAIL_VERIFY_SUCCESS_PAGE",
+    displayName: "Xác thực email",
+    path: "/email_verify_success",
+    element: <EmailVerifySuccessPage />,
+};
 const CART_PAGE = {
     name: "CART_PAGE",
-    displayName: "Trang chủ",
+    displayName: "Giỏ hàng",
     path: "/cart",
     element: <Cart />,
 };
 
 const PAYMENT_PAGE = {
     name: "PAYMENT_PAGE",
-    displayName: "Trang chủ",
+    displayName: "Thanh toán",
     path: "/payment",
     element: <Payment />,
 };
@@ -74,10 +108,20 @@ const DASHBOARD = {
     path: "/dashboard",
     element: <Dashboard />,
 };
-
+const PROFILE_PAGE = {
+    name: "PROFILE_PAGE",
+    displayName: "Trang chủ",
+    path: "/profile",
+    element: <Profile />,
+};
 const Page = {
     LOGIN_PAGE,
     REGISTER_PAGE,
+    FORGOT_PASSWORD_PAGE,
+    RESET_PASSWORD,
+    EMAIL_VERIFY_PAGE,
+    EMAIL_VERIFY_SEND_PAGE,
+    EMAIL_VERIFY_SUCCESS_PAGE,
     HOME_PAGE,
     PRODUCT_PAGE,
     PRODUCT_DETAILS,
@@ -85,7 +129,7 @@ const Page = {
     PAYMENT_PAGE,
     ORDER_TRACKING_PAGE,
     ORDER_PAGE,
-    DASHBOARD
-
+    DASHBOARD,
+    PROFILE_PAGE
 };
 export default Page;

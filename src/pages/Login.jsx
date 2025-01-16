@@ -4,9 +4,15 @@ import React, { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import LOGO from "../assets/logo.png"
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { googleSignIn, signIn } from "../routers/ApiRoutes";
+import { setToLocalStorage } from "../utils/functions";
+import { toast } from "react-toastify";
+import ROUTES from '../constants/Page';
+import CryptoJS from 'crypto-js'
 
 export default function Login() {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         username: "",
         password: ""
@@ -47,16 +53,79 @@ export default function Login() {
             setIsLoading(true);
             try {
                 // Simulating API call
-                await new Promise((resolve) => setTimeout(resolve, 2000));
-                console.log("Form submitted:", formData);
+                const response = await signIn(formData);
+                console.log("Login response:", response);
+                if (response.status === 200) {
+                    const currentUser = {
+                        accessToken: response.data.accessToken,
+                        currentUser: response.data.user
+                    }
+                    console.log(currentUser)
+                    setToLocalStorage('persist:auth', JSON.stringify(currentUser))
+                    // loginState(currentUser.currentUser)
+                    // dispatch(loginState(currentUser.currentUser))
+                    navigate(ROUTES.HOME_PAGE.path)
+                    toast.success('Đăng nhập thành công')
+                }
             } catch (error) {
                 console.error("Login error:", error);
+                toast.error('Đăng nhập thất bại')
+                if (error.message.includes("Username")) {
+                    setErrors({
+                        username: "Username is incorrect",
+                    });
+                }
+                if (error.message.includes("Password")) {
+                    setErrors({
+                        password: "Password is incorrect",
+                    });
+                }
             } finally {
                 setIsLoading(false);
             }
         }
     };
-
+    const handleGoogleSignIn = async () => {
+        try {
+            const result = await googleSignIn();
+            if (result) {
+                const currentUser = {
+                    accessToken: result.accessToken,
+                    currentUser: result.currentUser
+                };
+                let data;
+                const userRole = currentUser?.currentUser.key;
+                if (userRole) {
+                    try {
+                        const decrypted = CryptoJS.AES.decrypt(
+                            userRole,
+                            process.env.REACT_APP_CRYPTO
+                        );
+                        data = decrypted.toString(CryptoJS.enc.Utf8);
+                    } catch (error) {
+                        console.error('Decryption error:', error);
+                    }
+                }
+                console.log(currentUser);
+                setToLocalStorage('persist:auth', JSON.stringify(currentUser)); 
+                // dispatch(loginState(currentUser.currentUser));
+    
+                if (data === 'R1' || data === 'R2') {
+                    navigate(ROUTES.DASHBOARD.path);
+                } else {
+                    navigate(ROUTES.DASHBOARD.path);
+                }
+    
+                // socket.on('connection', () => {
+                //     console.log('User Connect');
+                // });
+                toast.success('Đăng nhập thành công');
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+    
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-800 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-6xl w-full flex bg-white rounded-2xl shadow-xl overflow-hidden">
@@ -136,17 +205,14 @@ export default function Login() {
                                 </div>
                             </div>
 
-                            <div className="flex items-center justify-between">
-
-
-
+                            <Link to={ROUTES.FORGOT_PASSWORD_PAGE.path} className="flex items-center justify-between">
                                 <button
                                     type="button"
                                     className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
                                 >
                                     Forgot your password?
                                 </button>
-                            </div>
+                            </Link>
 
                             <button
                                 type="submit"
@@ -180,6 +246,7 @@ export default function Login() {
 
                             <button
                                 type="button"
+                                onClick={handleGoogleSignIn}
                                 className="w-full flex items-center justify-center gap-2 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                             >
                                 <FcGoogle className="w-5 h-5" />
