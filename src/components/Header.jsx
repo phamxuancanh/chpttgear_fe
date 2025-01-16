@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState } from "react";
 import { FiShoppingCart, FiUser, FiMenu, FiBell } from "react-icons/fi";
 import { FaPlus, FaMinus } from "react-icons/fa";
 import { IoMdArrowDropdown } from "react-icons/io";
 import LOGO from "../assets/logo.png"
 import { Link, useNavigate } from "react-router-dom";
-import { signOut, verifyToken } from "../routers/ApiRoutes";
+import { signOut } from "../routers/ApiRoutes";
 import { getFromLocalStorage, removeAllLocalStorage } from "../utils/functions";
 import ROUTES from '../constants/Page';
 import { toast } from "react-toastify";
@@ -21,7 +21,7 @@ export default function Header() {
 
     const ls = getFromLocalStorage('persist:auth');
     const currentUser = ls?.currentUser
-    
+
     const products = [
         {
             name: "Microcontrollers",
@@ -124,19 +124,6 @@ export default function Header() {
     const setToggleUser = () => {
         setIsDropdownOpenUser(!isDropdownOpenUser)
     };
-    // const handleLogout = useCallback(async () => {
-    //     try {
-    //         const response = await signOut();
-    //         if (response) {
-    //             // dispatch(logoutState());
-    //             removeAllLocalStorage();
-    //             navigate(ROUTES.LOGIN_PAGE.path);
-    //             toast.success('Đăng xuất thành công!');
-    //         }
-    //     } catch (error) {
-    //         console.error(error);
-    //     }
-    // }, [navigate]);
     const handleLogout = async () => {
         try {
             const response = await signOut()
@@ -341,6 +328,11 @@ export default function Header() {
                                         )}
                                         {currentUser && (
                                             <>
+                                                <Link to="/profile"
+                                                    className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
+                                                >
+                                                    {"Hồ sơ"}
+                                                </Link>
                                                 <Link to="/orders"
                                                     className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
                                                 >
@@ -348,7 +340,7 @@ export default function Header() {
                                                 </Link>
                                                 <button
                                                     onClick={handleLogout}
-                                                    className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
+                                                    className="flex w-full items-start px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
                                                 >
                                                     {"Đăng xuất"}
                                                 </button>
@@ -451,7 +443,22 @@ export default function Header() {
                                     onClick={() => setToggleUser()}
                                     className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-900 transition duration-300 flex items-center justify-between"
                                 >
-                                    <FiUser className="h-6 w-6" />
+                                    <div className="p-2 flex items-center space-x-2 border border-white rounded-lg">
+                                        {currentUser ? (
+                                            <>
+                                                <img src={currentUser.avatar} alt="avatar" className="w-8 h-8 rounded-full" />
+                                                <div>
+                                                    <div>Xin chào</div>
+                                                    <div className="font-bold">{currentUser.firstName} {currentUser.lastName}</div>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="flex items-center space-x-2">
+                                                <FiUser className="h-6 w-6" />
+                                                <div className="font-bold">Đăng nhập</div>
+                                            </div>
+                                        )}
+                                    </div>
                                     <IoMdArrowDropdown />
                                 </button>
 
@@ -475,6 +482,11 @@ export default function Header() {
 
                                         {currentUser && (
                                             <>
+                                                <Link to="/profile"
+                                                    className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
+                                                >
+                                                    {"Hồ sơ"}
+                                                </Link>
                                                 <Link to="/orders"
                                                     className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
                                                 >
@@ -482,7 +494,7 @@ export default function Header() {
                                                 </Link>
                                                 <button
                                                     onClick={handleLogout}
-                                                    className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
+                                                    className="flex items-start w-full px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
                                                 >
                                                     {"Đăng xuất"}
                                                 </button>
