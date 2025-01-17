@@ -52,7 +52,7 @@ export const resetPassword = async (payload) => {
 
 export const verifyEmail = async (token) => {
     console.log(token);
-    return await requestWithoutJwt.get('/users/verifyEmail', {
+    return await requestWithoutJwt.post('/users/verifyEmail', {
         params: { token },
     });
 };
