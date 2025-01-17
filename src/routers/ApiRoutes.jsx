@@ -30,6 +30,9 @@ export const signUp = async (payload) => {
 export const findUserById = async (id) => {
     return await requestWithJwt.get(`/users/${id}`);
 };
+export const editUserById = async (id, payload) => {
+    return await requestWithJwt.put(`/users/${id}`, {data: payload});
+};
 export const refresh = async () => {
     return await requestWithJwt.post('/users/refreshToken', {}, { withCredentials: true });
 };

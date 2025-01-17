@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FiEdit2, FiMail, FiPhone, FiMapPin, FiCalendar, FiActivity, FiLock, FiStar, FiHome } from "react-icons/fi";
+import { getFromLocalStorage } from "../utils/functions";
+import { editUserById, findUserById } from "../routers/ApiRoutes";
 
 export default function Profile() {
     const [isEditing, setIsEditing] = useState(false);
@@ -30,7 +32,25 @@ export default function Profile() {
         { id: 2, action: "Ordered Raspberry Pi 4", date: "2024-01-14", points: 250 },
         { id: 3, action: "Updated shipping address", date: "2024-01-13", points: 0 }
     ]);
-
+    const currentUserLS = getFromLocalStorage('persist:auth').currentUser;
+    const [user, setUser] = useState(null);
+    useEffect(() => {
+        const getUser = async () => {
+            try {
+                const response = await findUserById(currentUserLS.id);
+                console.log(response.data);
+                setUser(response.data);
+                setFormData(response.data);
+            } catch (error) {
+                console.error("Error fetching user data:", error);
+            }
+        };
+    
+        if (currentUserLS) {
+            getUser();
+        }
+    }, [currentUserLS?.id]);
+    
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({
@@ -49,8 +69,17 @@ export default function Profile() {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        const response = await editUserById(currentUserLS.id, formData);
+        if (response.status === 200) {
+            alert("Update user successfully");
+            console.log(response);
+        }
+        else {
+            alert("Update user failed");
+        }
+
         setIsEditing(false);
     };
 
@@ -127,7 +156,7 @@ export default function Profile() {
                 </button>
             </div>
             <div className="space-y-4">
-                {formData.addresses.map((address) => (
+                {/* {formData.addresses.map((address) => (
                     <div key={address.id} className="border rounded-lg p-4">
                         <div className="flex items-start justify-between">
                             <div className="flex items-start gap-3">
@@ -149,7 +178,7 @@ export default function Profile() {
                             )}
                         </div>
                     </div>
-                ))}
+                ))} */}
             </div>
         </div>
     );
