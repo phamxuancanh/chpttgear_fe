@@ -22,7 +22,6 @@ export default function Profile() {
         const getUser = async () => {
             try {
                 const response = await findUserById(currentUserLS.id);
-                console.log(response.data);
                 setUser(response.data);
             } catch (error) {
                 console.error("Error fetching user data:", error);
@@ -42,9 +41,33 @@ export default function Profile() {
         }));
     };
 
-    const handleSetDefaultAddress = (address) => {
-        alert(address);
+    const handleSetDefaultAddress = async (address) => {
+
+        let addressArray = user?.address ? user.address.split(";;").map(item => item.trim()) : [];
+
+        const addressIndex = addressArray.indexOf(address);
+        if (addressIndex === -1) {
+            console.error("Address not found in the list.");
+            return;
+        }
+        const updatedAddresses = [address, ...addressArray.filter(item => item !== address)];
+
+        try {
+            const response = await editUserById(currentUserLS.id, { ...formData, address: updatedAddresses.join(";;") });
+            if (response.status === 200) {
+                toast.success("Set default address successfully");
+                setUser(response.data);
+                setFormData(response.data);
+            } else {
+                toast.error("Set default address failed");
+            }
+        }
+        catch (error) {
+            toast.error("Set default address failed");
+        }
+
     };
+
 
     const handleAddAddress = async (e) => {
         e.preventDefault();
@@ -60,7 +83,6 @@ export default function Profile() {
 
         if (response.status === 200) {
             toast.success("Add address successfully");
-            console.log(response);
             setUser(response.data);
             setFormData(response.data);
         } else {
@@ -76,29 +98,21 @@ export default function Profile() {
         setAddressModalState(prevState => ({ ...prevState, [address]: false }));
     }
     const handleDeleteAddress = async (addressToDelete) => {
-        console.log("Address to delete:", addressToDelete);
-        // Lấy user.address hiện tại từ props và loại bỏ khoảng trắng dư thừa, nếu có
         let currentUserAddresses = user?.address ? user.address.split(";;").map(item => item.trim()) : [];
-        console.log("Current User Addresses:", currentUserAddresses);
         if (currentUserAddresses.length === 1) {
             toast.error("You must have at least one address");
             handleCloseDeleteAdressModal(addressToDelete);
             return;
         }
         let updatedAddresses = currentUserAddresses.filter(address => address !== addressToDelete);
-        console.log("New User Addresses:", updatedAddresses);
         updatedAddresses = updatedAddresses.join(";;");
-        console.log("Updated Addresses:", updatedAddresses);
-        // Cập nhật formData trước khi gửi yêu cầu
         setFormData(prevFormData => ({
             ...prevFormData,
             address: updatedAddresses
         }));
-        // Gửi request lên server
         const response = await editUserById(currentUserLS.id, { ...formData, address: updatedAddresses });
         if (response.status === 200) {
             toast.success("Delete address successfully");
-            console.log(response);
             setUser(response.data);
             setFormData(response.data);
         } else {
@@ -112,7 +126,6 @@ export default function Profile() {
         const response = await editUserById(currentUserLS.id, formData);
         if (response.status === 200) {
             toast.success("Update user successfully");
-            console.log(response);
             setUser(response.data);
             setFormData(response.data);
         }
@@ -125,18 +138,15 @@ export default function Profile() {
 
     const handlePasswordChange = async (e) => {
         e.preventDefault();
-        console.log("Form Data:", formData);
 
         if (formData.newPassword !== formData.confirmPassword) {
             toast.error("New password and confirm password do not match");
             return;
         }
-        console.log("Form Data:", formData);
         try {
             const response = await changePassword(currentUserLS.id, formData);
             if (response.status === 200) {
                 toast.success("Change password successfully");
-                console.log(response);
                 setUser(response.data);
                 setFormData(response.data);
             }
@@ -145,7 +155,6 @@ export default function Profile() {
             }
         }
         catch (error) {
-            console.error("Error changing password:", error);
             toast.error("Change password failed");
         }
         finally {
@@ -387,18 +396,26 @@ export default function Profile() {
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-3">
-                                                    <button
-                                                        onClick={() => handleSetDefaultAddress(address)}
-                                                        className="text-sm text-blue-600 hover:text-blue-700"
-                                                    >
-                                                        Set as Default
-                                                    </button>
-                                                    <button
-                                                        className="text-sm text-red-600 hover:text-red-700"
-                                                        onClick={() => handleOpenDeleteAdressModal(address)}
-                                                    >
-                                                        Delete
-                                                    </button>
+                                                    {/* Nếu là phần tử đầu tiên, hiển thị "Default Address" */}
+                                                    {index === 0 ? (
+                                                        <span className="text-sm text-green-600 font-semibold">Default Address</span>
+                                                    ) : (
+                                                        <>
+                                                            {/* Hiển thị các nút cho các phần tử khác */}
+                                                            <button
+                                                                onClick={() => handleSetDefaultAddress(address)}
+                                                                className="text-sm text-blue-600 hover:text-blue-700"
+                                                            >
+                                                                Set as Default
+                                                            </button>
+                                                            <button
+                                                                className="text-sm text-red-600 hover:text-red-700"
+                                                                onClick={() => handleOpenDeleteAdressModal(address)}
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        </>
+                                                    )}
                                                     <ChoiceModal
                                                         title="Delete Address"
                                                         modalOpen={addressModalState[address] || false}
@@ -430,6 +447,8 @@ export default function Profile() {
                                             </div>
                                         </div>
                                     ))}
+
+
                                 </div>
                             </div>
                         </>
@@ -449,7 +468,13 @@ export default function Profile() {
                                 Edit Profile
                             </button>
                             <button
-                                onClick={() => setIsChangingPassword(true)}
+                                onClick={() => {
+                                    if (user.type === 'google') {
+                                        toast.info("Tài khoản này được đăng kí bằng Google. Vui lòng thay đổi mật khẩu bằng Google");
+                                    } else {
+                                        setIsChangingPassword(true);
+                                    }
+                                }}
                                 className="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                             >
                                 <FiLock />
