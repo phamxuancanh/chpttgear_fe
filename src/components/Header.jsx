@@ -144,7 +144,7 @@ export default function Header() {
                     <div className="flex items-center justify-between h-16 ">
 
                         <Link to="/">
-                            <img src={LOGO} width={200} height={200} />
+                            <img src={LOGO} width={100} height={100} />
                         </Link>
 
                         <div className="hidden md:flex items-center space-x-8">
@@ -296,7 +296,9 @@ export default function Header() {
                                                 <img src={currentUser.avatar} alt="avatar" className="w-8 h-8 rounded-full" />
                                                 <div>
                                                     <div>Xin chào</div>
-                                                    <div className="font-bold">{currentUser.firstName} {currentUser.lastName}</div>
+                                                    <div className="font-bold">
+                                                        {currentUser.firstName || currentUser.lastName ? `${currentUser.firstName} ${currentUser.lastName}` : currentUser.username}
+                                                    </div>
                                                 </div>
                                             </>
                                         ) : (
