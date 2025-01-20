@@ -1,15 +1,25 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FiEdit2, FiMail, FiPhone, FiMapPin, FiCalendar, FiActivity, FiLock, FiStar, FiHome } from "react-icons/fi";
 import { getFromLocalStorage } from "../utils/functions";
 import { changePassword, editUserById, findUserById } from "../routers/ApiRoutes";
 import { toast } from "react-toastify";
 import ChoiceModal from "../components/Modal/ChoiceModal";
+import AVTChangeModal from '../components/Modal/ChangeAVTModal'
+import ZoomModal from '../components/Modal/ZoomModal'
+import AvatarEditor from 'react-avatar-editor'
+
 export default function Profile() {
     const [isEditing, setIsEditing] = useState(false);
-    const [isChangingPassword, setIsChangingPassword] = useState(false);
-    const [isAddingAddress, setIsAddingAddress] = useState(false);
-    const [addressModalState, setAddressModalState] = useState({});
-    const [formData, setFormData] = useState();
+    const [isChangingPassword, setIsChangingPassword] = useState(false)
+    const [isAddingAddress, setIsAddingAddress] = useState(false)
+    const [addressModalState, setAddressModalState] = useState({})
+    const [choiceAVTModalOpen, setChoiceAVTModalOpen] = useState(false)
+    const [zoomModalAVTOpen, setZoomModalAVTOpen] = useState(false)
+    const [formData, setFormData] = useState()
+    const [zoom, setZoom] = useState(1)
+    const [rotate, setRotate] = useState(0)
+    const cropRef = useRef<AvatarEditor>(null)
+
 
     const [activities] = useState([
         { id: 1, action: "Purchased Arduino Uno R3", date: "2024-01-15", points: 100 },
@@ -161,6 +171,10 @@ export default function Profile() {
             setIsChangingPassword(false);
         }
     };
+    const handleOpenChangeAVTModal = useCallback(() => {
+        setChoiceAVTModalOpen(true)
+    }, [])
+
     const splittedAddresses = user?.address?.split(";;");
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">
@@ -175,11 +189,12 @@ export default function Profile() {
                                 e.target.src = "https://images.unsplash.com/photo-1633332755192-727a05c4013d";
                             }}
                         />
-                        <label className="absolute inset-0 flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+                        <label className="absolute inset-0 flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity" onClick={handleOpenChangeAVTModal}>
                             <input type="file" className="hidden" accept="image/*" />
                             <FiEdit2 className="text-white text-2xl" />
                         </label>
                     </div>
+
                     <div className="flex-1 text-center md:text-left">
                         <h1 className="text-3xl font-bold text-gray-800">{user?.firstName} {user?.lastName}</h1>
                         <div className="flex items-center justify-center md:justify-start gap-2 mt-2">
@@ -503,6 +518,100 @@ export default function Profile() {
                     </div>
                 </div>
             </div>
+            <AVTChangeModal
+                title="Thay đổi ảnh đại diện"
+                modalOpen={choiceAVTModalOpen}
+                setModalOpen={setChoiceAVTModalOpen}
+            >
+                <div className='flex space-x-3'>
+                    <div className='bg-teal-300 w-full rounded-md flex flex-col items-center justify-center p-5 space-y-3' onClick={handleUploadClick}>
+                        <div className='rounded-full bg-sky-700 w-32 h-32 flex items-center justify-center cursor-pointer'>
+                            <AddPhotoAlternateIcon className='text-slate-300 cursor-pointer' fontSize='large' />
+                        </div>
+                        <div className='font-bold hover:text-gray-700 cursor-pointer'>{t('profile.uploadImage')}</div>
+                    </div>
+                    <input
+                        type='file'
+                        ref={fileInputRef}
+                        style={{ display: 'none' }}
+                        accept='.jpg,.jpeg,.png,.gif'
+                        onChange={handleFileChange}
+                    />
+                </div>
+            </AVTChangeModal>
+
+            <ZoomModal
+                title="Thu phóng & xoay ảnh"
+                modalOpen={zoomModalAVTOpen}
+                setModalOpen={setZoomModalAVTOpen}
+            >
+                <>
+                    <AvatarEditor
+                        ref={cropRef}
+                        className="col-span-9 mx-auto mb-5 rounded-sm"
+                        image={imageSrc}
+                        width={320}
+                        height={320}
+                        border={50}
+                        borderRadius={250}
+                        scale={zoom}
+                        rotate={rotate}
+                    />
+                    <label className="col-span-2 text-sm font-semibold text-dark-2">
+                        {t('profile.zoom')}
+                    </label>
+                    <input
+                        type="range"
+                        className="col-span-5 transparent h-[4px] w-full cursor-pointer appearance-none border-transparent bg-neutral-200 dark:bg-neutral-600 mt-2"
+                        id="customRange1"
+                        min={0}
+                        max={2}
+                        step={0.05}
+                        value={zoom}
+                        onChange={handleInputZoomChange}
+                    />
+                    <input
+                        type="number"
+                        className="bg-dark-2 text-dark-2 col-span-2 py-1.5 rounded-md text-sm font-semibold text-center"
+                        min={0}
+                        max={2}
+                        step={0.05}
+                        value={zoom}
+                        onChange={handleInputZoomChange}
+                    />
+                    <div></div>
+                    <label className="col-span-2 text-sm font-semibold text-dark-2">
+                        {t('profile.rotate')}
+                    </label>
+                    <input
+                        type="range"
+                        className="col-span-5 transparent h-[4px] w-full cursor-pointer appearance-none border-transparent bg-neutral-200 dark:bg-neutral-600 mt-2"
+                        id="customRange1"
+                        min={-180}
+                        max={180}
+                        value={rotate}
+                        step={1}
+                        onChange={handleInputRotateChange}
+                    />
+                    <input
+                        type="number"
+                        className="bg-dark-2 text-dark-2 col-span-2 py-1.5 rounded-md text-sm font-semibold text-center"
+                        min={-180}
+                        max={180}
+                        step={1}
+                        value={rotate}
+                        onChange={handleInputRotateChange}
+                    />
+                </>
+                <div className='flex justify-between m-3 font-bold'>
+                    <div className='cursor-pointer hover:text-gray-700 hover:underline py-1' onClick={() => setZoomModalAVTOpen(false)}>Bỏ qua</div>
+                    <div className='flex space-x-4'>
+                        <div className='cursor-pointer hover:text-gray-700 hover:underline py-1' onClick={() => setZoomModalAVTOpen(false)}>{t('profile.cancel')}</div>
+                        <div className='cursor-pointer hover:text-gray-700 bg-teal-300 hover:bg-teal-500 rounded-md px-3 py-1' onClick={handleSaveAVT}>Lưu</div>
+                    </div>
+                </div>
+            </ZoomModal>
+
         </div>
     );
 };
