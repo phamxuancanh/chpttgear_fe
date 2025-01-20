@@ -296,7 +296,9 @@ export default function Header() {
                                                 <img src={currentUser.avatar} alt="avatar" className="w-8 h-8 rounded-full" />
                                                 <div>
                                                     <div>Xin chào</div>
-                                                    <div className="font-bold">{currentUser.firstName} {currentUser.lastName}</div>
+                                                    <div className="font-bold">
+                                                        {currentUser.firstName || currentUser.lastName ? `${currentUser.firstName} ${currentUser.lastName}` : currentUser.username}
+                                                    </div>
                                                 </div>
                                             </>
                                         ) : (

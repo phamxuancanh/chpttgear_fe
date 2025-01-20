@@ -64,7 +64,7 @@ export const verifyOTP = async (payload) => {
     return await requestWithoutJwt.post('/users/verifyOTP', { data: payload }, { withCredentials: true });
 };
 export const changePassword = async (id, payload) => {
-    return await requestWithJwt.put(`/users/${id}/changePassword`, payload);
+    return await requestWithJwt.put(`/users/${id}/changePassword`, { data: payload });
 };
 export const googleSignIn = async () => {
     const auth = getAuth(app);
