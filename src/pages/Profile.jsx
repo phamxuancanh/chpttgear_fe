@@ -7,8 +7,11 @@ import ChoiceModal from "../components/Modal/ChoiceModal";
 import AVTChangeModal from '../components/Modal/ChangeAVTModal'
 import ZoomModal from '../components/Modal/ZoomModal'
 import AvatarEditor from 'react-avatar-editor'
+import { MdAddPhotoAlternate } from "react-icons/md";
 
 export default function Profile() {
+    const fileInputRef = useRef < HTMLInputElement > (null)
+    const [imageSrc, setImageSrc] = useState('')
     const [isEditing, setIsEditing] = useState(false);
     const [isChangingPassword, setIsChangingPassword] = useState(false)
     const [isAddingAddress, setIsAddingAddress] = useState(false)
@@ -18,7 +21,7 @@ export default function Profile() {
     const [formData, setFormData] = useState()
     const [zoom, setZoom] = useState(1)
     const [rotate, setRotate] = useState(0)
-    const cropRef = useRef<AvatarEditor>(null)
+    const cropRef = useRef < AvatarEditor > (null)
 
 
     const [activities] = useState([
@@ -176,6 +179,84 @@ export default function Profile() {
     }, [])
 
     const splittedAddresses = user?.address?.split(";;");
+    const handleInputZoomChange = (event) => {
+        const zoomValue = event.target.value;
+        setZoom(zoomValue);
+    };
+
+    const handleInputRotateChange = (event) => {
+        const rotateValue = event.target.value;
+        setRotate(rotateValue);
+    };
+    const handleUploadClick = (event) => {
+        event.stopPropagation();
+        if (fileInputRef.current) {
+            fileInputRef.current.click();
+        }
+    };
+
+    const handleFileChange = (event) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+            if (validTypes.includes(file.type)) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    setImageSrc(reader.result);
+                    setChoiceAVTModalOpen(false);
+                    setZoomModalAVTOpen(true);
+                };
+                reader.readAsDataURL(file);
+                console.log('Selected file:', file);
+            } else {
+                toast.error('Invalid file type. Please select a JPG, JPEG, PNG, or GIF file.');
+            }
+        }
+    };
+    const handleSaveAVT = async () => {
+        try {
+            let dataUrl = user?.avatar || '';
+            if (cropRef.current) {
+                const canvas = cropRef.current.getImage();
+                dataUrl = canvas.toDataURL();
+            }
+
+            if (dataUrl) {
+                const result = await fetch(dataUrl);
+                const blob = await result.blob();
+                const formData = new FormData();
+                formData.append('avatar', blob, 'avatar.png');
+
+                let response = { status: 400 };
+                if (user?.id) {
+                    response = await changeAVT(user.id, formData);
+                }
+
+                if (response.status === 200) {
+                    toast.success('Change AVT successfully');
+                    if (userRedux) {
+                        dispatch(updateStateInfo({
+                            ...userRedux,
+                            avatar: dataUrl
+                        }));
+                    }
+                    setImageSrc(userRedux?.avatar || '');
+                    setZoomModalAVTOpen(false);
+                    setZoom(1);
+                    setRotate(0);
+                } else {
+                    console.log('Change AVT failed');
+                    toast.error('Change AVT failed');
+                }
+            } else {
+                toast.error('No avatar available for saving');
+            }
+        } catch (error) {
+            console.error('An error occurred while changing the avatar:', error);
+            toast.error('An error occurred while changing the avatar');
+        }
+    };
+
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">
             <div className="relative mb-8">
@@ -526,9 +607,9 @@ export default function Profile() {
                 <div className='flex space-x-3'>
                     <div className='bg-teal-300 w-full rounded-md flex flex-col items-center justify-center p-5 space-y-3' onClick={handleUploadClick}>
                         <div className='rounded-full bg-sky-700 w-32 h-32 flex items-center justify-center cursor-pointer'>
-                            <AddPhotoAlternateIcon className='text-slate-300 cursor-pointer' fontSize='large' />
+                            <MdAddPhotoAlternate className='text-slate-300 cursor-pointer' fontSize='large' />
                         </div>
-                        <div className='font-bold hover:text-gray-700 cursor-pointer'>{t('profile.uploadImage')}</div>
+                        <div className='font-bold hover:text-gray-700 cursor-pointer'>Upload Image</div>
                     </div>
                     <input
                         type='file'
@@ -558,7 +639,7 @@ export default function Profile() {
                         rotate={rotate}
                     />
                     <label className="col-span-2 text-sm font-semibold text-dark-2">
-                        {t('profile.zoom')}
+                        Thu phóng
                     </label>
                     <input
                         type="range"
@@ -581,7 +662,7 @@ export default function Profile() {
                     />
                     <div></div>
                     <label className="col-span-2 text-sm font-semibold text-dark-2">
-                        {t('profile.rotate')}
+                        Xoay
                     </label>
                     <input
                         type="range"
@@ -606,7 +687,7 @@ export default function Profile() {
                 <div className='flex justify-between m-3 font-bold'>
                     <div className='cursor-pointer hover:text-gray-700 hover:underline py-1' onClick={() => setZoomModalAVTOpen(false)}>Bỏ qua</div>
                     <div className='flex space-x-4'>
-                        <div className='cursor-pointer hover:text-gray-700 hover:underline py-1' onClick={() => setZoomModalAVTOpen(false)}>{t('profile.cancel')}</div>
+                        <div className='cursor-pointer hover:text-gray-700 hover:underline py-1' onClick={() => setZoomModalAVTOpen(false)}>Hủy</div>
                         <div className='cursor-pointer hover:text-gray-700 bg-teal-300 hover:bg-teal-500 rounded-md px-3 py-1' onClick={handleSaveAVT}>Lưu</div>
                     </div>
                 </div>
