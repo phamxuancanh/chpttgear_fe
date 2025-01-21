@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FiEdit2, FiMail, FiPhone, FiMapPin, FiCalendar, FiActivity, FiLock, FiStar, FiHome } from "react-icons/fi";
 import { getFromLocalStorage } from "../utils/functions";
-import { changePassword, editUserById, findUserById } from "../routers/ApiRoutes";
+import { changeAVT, changePassword, editUserById, findUserById } from "../routers/ApiRoutes";
 import { toast } from "react-toastify";
 import ChoiceModal from "../components/Modal/ChoiceModal";
 import AVTChangeModal from '../components/Modal/ChangeAVTModal'
@@ -10,7 +10,7 @@ import AvatarEditor from 'react-avatar-editor'
 import { MdAddPhotoAlternate } from "react-icons/md";
 
 export default function Profile() {
-    const fileInputRef = useRef < HTMLInputElement > (null)
+    const fileInputRef = useRef(null)
     const [imageSrc, setImageSrc] = useState('')
     const [isEditing, setIsEditing] = useState(false);
     const [isChangingPassword, setIsChangingPassword] = useState(false)
@@ -21,7 +21,7 @@ export default function Profile() {
     const [formData, setFormData] = useState()
     const [zoom, setZoom] = useState(1)
     const [rotate, setRotate] = useState(0)
-    const cropRef = useRef < AvatarEditor > (null)
+    const cropRef = useRef(null)
 
 
     const [activities] = useState([
@@ -220,27 +220,28 @@ export default function Profile() {
                 const canvas = cropRef.current.getImage();
                 dataUrl = canvas.toDataURL();
             }
-
+    
             if (dataUrl) {
                 const result = await fetch(dataUrl);
                 const blob = await result.blob();
-                const formData = new FormData();
-                formData.append('avatar', blob, 'avatar.png');
-
+                console.log('Blob:', blob);
+    
+                const fDT = new FormData();
+                fDT.append('avatar', blob, 'avatar.png');
+    
+                // Kiểm tra nội dung FormData
+                for (let [key, value] of fDT.entries()) {
+                    console.log(`${key}:`, value);
+                }
+    
                 let response = { status: 400 };
                 if (user?.id) {
-                    response = await changeAVT(user.id, formData);
+                    response = await changeAVT(user.id, fDT); // Gửi request tới API
                 }
-
+    
                 if (response.status === 200) {
                     toast.success('Change AVT successfully');
-                    if (userRedux) {
-                        dispatch(updateStateInfo({
-                            ...userRedux,
-                            avatar: dataUrl
-                        }));
-                    }
-                    setImageSrc(userRedux?.avatar || '');
+                    setImageSrc(user?.avatar || '');
                     setZoomModalAVTOpen(false);
                     setZoom(1);
                     setRotate(0);
@@ -257,6 +258,7 @@ export default function Profile() {
         }
     };
 
+
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">
             <div className="relative mb-8">
@@ -271,7 +273,7 @@ export default function Profile() {
                             }}
                         />
                         <label className="absolute inset-0 flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity" onClick={handleOpenChangeAVTModal}>
-                            <input type="file" className="hidden" accept="image/*" />
+                            {/* <input type="file" className="hidden" accept="image/*" /> */}
                             <FiEdit2 className="text-white text-2xl" />
                         </label>
                     </div>

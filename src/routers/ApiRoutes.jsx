@@ -66,6 +66,10 @@ export const verifyOTP = async (payload) => {
 export const changePassword = async (id, payload) => {
     return await requestWithJwt.put(`/users/${id}/changePassword`, { data: payload });
 };
+export const changeAVT = async (id, payload) => {
+    return await requestWithJwt.put(`/users/${id}/changeAVT`, payload);
+};
+
 export const googleSignIn = async () => {
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
