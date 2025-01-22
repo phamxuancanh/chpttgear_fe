@@ -10,8 +10,10 @@ import { setToLocalStorage } from "../utils/functions";
 import { toast } from "react-toastify";
 import ROUTES from '../constants/Page';
 import CryptoJS from 'crypto-js'
-
+import { useDispatch } from 'react-redux';
+import { login } from '../redux/authSlice';
 export default function Login() {
+    const dispatch = useDispatch();
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         username: "",
@@ -60,8 +62,9 @@ export default function Login() {
                         accessToken: response.data.accessToken,
                         currentUser: response.data.user
                     }
-                    console.log(currentUser)
-                    setToLocalStorage('persist:auth', JSON.stringify(currentUser))
+                    // console.log(currentUser)
+                    // setToLocalStorage('persist:auth', JSON.stringify(currentUser))
+                    dispatch(login(currentUser));
                     // loginState(currentUser.currentUser)
                     // dispatch(loginState(currentUser.currentUser))
                     navigate(ROUTES.HOME_PAGE.path)
@@ -107,7 +110,9 @@ export default function Login() {
                     }
                 }
                 console.log(currentUser);
-                setToLocalStorage('persist:auth', JSON.stringify(currentUser)); 
+                // setToLocalStorage('persist:auth', JSON.stringify(currentUser)); 
+                dispatch(login(currentUser));
+
                 // dispatch(loginState(currentUser.currentUser));
     
                 if (data === 'R1' || data === 'R2') {

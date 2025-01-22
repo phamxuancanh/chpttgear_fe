@@ -8,7 +8,10 @@ import { signOut } from "../routers/ApiRoutes";
 import { getFromLocalStorage, removeAllLocalStorage } from "../utils/functions";
 import ROUTES from '../constants/Page';
 import { toast } from "react-toastify";
+import { useDispatch } from 'react-redux';
+import { logout, setToken } from '../redux/authSlice';
 export default function Header() {
+    const dispatch = useDispatch();
     const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -125,6 +128,7 @@ export default function Header() {
         setIsDropdownOpenUser(!isDropdownOpenUser)
     };
     const handleLogout = async () => {
+        dispatch(logout())
         try {
             const response = await signOut()
             if (response) {
@@ -137,6 +141,14 @@ export default function Header() {
             console.error(error);
         }
     }
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            dispatch(setToken(token))
+        }
+    }, [dispatch])
+
     const handleLinkClick = () => {
         setShowProductDropdown(false);
         setShowBellDropdown(false);
