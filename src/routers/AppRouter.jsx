@@ -3,27 +3,97 @@ import AuthRoute from "./AuthRoutes";
 import Layout from "./Layout";
 import Page from "../constants/Page";
 import ScrollToTop from "../utils/ScrollToTop";
-import Home from "../pages/Home";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
-import Product from "../pages/Product";
-import Login from "../pages/Login";
-import Register from "../pages/Register";
-import Cart from "../pages/Cart";
-import Payment from "../pages/Payment";
-import OrderTracking from "../pages/OrderTracking";
-import Order from "../pages/Order";
-import ProductDetail from "../pages/ProductDetail";
-import Dashboard from "../pages/Dashboard";
 import ChatButton from "../components/ChatButton";
-import EmailVerifyPage from "../pages/EmailVerifyPage";
-import EmailVerifySendPage from "../pages/EmailVerifySendPage";
-import EmailVerifySuccessPage from "../pages/EmailVerifySuccessPage";
-import ForgotPassword from "../pages/ForgotPassword";
-import ResetPassword from "../pages/ResetPassword";
-import Profile from "../pages/Profile";
+import loadable from '@loadable/component';
+import Loading from "../components/loading";
+const Home = loadable(async () => {
+    const module = await import('../pages/Home');
+    return module;
+}, { fallback: <Loading /> });
+
+const Product = loadable(async () => {
+    const module = await import('../pages/Product');
+    return module;
+}, { fallback: <Loading /> });
+
+const Login = loadable(async () => {
+    const module = await import('../pages/Login');
+    return module;
+}, { fallback: <Loading /> });
+
+const Register = loadable(async () => {
+    const module = await import('../pages/Register');
+    return module;
+}, { fallback: <Loading /> });
+
+const Cart = loadable(async () => {
+    const module = await import('../pages/Cart');
+    return module;
+}, { fallback: <Loading /> });
+
+const Payment = loadable(async () => {
+    const module = await import('../pages/Payment');
+    return module;
+}, { fallback: <Loading /> });
+
+const OrderTracking = loadable(async () => {
+    const module = await import('../pages/OrderTracking');
+    return module;
+}, { fallback: <Loading /> });
+
+const Order = loadable(async () => {
+    const module = await import('../pages/Order');
+    return module;
+}, { fallback: <Loading /> });
+
+const ProductDetail = loadable(async () => {
+    const module = await import('../pages/ProductDetail');
+    return module;
+}, { fallback: <Loading /> });
+
+const Dashboard = loadable(async () => {
+    const module = await import('../pages/Dashboard');
+    return module;
+}, { fallback: <Loading /> });
+
+const EmailVerifyPage = loadable(async () => {
+    const module = await import('../pages/EmailVerifyPage');
+    return module;
+}, { fallback: <Loading /> });
+
+const EmailVerifySendPage = loadable(async () => {
+    const module = await import('../pages/EmailVerifySendPage');
+    return module;
+}, { fallback: <Loading /> });
+
+const EmailVerifySuccessPage = loadable(async () => {
+    const module = await import('../pages/EmailVerifySuccessPage');
+    return module;
+}, { fallback: <Loading /> });
+
+const ForgotPassword = loadable(async () => {
+    const module = await import('../pages/ForgotPassword');
+    return module;
+}, { fallback: <Loading /> });
+
+const ResetPassword = loadable(async () => {
+    const module = await import('../pages/ResetPassword');
+    return module;
+}, { fallback: <Loading /> });
+
+const Profile = loadable(async () => {
+    const module = await import('../pages/Profile');
+    return module;
+}, { fallback: <Loading /> });
+const NotFound = loadable(async () => {
+    const module = await import('../pages/NotFound');
+    return module;
+}, { fallback: <Loading /> });
+
+
 const ChatButtonWrapper = () => {
     const location = useLocation();
-
     const showChatButton = [
         Page.HOME_PAGE.path,
         Page.PRODUCT_PAGE.path,
@@ -32,7 +102,6 @@ const ChatButtonWrapper = () => {
 
     return showChatButton ? <ChatButton /> : null;
 };
-
 const AppRouter = () => {
     return (
         <BrowserRouter>
@@ -43,7 +112,7 @@ const AppRouter = () => {
                 <Route
                     path={Page.LOGIN_PAGE.path}
                     element={
-                        <AuthRoute publicOnly>
+                        <AuthRoute allowedRoles={['R1']}>
                             <Login />
                         </AuthRoute>
                     }
@@ -171,7 +240,7 @@ const AppRouter = () => {
                 <Route
                     path={Page.DASHBOARD.path}
                     element={
-                        <AuthRoute allowedRoles={['R1', 'R2']}>
+                        <AuthRoute>
                             <Dashboard />
                         </AuthRoute>
                     }
@@ -185,6 +254,10 @@ const AppRouter = () => {
                             </Layout>
                         </AuthRoute>
                     }
+                />
+                <Route
+                    path={Page.NOT_FOUND.path}
+                    element={<NotFound />}
                 />
             </Routes>
         </BrowserRouter>

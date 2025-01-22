@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@loadable/component": "^5.16.4",
     "@reduxjs/toolkit": "^2.5.0",
     "@tanstack/react-query": "^5.64.0",
     "axios": "^1.7.9",
@@ -21,6 +22,7 @@
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.1.1",
     "react-scripts": "5.0.1",
+    "react-select": "^5.9.0",
     "react-spinners": "^0.13.8",
     "react-toastify": "^11.0.2",
     "react-transition-group": "^4.4.5",

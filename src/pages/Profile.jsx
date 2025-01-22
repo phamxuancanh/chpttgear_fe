@@ -8,6 +8,8 @@ import AVTChangeModal from '../components/Modal/ChangeAVTModal'
 import ZoomModal from '../components/Modal/ZoomModal'
 import AvatarEditor from 'react-avatar-editor'
 import { MdAddPhotoAlternate } from "react-icons/md";
+import provinceData from "../assets/address/province.json";
+import Select from "react-select";
 
 export default function Profile() {
     const fileInputRef = useRef(null)
@@ -23,6 +25,81 @@ export default function Profile() {
     const [rotate, setRotate] = useState(0)
     const cropRef = useRef(null)
 
+    const [listProvince, setListProvince] = useState([])
+    const [listDistrict, setListDistrict] = useState([])
+    const [listWard, setListWard] = useState([])
+    const [selectedProvince, setSelectedProvince] = useState({});
+    const [selectedDistrict, setSelectedDistrict] = useState({});
+    const [selectedWard, setSelectedWard] = useState({});
+
+    useEffect(() => {
+        const provinces = provinceData.map((province) => ({
+            id: province.ProvinceID,
+            name: province.ProvinceName
+        }));
+        setListProvince(provinces);
+        const districts = provinceData
+            .flatMap((province) => province.Districts)
+            .map((district) => ({
+                id: district.DistrictID,
+                name: district.DistrictName,
+                provinceID: district.ProvinceID
+            }));
+        setListDistrict(districts);
+        const wards = provinceData
+            .flatMap((province) => province.Districts)
+            .flatMap((district) => district.Wards)
+            .map((ward) => ({
+                id: ward.WardCode,
+                name: ward.WardName,
+                districtId: ward.DistrictID
+            }));
+        setListWard(wards);
+    }, []);
+
+    const handleProvinceChange = (selectedOption) => {
+        if (selectedOption) {
+            setSelectedProvince({
+                id: selectedOption.value,
+                name: selectedOption.label,
+            });
+        } else {
+            setSelectedProvince({ id: "", name: "" });
+        }
+        // Reset district và ward khi đổi province
+        setSelectedDistrict({ id: "", name: "" });
+        setSelectedWard({ id: "", name: "" });
+    };
+    const handleDistrictChange = (selectedOption) => {
+        if (selectedOption) {
+            setSelectedDistrict({
+                id: selectedOption.value,
+                name: selectedOption.label,
+            });
+        } else {
+            setSelectedDistrict({ id: "", name: "" });
+        }
+        // Reset ward khi đổi district
+        setSelectedWard({ id: "", name: "" });
+    };
+    const handleWardChange = (selectedOption) => {
+        if (selectedOption) {
+            setSelectedWard({
+                id: selectedOption.value,
+                name: selectedOption.label,
+            });
+        } else {
+            setSelectedWard({ id: "", name: "" });
+        }
+    };
+
+    const filteredDistricts = listDistrict.filter(
+        (district) => String(district.provinceID) === String(selectedProvince.id)
+    );
+
+    const filteredWards = listWard.filter(
+        (ward) => String(ward.districtId) === String(selectedDistrict.id)
+    );
 
     const [activities] = useState([
         { id: 1, action: "Purchased Arduino Uno R3", date: "2024-01-15", points: 100 },
@@ -64,7 +141,6 @@ export default function Profile() {
             return;
         }
         const updatedAddresses = [address, ...addressArray.filter(item => item !== address)];
-
         try {
             const response = await editUserById(currentUserLS.id, { ...formData, address: updatedAddresses.join(";;") });
             if (response.status === 200) {
@@ -80,29 +156,65 @@ export default function Profile() {
         }
 
     };
-
-
+    const handleCancelAddAddress = () => {
+        setIsAddingAddress(false);
+        setSelectedProvince({});
+        setSelectedDistrict({});
+        setSelectedWard({});
+        setFormData({ ...formData, address: "" });
+    };
     const handleAddAddress = async (e) => {
         e.preventDefault();
-        let currentUserAddresses = user?.address ? user.address.split(";;") : [];
-        let newAddressToAdd = formData.address.trim();
-        if (newAddressToAdd) {
-            currentUserAddresses.push(newAddressToAdd)
+        if (!selectedProvince.id || !selectedDistrict.id || !selectedWard.id || !formData.address) {
+            toast.error("Please select province, district and ward and enter address");
+            return;
         }
+        let currentUserAddresses = user?.address ? user.address.split(";;") : [];
+        let newAddressToAdd =
+            formData.address.trim() +
+            " " +
+            selectedWard.name +
+            ", " +
+            selectedDistrict.name +
+            ", " +
+            selectedProvince.name +
+            "|" +
+            selectedWard.id +
+            "," +
+            selectedDistrict.id +
+            "," +
+            selectedProvince.id;
+        const normalizedNewAddress = newAddressToAdd.toLowerCase().trim();
+        const normalizedAddresses = currentUserAddresses.map((address) =>
+            address.toLowerCase().trim()
+        );
+        if (normalizedAddresses.includes(normalizedNewAddress)) {
+            toast.error("This address already exists");
+            return;
+        }
+        currentUserAddresses.push(newAddressToAdd);
         const updatedAddresses = currentUserAddresses.join(";;");
         setFormData({ ...formData, address: updatedAddresses });
-
-        const response = await editUserById(currentUserLS.id, { ...formData, address: updatedAddresses });
-
-        if (response.status === 200) {
-            toast.success("Add address successfully");
-            setUser(response.data);
-            setFormData(response.data);
-        } else {
+        try {
+            const response = await editUserById(currentUserLS.id, { ...formData, address: updatedAddresses });
+            if (response.status === 200) {
+                toast.success("Add address successfully");
+                setUser(response.data);
+            } else {
+                toast.error("Add address failed");
+            }
+        } catch (error) {
             toast.error("Add address failed");
+        } finally {
+            setIsAddingAddress(false);
+            setSelectedProvince({});
+            setSelectedDistrict({});
+            setSelectedWard({});
+            setFormData({ ...formData, address: "" });
         }
-        setIsAddingAddress(false);
     };
+    
+
     const handleOpenDeleteAdressModal = (address) => {
         setAddressModalState(prevState => ({ ...prevState, [address]: true }));
     };
@@ -113,16 +225,16 @@ export default function Profile() {
     const handleDeleteAddress = async (addressToDelete) => {
         let currentUserAddresses = user?.address ? user.address.split(";;").map(item => item.trim()) : [];
         if (currentUserAddresses.length === 1) {
-            toast.error("You must have at least one address");
-            handleCloseDeleteAdressModal(addressToDelete);
+            toast.error("You must have at least one address")
+            handleCloseDeleteAdressModal(addressToDelete)
             return;
         }
         let updatedAddresses = currentUserAddresses.filter(address => address !== addressToDelete);
-        updatedAddresses = updatedAddresses.join(";;");
+        updatedAddresses = updatedAddresses.join(";;")
         setFormData(prevFormData => ({
             ...prevFormData,
             address: updatedAddresses
-        }));
+        }))
         const response = await editUserById(currentUserLS.id, { ...formData, address: updatedAddresses });
         if (response.status === 200) {
             toast.success("Delete address successfully");
@@ -138,12 +250,12 @@ export default function Profile() {
         e.preventDefault();
         const response = await editUserById(currentUserLS.id, formData);
         if (response.status === 200) {
-            toast.success("Update user successfully");
+            toast.success("Cập nhật thông tin thành công");
             setUser(response.data);
             setFormData(response.data);
         }
         else {
-            toast.error("Update user failed");
+            toast.error("Cập nhật thông tin thất bại");
         }
 
         setIsEditing(false);
@@ -151,24 +263,23 @@ export default function Profile() {
 
     const handlePasswordChange = async (e) => {
         e.preventDefault();
-
         if (formData.newPassword !== formData.confirmPassword) {
-            toast.error("New password and confirm password do not match");
+            toast.error("Mật khẩu mới và xác nhận mật khẩu không khớp");
             return;
         }
         try {
             const response = await changePassword(currentUserLS.id, formData);
             if (response.status === 200) {
-                toast.success("Change password successfully");
+                toast.success("Đổi mật khẩu thành công");
                 setUser(response.data);
                 setFormData(response.data);
             }
             else {
-                toast.error("Change password failed");
+                toast.error("Đổi mật khẩu thất bại");
             }
         }
         catch (error) {
-            toast.error("Change password failed");
+            toast.error("Đổi mật khẩu thất bại");
         }
         finally {
             setIsChangingPassword(false);
@@ -207,9 +318,8 @@ export default function Profile() {
                     setZoomModalAVTOpen(true);
                 };
                 reader.readAsDataURL(file);
-                console.log('Selected file:', file);
             } else {
-                toast.error('Invalid file type. Please select a JPG, JPEG, PNG, or GIF file.');
+                toast.error('Không đúng định dạng ảnh');
             }
         }
     };
@@ -220,37 +330,30 @@ export default function Profile() {
                 const canvas = cropRef.current.getImage();
                 dataUrl = canvas.toDataURL();
             }
-    
+
             if (dataUrl) {
                 const result = await fetch(dataUrl);
                 const blob = await result.blob();
-                console.log('Blob:', blob);
-    
                 const fDT = new FormData();
                 fDT.append('avatar', blob, 'avatar.png');
-    
                 // Kiểm tra nội dung FormData
-                for (let [key, value] of fDT.entries()) {
-                    console.log(`${key}:`, value);
-                }
-    
                 let response = { status: 400 };
                 if (user?.id) {
-                    response = await changeAVT(user.id, fDT); // Gửi request tới API
+                    response = await changeAVT(user.id, fDT);
                 }
-    
+
                 if (response.status === 200) {
-                    toast.success('Change AVT successfully');
+                    toast.success('Đổi ảnh đại diện thành công');
                     setImageSrc(user?.avatar || '');
+                    setUser(response.data);
                     setZoomModalAVTOpen(false);
                     setZoom(1);
                     setRotate(0);
                 } else {
-                    console.log('Change AVT failed');
-                    toast.error('Change AVT failed');
+                    toast.error('Đổi ảnh đại diện thất bại');
                 }
             } else {
-                toast.error('No avatar available for saving');
+                toast.error('Không thể lưu ảnh đại diện');
             }
         } catch (error) {
             console.error('An error occurred while changing the avatar:', error);
@@ -258,20 +361,21 @@ export default function Profile() {
         }
     };
 
-
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">
             <div className="relative mb-8">
                 <div className="flex flex-col md:flex-row items-center gap-6">
                     <div className="relative group">
-                        <img
-                            src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e"
-                            alt="Profile"
-                            className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg group-hover:opacity-80 transition-opacity"
-                            onError={(e) => {
-                                e.target.src = "https://images.unsplash.com/photo-1633332755192-727a05c4013d";
-                            }}
-                        />
+                        {user?.avatar && (
+                            <img
+                                src={user.avatar}
+                                alt="Profile"
+                                className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg group-hover:opacity-80 transition-opacity"
+                                onError={(e) => {
+                                    e.target.src = "https://images.unsplash.com/photo-1633332755192-727a05c4013d";
+                                }}
+                            />
+                        )}
                         <label className="absolute inset-0 flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity" onClick={handleOpenChangeAVTModal}>
                             {/* <input type="file" className="hidden" accept="image/*" /> */}
                             <FiEdit2 className="text-white text-2xl" />
@@ -281,10 +385,10 @@ export default function Profile() {
                     <div className="flex-1 text-center md:text-left">
                         <h1 className="text-3xl font-bold text-gray-800">{user?.firstName} {user?.lastName}</h1>
                         <div className="flex items-center justify-center md:justify-start gap-2 mt-2">
-                            <FiStar className="text-yellow-500" />
-                            <span className="text-gray-600"> Member</span>
+                            <FiStar className="text-sky-500" />
+                            <span className="text-gray-600">Thành viên Bạch Kim</span>
                             <span className="text-gray-600">|</span>
-                            <span className="text-gray-600"> Points</span>
+                            <span className="text-gray-600">{user?.score} Điểm</span>
                         </div>
                     </div>
                 </div>
@@ -443,7 +547,8 @@ export default function Profile() {
                                         <FiPhone className="text-gray-500 text-xl" />
                                         <div>
                                             <p className="text-sm text-gray-500">Phone</p>
-                                            <p className="text-gray-800">{user?.phone || "Chưa cập nhật"}</p>                                        </div>
+                                            <p className="text-gray-800">{user?.phone || "Chưa cập nhật"}</p>
+                                        </div>
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <FiCalendar className="text-gray-500 text-xl" />
@@ -469,17 +574,77 @@ export default function Profile() {
                                             <div className="flex items-center space-x-3 mb-2">
                                                 <label className="block text-gray-700 font-bold" htmlFor="address">New Address</label>
                                                 <button className="text-blue-600 hover:text-blue-700" onClick={(e) => handleAddAddress(e)}>Save</button>
-                                                <button className="text-blue-600 hover:text-blue-700" onClick={() => setIsAddingAddress(false)}>Cancel</button>
+                                                <button className="text-red-600 hover:text-red-700" onClick={handleCancelAddAddress}>Cancel</button>
                                             </div>
-                                            <input
-                                                type="text"
-                                                id="address"
-                                                name="address"
-                                                placeholder="Enter your new address"
-                                                onChange={handleInputChange}
-                                                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                required
-                                            />
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                                {/* Province Dropdown */}
+                                                <div className="col-span-1">
+                                                    <Select
+                                                        value={
+                                                            selectedProvince.id
+                                                                ? { value: selectedProvince.id, label: selectedProvince.name }
+                                                                : null
+                                                        }
+                                                        onChange={handleProvinceChange}
+                                                        options={listProvince.map((province) => ({
+                                                            value: province.id,
+                                                            label: province.name,
+                                                        }))}
+                                                        placeholder="Select Province"
+                                                    />
+                                                </div>
+
+                                                {/* District Dropdown */}
+                                                <div className="col-span-1">
+                                                    <Select
+                                                        value={
+                                                            selectedDistrict.id
+                                                                ? { value: selectedDistrict.id, label: selectedDistrict.name }
+                                                                : null
+                                                        }
+                                                        onChange={handleDistrictChange}
+                                                        options={filteredDistricts.map((district) => ({
+                                                            value: district.id,
+                                                            label: district.name,
+                                                        }))}
+                                                        placeholder="Select District"
+                                                        isDisabled={!selectedProvince.id}
+                                                    />
+
+                                                </div>
+                                                {/* Ward Dropdown */}
+                                                <div className="col-span-1">
+                                                    <Select
+                                                        value={
+                                                            selectedWard.id
+                                                                ? { value: selectedWard.id, label: selectedWard.name }
+                                                                : null
+                                                        }
+                                                        onChange={handleWardChange}
+                                                        options={filteredWards.map((ward) => ({
+                                                            value: ward.id,
+                                                            label: ward.name,
+                                                        }))}
+                                                        placeholder="Select Ward"
+                                                        isDisabled={!selectedDistrict.id}
+                                                    />
+                                                </div>
+
+                                                {/* Address Input */}
+                                                <div className="col-span-1">
+                                                    <input
+                                                        type="text"
+                                                        id="address"
+                                                        name="address"
+                                                        placeholder="Enter your new address"
+                                                        onChange={handleInputChange}
+                                                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                        required
+                                                    />
+                                                </div>
+                                            </div>
+
                                         </div>
                                     </form>
                                 )}
@@ -490,7 +655,7 @@ export default function Profile() {
                                                 <div className="flex items-start gap-3">
                                                     <FiHome className="text-gray-500 text-xl mt-1" />
                                                     <div>
-                                                        <p className="text-gray-800">{address}</p>
+                                                        <p className="text-gray-800">{address.split('|')[0]}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-3">

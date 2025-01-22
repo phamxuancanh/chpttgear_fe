@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FiShoppingCart, FiUser, FiMenu, FiBell } from "react-icons/fi";
 import { FaPlus, FaMinus } from "react-icons/fa";
 import { IoMdArrowDropdown } from "react-icons/io";
@@ -137,18 +137,22 @@ export default function Header() {
             console.error(error);
         }
     }
+    const handleLinkClick = () => {
+        setShowProductDropdown(false);
+        setShowBellDropdown(false);
+        setShowCartDropdown(false);
+        setShowUserDropdown(false);
+    };
     return (
         <div>
             <nav className="bg-black text-white shadow-lg py-2 sticky z-10 ">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16 ">
-
                         <Link to="/">
                             <img src={LOGO} width={100} height={100} />
                         </Link>
-
                         <div className="hidden md:flex items-center space-x-8">
-                            <Link to="/" className="hover:text-blue-400 transition duration-300">
+                            <Link to="/" onClick={handleLinkClick} className="hover:text-blue-400 transition duration-300">
                                 Trang chủ
                             </Link>
                             <div className="relative">
@@ -165,7 +169,7 @@ export default function Header() {
                                     >
                                         {products.map((product, index) => (
                                             <div key={index} className="relative group">
-                                                <Link
+                                                <Link onClick={handleLinkClick}
                                                     to="/products"
                                                     className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
                                                 >
@@ -173,7 +177,7 @@ export default function Header() {
                                                 </Link>
                                                 <div className="absolute left-full top-0 w-48 hidden group-hover:block rounded-md shadow-lg bg-white text-black">
                                                     {product.subItems.map((subItem, subIndex) => (
-                                                        <Link to="/products"
+                                                        <Link to="/products" onClick={handleLinkClick}
                                                             key={subIndex}
 
                                                             className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
@@ -274,7 +278,7 @@ export default function Header() {
                                                 </div>
                                             ))}
                                             <div className="w-full flex justify-center items-center ">
-                                                <Link to="/cart">
+                                                <Link to="/cart" onClick={handleLinkClick}>
                                                     <button className=" bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600">
                                                         Xem giỏ hàng
                                                     </button>
@@ -310,41 +314,41 @@ export default function Header() {
                                     </div>
                                 </button>
                                 {showUserDropdown && currentUser && (
-                                    <div
-                                        className="absolute  z-50 right-0 mt-2 w-48 rounded-md shadow-lg bg-white text-black"
-                                    >
-                                        {!currentUser && (
+                                    <div className="absolute z-50 right-0 mt-2 w-48 rounded-md shadow-lg bg-white text-black">
+                                        {!currentUser ? (
                                             <>
-                                                <Link to="/login"
-                                                    href="#"
-                                                    className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
+                                                <Link onClick={handleLinkClick}
+                                                    to="/login"
+                                                    className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
                                                 >
-                                                    {"Đăng nhập"}
+                                                    Đăng nhập
                                                 </Link>
-                                                <Link to="/register"
-                                                    className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
+                                                <Link onClick={handleLinkClick}
+                                                    to="/register"
+                                                    className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
                                                 >
-                                                    {"Đăng kí"}
+                                                    Đăng kí
                                                 </Link>
                                             </>
-                                        )}
-                                        {currentUser && (
+                                        ) : (
                                             <>
-                                                <Link to="/profile"
-                                                    className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
+                                                <Link onClick={handleLinkClick}
+                                                    to="/profile"
+                                                    className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
                                                 >
-                                                    {"Hồ sơ"}
+                                                    Hồ sơ
                                                 </Link>
-                                                <Link to="/orders"
-                                                    className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
+                                                <Link onClick={handleLinkClick}
+                                                    to="/orders"
+                                                    className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
                                                 >
-                                                    {"Đơn hàng của tôi"}
+                                                    Đơn hàng của tôi
                                                 </Link>
                                                 <button
                                                     onClick={handleLogout}
-                                                    className="flex w-full items-start px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
+                                                    className="flex w-full items-start px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
                                                 >
-                                                    {"Đăng xuất"}
+                                                    Đăng xuất
                                                 </button>
                                             </>
                                         )}
@@ -387,6 +391,7 @@ export default function Header() {
                                     {products.map((product, index) => (
                                         <div key={index}>
                                             <Link to="/products"
+                                                onClick={handleLinkClick}
                                                 href="#"
                                                 className="block px-3 py-2 rounded-md text-gray-300 hover:bg-gray-900 transition duration-300"
                                             >
@@ -395,6 +400,7 @@ export default function Header() {
                                             <div className="pl-4">
                                                 {product.subItems.map((subItem, subIndex) => (
                                                     <Link to="/products"
+                                                        onClick={handleLinkClick}
                                                         key={subIndex}
 
                                                         className="block px-3 py-2 rounded-md text-gray-400 hover:bg-gray-900 transition duration-300"
@@ -466,39 +472,46 @@ export default function Header() {
 
                                 {isDropdownOpenUser && (
                                     <div className="pl-4 space-y-1">
-                                        {!currentUser && (
+                                        {!currentUser ? (
                                             <>
-                                                <Link to="/login"
-                                                    href="#"
-                                                    className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
+                                                <Link
+                                                    onClick={handleLinkClick}
+                                                    to="/login"
+                                                    className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
                                                 >
-                                                    {"Đăng nhập"}
+                                                    Đăng nhập
                                                 </Link>
-                                                <Link to="/register"
-                                                    className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
+                                                <Link
+                                                    onClick={handleLinkClick}
+                                                    to="/register"
+                                                    className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
                                                 >
-                                                    {"Đăng kí"}
+                                                    Đăng kí
                                                 </Link>
                                             </>
-                                        )}
-
-                                        {currentUser && (
+                                        ) : (
                                             <>
-                                                <Link to="/profile"
-                                                    className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
+                                                <Link
+                                                    onClick={handleLinkClick}
+                                                    to="/profile"
+                                                    className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
                                                 >
-                                                    {"Hồ sơ"}
+                                                    Hồ sơ
                                                 </Link>
-                                                <Link to="/orders"
-                                                    className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
+                                                <Link
+                                                    onClick={handleLinkClick}
+                                                    to="/orders"
+                                                    className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
                                                 >
-                                                    {"Đơn đã đặt"}
+                                                    Đơn đã đặt
                                                 </Link>
                                                 <button
-                                                    onClick={handleLogout}
-                                                    className="flex items-start w-full px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
+                                                    onClick={() => {
+                                                        handleLogout();
+                                                    }}
+                                                    className="flex items-start w-full px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
                                                 >
-                                                    {"Đăng xuất"}
+                                                    Đăng xuất
                                                 </button>
                                             </>
                                         )}
