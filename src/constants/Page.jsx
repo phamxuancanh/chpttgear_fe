@@ -14,6 +14,7 @@ import EmailVerifySuccessPage from "../pages/EmailVerifySuccessPage";
 import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ResetPassword";
 import Profile from "../pages/Profile";
+import NotFound from "../pages/NotFound";
 const HOME_PAGE = {
     name: "HOME_PAGE",
     displayName: "Trang chủ",
@@ -114,6 +115,12 @@ const PROFILE_PAGE = {
     path: "/profile",
     element: <Profile />,
 };
+const NOT_FOUND = {
+    name: "NOT_FOUND",
+    displayName: "Không tìm thấy",
+    path: "/*",
+    element: <NotFound />,
+};
 const Page = {
     LOGIN_PAGE,
     REGISTER_PAGE,
@@ -130,6 +137,7 @@ const Page = {
     ORDER_TRACKING_PAGE,
     ORDER_PAGE,
     DASHBOARD,
-    PROFILE_PAGE
+    PROFILE_PAGE,
+    NOT_FOUND,
 };
 export default Page;

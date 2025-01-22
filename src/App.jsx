@@ -7,9 +7,10 @@ import "react-toastify/dist/ReactToastify.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import AppRouter from "./routers/AppRouter";
 import { store, persistor } from "./redux/store";
+import { reload } from "./utils/functions"
 
+import ErrorBoundary from "./components/ErrorBoundary";
 const queryClient = new QueryClient();
-
 function App() {
   return (
     <Provider store={store}>
@@ -19,10 +20,12 @@ function App() {
             <title>CHPTT GEAR</title>
             <link rel="shortcut icon" href="./logo192.png" />
           </Helmet>
-          <AppRouter />
+          <ErrorBoundary onReset={reload}>
+            <AppRouter />
+          </ErrorBoundary>
           <ToastContainer
             position="bottom-right"
-            autoClose={2000} // Auto-close after 2 seconds
+            autoClose={2000}
             hideProgressBar={false}
             newestOnTop={false}
             closeOnClick
@@ -31,7 +34,7 @@ function App() {
             draggable
             pauseOnHover
             theme="light"
-            transition={Bounce} // Correctly use Bounce as a component
+            transition={Bounce}
           />
         </QueryClientProvider>
       </PersistGate>
