@@ -28,8 +28,8 @@ const authSlice = createSlice({
 const { login, logout, setToken, updateUser } = authSlice.actions;
 
 const persistConfig = {
-    key: 'root',
-    whitelist: ['auth'],
+    key: 'auth',
+    whitelist: ['isLoggedIn', 'user', 'token'],
     storage,
 };
 

@@ -10,6 +10,8 @@ import AvatarEditor from 'react-avatar-editor'
 import { MdAddPhotoAlternate } from "react-icons/md";
 import provinceData from "../assets/address/province.json";
 import Select from "react-select";
+import { useSelector } from 'react-redux';
+import { ClockLoader, PacmanLoader } from "react-spinners"
 
 export default function Profile() {
     const fileInputRef = useRef(null)
@@ -24,7 +26,7 @@ export default function Profile() {
     const [zoom, setZoom] = useState(1)
     const [rotate, setRotate] = useState(0)
     const cropRef = useRef(null)
-
+    const [loading, setLoading] = useState(false)
     const [listProvince, setListProvince] = useState([])
     const [listDistrict, setListDistrict] = useState([])
     const [listWard, setListWard] = useState([])
@@ -106,22 +108,23 @@ export default function Profile() {
         { id: 2, action: "Ordered Raspberry Pi 4", date: "2024-01-14", points: 250 },
         { id: 3, action: "Updated shipping address", date: "2024-01-13", points: 0 }
     ]);
-    const currentUserLS = getFromLocalStorage('persist:auth').currentUser;
+    // const currentUserLS = getFromLocalStorage('persist:auth').currentUser;
+    const userFromRedux = useSelector((state) => state.auth.user);
     const [user, setUser] = useState(null);
     useEffect(() => {
         const getUser = async () => {
             try {
-                const response = await findUserById(currentUserLS.id);
+                const response = await findUserById(userFromRedux.id);
                 setUser(response.data);
             } catch (error) {
                 console.error("Error fetching user data:", error);
             }
         };
 
-        if (currentUserLS) {
+        if (userFromRedux) {
             getUser();
         }
-    }, [currentUserLS?.id]);
+    }, [userFromRedux?.id]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -132,6 +135,7 @@ export default function Profile() {
     };
 
     const handleSetDefaultAddress = async (address) => {
+        setLoading(true);
 
         let addressArray = user?.address ? user.address.split(";;").map(item => item.trim()) : [];
 
@@ -142,7 +146,7 @@ export default function Profile() {
         }
         const updatedAddresses = [address, ...addressArray.filter(item => item !== address)];
         try {
-            const response = await editUserById(currentUserLS.id, { ...formData, address: updatedAddresses.join(";;") });
+            const response = await editUserById(userFromRedux.id, { ...formData, address: updatedAddresses.join(";;") });
             if (response.status === 200) {
                 toast.success("Set default address successfully");
                 setUser(response.data);
@@ -154,6 +158,8 @@ export default function Profile() {
         catch (error) {
             toast.error("Set default address failed");
         }
+        setLoading(false);
+
 
     };
     const handleCancelAddAddress = () => {
@@ -164,6 +170,7 @@ export default function Profile() {
         setFormData({ ...formData, address: "" });
     };
     const handleAddAddress = async (e) => {
+        setLoading(true);
         e.preventDefault();
         if (!selectedProvince.id || !selectedDistrict.id || !selectedWard.id || !formData.address) {
             toast.error("Please select province, district and ward and enter address");
@@ -196,7 +203,8 @@ export default function Profile() {
         const updatedAddresses = currentUserAddresses.join(";;");
         setFormData({ ...formData, address: updatedAddresses });
         try {
-            const response = await editUserById(currentUserLS.id, { ...formData, address: updatedAddresses });
+            setLoading(true);
+            const response = await editUserById(userFromRedux.id, { ...formData, address: updatedAddresses });
             if (response.status === 200) {
                 toast.success("Add address successfully");
                 setUser(response.data);
@@ -210,7 +218,8 @@ export default function Profile() {
             setSelectedProvince({});
             setSelectedDistrict({});
             setSelectedWard({});
-            setFormData({ ...formData, address: "" });
+            // setFormData({ ...formData, address: "" });
+            setLoading(false);
         }
     };
     
@@ -223,6 +232,7 @@ export default function Profile() {
         setAddressModalState(prevState => ({ ...prevState, [address]: false }));
     }
     const handleDeleteAddress = async (addressToDelete) => {
+        setLoading(true);
         let currentUserAddresses = user?.address ? user.address.split(";;").map(item => item.trim()) : [];
         if (currentUserAddresses.length === 1) {
             toast.error("You must have at least one address")
@@ -235,7 +245,7 @@ export default function Profile() {
             ...prevFormData,
             address: updatedAddresses
         }))
-        const response = await editUserById(currentUserLS.id, { ...formData, address: updatedAddresses });
+        const response = await editUserById(userFromRedux.id, { ...formData, address: updatedAddresses });
         if (response.status === 200) {
             toast.success("Delete address successfully");
             setUser(response.data);
@@ -243,12 +253,15 @@ export default function Profile() {
         } else {
             toast.error("Delete address failed");
         }
+        setLoading(false);
         handleCloseDeleteAdressModal(addressToDelete);
     };
 
     const handleSubmit = async (e) => {
+        setLoading(true);
         e.preventDefault();
-        const response = await editUserById(currentUserLS.id, formData);
+        console.log(formData);
+        const response = await editUserById(userFromRedux.id, formData);
         if (response.status === 200) {
             toast.success("Cập nhật thông tin thành công");
             setUser(response.data);
@@ -259,6 +272,7 @@ export default function Profile() {
         }
 
         setIsEditing(false);
+        setLoading(false);
     };
 
     const handlePasswordChange = async (e) => {
@@ -268,7 +282,8 @@ export default function Profile() {
             return;
         }
         try {
-            const response = await changePassword(currentUserLS.id, formData);
+            setLoading(true);
+            const response = await changePassword(userFromRedux.id, formData);
             if (response.status === 200) {
                 toast.success("Đổi mật khẩu thành công");
                 setUser(response.data);
@@ -283,6 +298,7 @@ export default function Profile() {
         }
         finally {
             setIsChangingPassword(false);
+            setLoading(false);
         }
     };
     const handleOpenChangeAVTModal = useCallback(() => {
@@ -325,6 +341,7 @@ export default function Profile() {
     };
     const handleSaveAVT = async () => {
         try {
+            setLoading(true);
             let dataUrl = user?.avatar || '';
             if (cropRef.current) {
                 const canvas = cropRef.current.getImage();
@@ -359,16 +376,37 @@ export default function Profile() {
             console.error('An error occurred while changing the avatar:', error);
             toast.error('An error occurred while changing the avatar');
         }
+        finally {
+            setLoading(false);
+        }
     };
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">
+            {loading && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black opacity-50">
+                    <div className="flex justify-center items-center w-full h-140 mt-20">
+                        <ClockLoader
+                            className='flex justify-center items-center w-full mt-20'
+                            color='#5EEAD4'
+                            cssOverride={{
+                                display: 'block',
+                                margin: '0 auto',
+                                borderColor: 'blue'
+                            }}
+                            loading
+                            speedMultiplier={3}
+                            size={40}
+                        />
+                    </div>
+                </div>
+            )}
             <div className="relative mb-8">
                 <div className="flex flex-col md:flex-row items-center gap-6">
                     <div className="relative group">
                         {user?.avatar && (
                             <img
-                                src={user.avatar}
+                                src={userFromRedux?.avatar}
                                 alt="Profile"
                                 className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg group-hover:opacity-80 transition-opacity"
                                 onError={(e) => {

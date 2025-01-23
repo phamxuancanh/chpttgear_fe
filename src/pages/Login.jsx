@@ -58,21 +58,19 @@ export default function Login() {
                 const response = await signIn(formData);
                 console.log("Login response:", response);
                 if (response.status === 200) {
-                    const currentUser = {
-                        accessToken: response.data.accessToken,
-                        currentUser: response.data.user
+                    const { accessToken, user } = response.data;
+                    const payload = {
+                        token: accessToken,
+                        user: user
                     }
-                    // console.log(currentUser)
-                    // setToLocalStorage('persist:auth', JSON.stringify(currentUser))
-                    dispatch(login(currentUser));
-                    // loginState(currentUser.currentUser)
-                    // dispatch(loginState(currentUser.currentUser))
-                    navigate(ROUTES.HOME_PAGE.path)
-                    toast.success('Đăng nhập thành công')
+                    console.log(payload)
+                    dispatch(login(payload)); // Dispatch action với payload đúng format
+                    navigate(ROUTES.HOME_PAGE.path);
+                    toast.success('Đăng nhập thành công');
                 }
             } catch (error) {
                 console.error("Login error:", error);
-                toast.error('Đăng nhập thất bại')
+                toast.error('Đăng nhập thất bại');
                 if (error.message.includes("Username")) {
                     setErrors({
                         username: "Username is incorrect",
@@ -92,12 +90,10 @@ export default function Login() {
         try {
             const result = await googleSignIn();
             if (result) {
-                const currentUser = {
-                    accessToken: result.accessToken,
-                    currentUser: result.currentUser
-                };
+                const { accessToken, currentUser } = result;
+                let userRole = currentUser?.key;
                 let data;
-                const userRole = currentUser?.currentUser.key;
+
                 if (userRole) {
                     try {
                         const decrypted = CryptoJS.AES.decrypt(
@@ -107,30 +103,32 @@ export default function Login() {
                         data = decrypted.toString(CryptoJS.enc.Utf8);
                     } catch (error) {
                         console.error('Decryption error:', error);
+                        // Xử lý lỗi giải mã nếu cần
                     }
                 }
-                console.log(currentUser);
-                // setToLocalStorage('persist:auth', JSON.stringify(currentUser)); 
-                dispatch(login(currentUser));
 
-                // dispatch(loginState(currentUser.currentUser));
-    
+                const payload = {
+                    token: accessToken,
+                    user: currentUser
+                };
+
+                console.log(payload); // Đảm bảo log payload chứ không phải currentUser
+
+                dispatch(login(payload)); // Dispatch action với payload đúng format
+
                 if (data === 'R1' || data === 'R2') {
                     navigate(ROUTES.DASHBOARD.path);
                 } else {
-                    navigate(ROUTES.DASHBOARD.path);
+                    navigate(ROUTES.HOME_PAGE.path);
                 }
-    
-                // socket.on('connection', () => {
-                //     console.log('User Connect');
-                // });
                 toast.success('Đăng nhập thành công');
             }
         } catch (error) {
             console.error(error);
+            toast.error('Đăng nhập thất bại'); // Thêm thông báo lỗi khi Google sign in thất bại
         }
     };
-    
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-800 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-6xl w-full flex bg-white rounded-2xl shadow-xl overflow-hidden">
