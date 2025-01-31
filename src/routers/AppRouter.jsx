@@ -112,7 +112,7 @@ const AppRouter = () => {
                 <Route
                     path={Page.LOGIN_PAGE.path}
                     element={
-                        <AuthRoute allowedRoles={['R1']}>
+                        <AuthRoute>
                             <Login />
                         </AuthRoute>
                     }

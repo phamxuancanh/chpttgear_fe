@@ -1,14 +1,18 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FiShoppingCart, FiUser, FiMenu, FiBell } from "react-icons/fi";
 import { FaPlus, FaMinus } from "react-icons/fa";
 import { IoMdArrowDropdown } from "react-icons/io";
 import LOGO from "../assets/logo.png"
 import { Link, useNavigate } from "react-router-dom";
 import { signOut } from "../routers/ApiRoutes";
-import { getFromLocalStorage, removeAllLocalStorage } from "../utils/functions";
 import ROUTES from '../constants/Page';
 import { toast } from "react-toastify";
+import { useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
+
+import { logout, setToken } from '../redux/authSlice';
 export default function Header() {
+    const dispatch = useDispatch();
     const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -18,10 +22,8 @@ export default function Header() {
     const [showCartDropdown, setShowCartDropdown] = useState(false);
     const [showUserDropdown, setShowUserDropdown] = useState(false);
     const [showBellDropdown, setShowBellDropdown] = useState(false);
-
-    const ls = getFromLocalStorage('persist:auth');
-    const currentUser = ls?.currentUser
-
+    const user = useSelector((state) => state.auth.user);
+    const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
     const products = [
         {
             name: "Microcontrollers",
@@ -98,7 +100,7 @@ export default function Header() {
     };
 
     const setDropdownUser = () => {
-        if (currentUser) {
+        if (user) {
             setShowProductDropdown(false)
             setShowCartDropdown(false)
             setShowUserDropdown(!showUserDropdown)
@@ -125,10 +127,12 @@ export default function Header() {
         setIsDropdownOpenUser(!isDropdownOpenUser)
     };
     const handleLogout = async () => {
+        dispatch(logout())
         try {
             const response = await signOut()
             if (response) {
-                removeAllLocalStorage()
+                
+                // removeAllLocalStorage()
                 navigate(ROUTES.LOGIN_PAGE.path)
                 toast.success('Đăng xuất thành công!')
             }
@@ -137,6 +141,14 @@ export default function Header() {
             console.error(error);
         }
     }
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            dispatch(setToken(token))
+        }
+    }, [dispatch])
+
     const handleLinkClick = () => {
         setShowProductDropdown(false);
         setShowBellDropdown(false);
@@ -295,13 +307,13 @@ export default function Header() {
                                     onClick={() => setDropdownUser()}
                                 >
                                     <div className="p-2 flex items-center space-x-2 border border-white rounded-lg">
-                                        {currentUser ? (
+                                        {isLoggedIn ? (
                                             <>
-                                                <img src={currentUser.avatar} alt="avatar" className="w-8 h-8 rounded-full" />
+                                                <img src={user.avatar} alt="avatar" className="w-8 h-8 rounded-full" />
                                                 <div>
                                                     <div>Xin chào</div>
                                                     <div className="font-bold">
-                                                        {currentUser.firstName || currentUser.lastName ? `${currentUser.firstName} ${currentUser.lastName}` : currentUser.username}
+                                                        {user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.username}
                                                     </div>
                                                 </div>
                                             </>
@@ -313,9 +325,9 @@ export default function Header() {
                                         )}
                                     </div>
                                 </button>
-                                {showUserDropdown && currentUser && (
+                                {showUserDropdown && user && (
                                     <div className="absolute z-50 right-0 mt-2 w-48 rounded-md shadow-lg bg-white text-black">
-                                        {!currentUser ? (
+                                        {!user ? (
                                             <>
                                                 <Link onClick={handleLinkClick}
                                                     to="/login"
@@ -452,12 +464,12 @@ export default function Header() {
                                     className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-900 transition duration-300 flex items-center justify-between"
                                 >
                                     <div className="p-2 flex items-center space-x-2 border border-white rounded-lg">
-                                        {currentUser ? (
+                                        {user ? (
                                             <>
-                                                <img src={currentUser.avatar} alt="avatar" className="w-8 h-8 rounded-full" />
+                                                <img src={user.avatar} alt="avatar" className="w-8 h-8 rounded-full" />
                                                 <div>
                                                     <div>Xin chào</div>
-                                                    <div className="font-bold">{currentUser.firstName} {currentUser.lastName}</div>
+                                                    <div className="font-bold">{user.firstName} {user.lastName}</div>
                                                 </div>
                                             </>
                                         ) : (
@@ -472,7 +484,7 @@ export default function Header() {
 
                                 {isDropdownOpenUser && (
                                     <div className="pl-4 space-y-1">
-                                        {!currentUser ? (
+                                        {!user ? (
                                             <>
                                                 <Link
                                                     onClick={handleLinkClick}
