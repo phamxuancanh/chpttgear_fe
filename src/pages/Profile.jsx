@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { FiEdit2, FiMail, FiPhone, FiMapPin, FiCalendar, FiActivity, FiLock, FiStar, FiHome } from "react-icons/fi";
-import { getFromLocalStorage } from "../utils/functions";
+import { FiEdit2, FiMail, FiPhone, FiCalendar, FiActivity, FiLock, FiStar, FiHome } from "react-icons/fi";
 import { changeAVT, changePassword, editUserById, findUserById } from "../routers/ApiRoutes";
 import { toast } from "react-toastify";
 import ChoiceModal from "../components/Modal/ChoiceModal";
@@ -11,7 +10,10 @@ import { MdAddPhotoAlternate } from "react-icons/md";
 import provinceData from "../assets/address/province.json";
 import Select from "react-select";
 import { useSelector } from 'react-redux';
-import { ClockLoader, PacmanLoader } from "react-spinners"
+import { ClockLoader } from "react-spinners"
+import { useDispatch } from 'react-redux';
+import { updateUser } from "../redux/authSlice";
+
 
 export default function Profile() {
     const fileInputRef = useRef(null)
@@ -33,6 +35,10 @@ export default function Profile() {
     const [selectedProvince, setSelectedProvince] = useState({});
     const [selectedDistrict, setSelectedDistrict] = useState({});
     const [selectedWard, setSelectedWard] = useState({});
+    const dispatch = useDispatch();
+    const userFromRedux = useSelector((state) => state.auth.user);
+    // const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+    const [user, setUser] = useState(null);
 
     useEffect(() => {
         const provinces = provinceData.map((province) => ({
@@ -108,9 +114,6 @@ export default function Profile() {
         { id: 2, action: "Ordered Raspberry Pi 4", date: "2024-01-14", points: 250 },
         { id: 3, action: "Updated shipping address", date: "2024-01-13", points: 0 }
     ]);
-    // const currentUserLS = getFromLocalStorage('persist:auth').currentUser;
-    const userFromRedux = useSelector((state) => state.auth.user);
-    const [user, setUser] = useState(null);
     useEffect(() => {
         const getUser = async () => {
             try {
@@ -136,9 +139,7 @@ export default function Profile() {
 
     const handleSetDefaultAddress = async (address) => {
         setLoading(true);
-
         let addressArray = user?.address ? user.address.split(";;").map(item => item.trim()) : [];
-
         const addressIndex = addressArray.indexOf(address);
         if (addressIndex === -1) {
             console.error("Address not found in the list.");
@@ -151,6 +152,7 @@ export default function Profile() {
                 toast.success("Set default address successfully");
                 setUser(response.data);
                 setFormData(response.data);
+                dispatch(updateUser(response.data));
             } else {
                 toast.error("Set default address failed");
             }
@@ -159,8 +161,6 @@ export default function Profile() {
             toast.error("Set default address failed");
         }
         setLoading(false);
-
-
     };
     const handleCancelAddAddress = () => {
         setIsAddingAddress(false);
@@ -208,6 +208,7 @@ export default function Profile() {
             if (response.status === 200) {
                 toast.success("Add address successfully");
                 setUser(response.data);
+                dispatch(updateUser(response.data));
             } else {
                 toast.error("Add address failed");
             }
@@ -218,11 +219,10 @@ export default function Profile() {
             setSelectedProvince({});
             setSelectedDistrict({});
             setSelectedWard({});
-            // setFormData({ ...formData, address: "" });
             setLoading(false);
         }
     };
-    
+
 
     const handleOpenDeleteAdressModal = (address) => {
         setAddressModalState(prevState => ({ ...prevState, [address]: true }));
@@ -257,46 +257,98 @@ export default function Profile() {
         handleCloseDeleteAdressModal(addressToDelete);
     };
 
+    const validateForm = () => {
+        const nameRegex = /^[A-Za-zÀ-Ỹà-ỹ\s]{2,50}$/;
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        const phoneRegex = /^\d{9,15}$/;
+        const firstName = formData?.firstName ?? user?.firstName ?? "";
+        const lastName = formData?.lastName ?? user?.lastName ?? "";
+        const email = formData?.email ?? user?.email ?? "";
+        const phone = formData?.phone ?? user?.phone ?? "";
+        const birthOfDate = formData?.birthOfDate ?? user?.birthOfDate ?? "";
+    
+        if (!firstName || !nameRegex.test(firstName)) {
+            toast.error("Tên không hợp lệ");
+            return false;
+        }
+        if (!lastName || !nameRegex.test(lastName)) {
+            toast.error("Họ không hợp lệ");
+            return false;
+        }
+        if (!email || !emailRegex.test(email)) {
+            toast.error("Email không hợp lệ");
+            return false;
+        }
+        if (!phone || !phoneRegex.test(phone)) {
+            toast.error("Số điện thoại không hợp lệ");
+            return false;
+        }
+        if (!birthOfDate) {
+            toast.error("Vui lòng nhập ngày sinh");
+            return false;
+        }
+    
+        const birthYear = new Date(birthOfDate).getFullYear();
+        const currentYear = new Date().getFullYear();
+        if (currentYear - birthYear < 13) {
+            toast.error("Bạn phải từ 13 tuổi trở lên");
+            return false;
+        }
+    
+        return true;
+    };
+    
     const handleSubmit = async (e) => {
-        setLoading(true);
         e.preventDefault();
+        if (!validateForm()) return;
+    
+        setLoading(true);
         console.log(formData);
         const response = await editUserById(userFromRedux.id, formData);
         if (response.status === 200) {
             toast.success("Cập nhật thông tin thành công");
             setUser(response.data);
             setFormData(response.data);
-        }
-        else {
+            dispatch(updateUser(response.data));
+        } else {
             toast.error("Cập nhật thông tin thất bại");
         }
-
         setIsEditing(false);
         setLoading(false);
     };
-
-    const handlePasswordChange = async (e) => {
-        e.preventDefault();
+    
+    const validatePassword = () => {
+        if (!formData.newPassword || formData.newPassword.trim().length < 6) {
+            toast.error("Mật khẩu mới phải có ít nhất 6 ký tự");
+            return false;
+        }
         if (formData.newPassword !== formData.confirmPassword) {
             toast.error("Mật khẩu mới và xác nhận mật khẩu không khớp");
-            return;
+            return false;
         }
+        if (formData.newPassword === formData.currentPassword) {
+            toast.error("Mật khẩu mới không được trùng với mật khẩu hiện tại");
+            return false;
+        }
+        return true;
+    };
+    
+    const handlePasswordChange = async (e) => {
+        e.preventDefault();
+        if (!validatePassword()) return;
+    
         try {
             setLoading(true);
             const response = await changePassword(userFromRedux.id, formData);
             if (response.status === 200) {
                 toast.success("Đổi mật khẩu thành công");
-                setUser(response.data);
-                setFormData(response.data);
-            }
-            else {
+                setFormData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+            } else {
                 toast.error("Đổi mật khẩu thất bại");
             }
-        }
-        catch (error) {
+        } catch (error) {
             toast.error("Đổi mật khẩu thất bại");
-        }
-        finally {
+        } finally {
             setIsChangingPassword(false);
             setLoading(false);
         }
@@ -360,9 +412,11 @@ export default function Profile() {
                 }
 
                 if (response.status === 200) {
+                    console.log(response.data);
                     toast.success('Đổi ảnh đại diện thành công');
                     setImageSrc(user?.avatar || '');
-                    setUser(response.data);
+                    setUser({ ...user, avatar: response.data.avatar });
+                    dispatch(updateUser({ ...userFromRedux, avatar: response.data.avatar }));
                     setZoomModalAVTOpen(false);
                     setZoom(1);
                     setRotate(0);
@@ -380,7 +434,11 @@ export default function Profile() {
             setLoading(false);
         }
     };
-
+    const formatDate = (date) => {
+        if (!date) return '';
+        const d = new Date(date);
+        return d.toISOString().split('T')[0];
+    };
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">
             {loading && (
@@ -408,7 +466,7 @@ export default function Profile() {
                             <img
                                 src={userFromRedux?.avatar}
                                 alt="Profile"
-                                className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg group-hover:opacity-80 transition-opacity"
+                                className="w-32 h-32 rounded-full object-cover border-4 border-green-400 shadow-lg group-hover:opacity-80 transition-opacity"
                                 onError={(e) => {
                                     e.target.src = "https://images.unsplash.com/photo-1633332755192-727a05c4013d";
                                 }}
@@ -443,7 +501,7 @@ export default function Profile() {
                                         type="text"
                                         id="firstName"
                                         name="firstName"
-                                        value={formData?.firstName}
+                                        value={formData?.firstName ?? user?.firstName}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         required
@@ -455,7 +513,7 @@ export default function Profile() {
                                         type="text"
                                         id="lastName"
                                         name="lastName"
-                                        value={formData?.lastName}
+                                        value={formData?.lastName ?? user?.lastName}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         required
@@ -467,7 +525,7 @@ export default function Profile() {
                                         type="email"
                                         id="email"
                                         name="email"
-                                        value={formData?.email}
+                                        value={formData?.email ?? user?.email}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         required
@@ -479,7 +537,7 @@ export default function Profile() {
                                         type="tel"
                                         id="phone"
                                         name="phone"
-                                        value={formData?.phone}
+                                        value={formData?.phone ?? user?.phone}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         required
@@ -491,7 +549,7 @@ export default function Profile() {
                                         type="date"
                                         id="birthOfDate"
                                         name="birthOfDate"
-                                        value={formData?.birthOfDate}
+                                        value={formatDate(formData?.birthOfDate) || formatDate(user?.birthOfDate)}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         required
@@ -516,10 +574,10 @@ export default function Profile() {
                         </form>
                     ) : isChangingPassword ? (
                         <form onSubmit={handlePasswordChange} className="bg-white rounded-xl shadow-md p-6 mb-8">
-                            <h2 className="text-2xl font-semibold mb-6">Change Password</h2>
+                            <h2 className="text-2xl font-semibold mb-6">Đổi mật khẩu</h2>
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-gray-700 mb-2" htmlFor="currentPassword">Current Password</label>
+                                    <label className="block text-gray-700 mb-2" htmlFor="currentPassword">Mật khẩu hiện tại</label>
                                     <input
                                         type="password"
                                         id="oldPassword"
@@ -530,7 +588,7 @@ export default function Profile() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-gray-700 mb-2" htmlFor="newPassword">New Password</label>
+                                    <label className="block text-gray-700 mb-2" htmlFor="newPassword">Mật khẩu mới</label>
                                     <input
                                         type="password"
                                         id="newPassword"
@@ -541,7 +599,7 @@ export default function Profile() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-gray-700 mb-2" htmlFor="confirmPassword">Confirm New Password</label>
+                                    <label className="block text-gray-700 mb-2" htmlFor="confirmPassword">Xác nhận mật khẩu</label>
                                     <input
                                         type="password"
                                         id="confirmPassword"
@@ -572,7 +630,7 @@ export default function Profile() {
                     ) : (
                         <>
                             <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-                                <h2 className="text-2xl font-semibold mb-6">Profile Details</h2>
+                                <h2 className="text-2xl font-semibold mb-6">Thông tin cá nhân</h2>
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-4">
                                         <FiMail className="text-gray-500 text-xl" />
@@ -584,14 +642,14 @@ export default function Profile() {
                                     <div className="flex items-center gap-4">
                                         <FiPhone className="text-gray-500 text-xl" />
                                         <div>
-                                            <p className="text-sm text-gray-500">Phone</p>
+                                            <p className="text-sm text-gray-500">Số điện thoại</p>
                                             <p className="text-gray-800">{user?.phone || "Chưa cập nhật"}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <FiCalendar className="text-gray-500 text-xl" />
                                         <div>
-                                            <p className="text-sm text-gray-500">Date of Birth</p>
+                                            <p className="text-sm text-gray-500">Ngày sinh</p>
                                             <p className="text-gray-800">
                                                 {user?.birthOfDate ? new Date(user.birthOfDate).toLocaleDateString() : "Chưa cập nhật"}
                                             </p>
@@ -601,9 +659,9 @@ export default function Profile() {
                             </div>
                             <div className="bg-white rounded-xl shadow-md p-6 mb-8">
                                 <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-2xl font-semibold">Shipping Addresses</h2>
+                                    <h2 className="text-2xl font-semibold">Địa chỉ giao hàng</h2>
                                     <button className="text-blue-600 hover:text-blue-700" onClick={() => setIsAddingAddress(true)}>
-                                        + Add New Address
+                                        + Thêm địa chỉ mới
                                     </button>
                                 </div>
                                 {isAddingAddress && (
@@ -611,8 +669,8 @@ export default function Profile() {
                                         <div>
                                             <div className="flex items-center space-x-3 mb-2">
                                                 <label className="block text-gray-700 font-bold" htmlFor="address">New Address</label>
-                                                <button className="text-blue-600 hover:text-blue-700" onClick={(e) => handleAddAddress(e)}>Save</button>
-                                                <button className="text-red-600 hover:text-red-700" onClick={handleCancelAddAddress}>Cancel</button>
+                                                <button className="text-blue-600 hover:text-blue-700" onClick={(e) => handleAddAddress(e)}>Lưu</button>
+                                                <button className="text-red-600 hover:text-red-700" onClick={handleCancelAddAddress}>Hủy</button>
                                             </div>
 
                                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -699,7 +757,7 @@ export default function Profile() {
                                                 <div className="flex items-center gap-3">
                                                     {/* Nếu là phần tử đầu tiên, hiển thị "Default Address" */}
                                                     {index === 0 ? (
-                                                        <span className="text-sm text-green-600 font-semibold">Default Address</span>
+                                                        <span className="text-sm text-green-600 font-semibold">Địa chỉ mặc định</span>
                                                     ) : (
                                                         <>
                                                             {/* Hiển thị các nút cho các phần tử khác */}
@@ -707,13 +765,13 @@ export default function Profile() {
                                                                 onClick={() => handleSetDefaultAddress(address)}
                                                                 className="text-sm text-blue-600 hover:text-blue-700"
                                                             >
-                                                                Set as Default
+                                                                Đặt làm mặc định
                                                             </button>
                                                             <button
                                                                 className="text-sm text-red-600 hover:text-red-700"
                                                                 onClick={() => handleOpenDeleteAdressModal(address)}
                                                             >
-                                                                Delete
+                                                                Xóa
                                                             </button>
                                                         </>
                                                     )}
@@ -724,7 +782,7 @@ export default function Profile() {
                                                     >
                                                         <div className="text-sm mb-5">
                                                             <div className="space-y-2">
-                                                                <p className="text-gray-500 font-bold">Delete Address {address}</p>
+                                                                <p className="text-gray-500 font-bold">Xóa địa chỉ {address}</p>
                                                             </div>
                                                         </div>
                                                         <div className="flex flex-wrap justify-end space-x-2">
@@ -733,13 +791,13 @@ export default function Profile() {
                                                                     className="flex-1 border rounded-lg btn-sm border-slate-300 hover:border-slate-400 text-slate-600 p-2 font-bold text-sm"
                                                                     onClick={(e) => { e.stopPropagation(); handleCloseDeleteAdressModal(address) }}
                                                                 >
-                                                                    Cancel
+                                                                    Hủy
                                                                 </button>
                                                                 <button
                                                                     className="flex-1 border rounded-lg btn-sm bg-indigo-500 hover:bg-indigo-600 text-white p-2 font-bold text-sm"
                                                                     onClick={() => handleDeleteAddress(address)}
                                                                 >
-                                                                    Delete
+                                                                    Xóa
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -748,8 +806,6 @@ export default function Profile() {
                                             </div>
                                         </div>
                                     ))}
-
-
                                 </div>
                             </div>
                         </>
@@ -758,7 +814,7 @@ export default function Profile() {
                 <div className="lg:col-span-1">
                     <div className="bg-white rounded-xl shadow-md p-6 mb-8">
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-semibold">Quick Actions</h2>
+                            <h2 className="text-xl font-semibold">Hoạt động</h2>
                         </div>
                         <div className="space-y-4">
                             <button
@@ -766,7 +822,7 @@ export default function Profile() {
                                 className="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                             >
                                 <FiEdit2 />
-                                Edit Profile
+                                Chỉnh sửa trang cá nhân
                             </button>
                             <button
                                 onClick={() => {
@@ -779,14 +835,14 @@ export default function Profile() {
                                 className="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                             >
                                 <FiLock />
-                                Change Password
+                                Đổi mật khẩu
                             </button>
                         </div>
                     </div>
                     <div className="bg-white rounded-xl shadow-md p-6">
                         <div className="flex items-center gap-2 mb-6">
                             <FiActivity className="text-gray-500 text-xl" />
-                            <h2 className="text-2xl font-semibold">Recent Activities</h2>
+                            <h2 className="text-2xl font-semibold">Hoạt động gần đây</h2>
                         </div>
                         <div className="space-y-4">
                             {activities.map((activity) => (
@@ -794,7 +850,7 @@ export default function Profile() {
                                     <div>
                                         <span className="text-gray-800">{activity.action}</span>
                                         {activity.points > 0 && (
-                                            <span className="text-sm text-green-600 block">+{activity.points} points</span>
+                                            <span className="text-sm text-green-600 block">+{activity.points} điểm</span>
                                         )}
                                     </div>
                                     <span className="text-sm text-gray-500">{activity.date}</span>
@@ -814,7 +870,7 @@ export default function Profile() {
                         <div className='rounded-full bg-sky-700 w-32 h-32 flex items-center justify-center cursor-pointer'>
                             <MdAddPhotoAlternate className='text-slate-300 cursor-pointer' fontSize='large' />
                         </div>
-                        <div className='font-bold hover:text-gray-700 cursor-pointer'>Upload Image</div>
+                        <div className='font-bold hover:text-gray-700 cursor-pointer'>Tải ảnh lên</div>
                     </div>
                     <input
                         type='file'
@@ -831,6 +887,24 @@ export default function Profile() {
                 modalOpen={zoomModalAVTOpen}
                 setModalOpen={setZoomModalAVTOpen}
             >
+                {loading && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black opacity-50">
+                        <div className="flex justify-center items-center w-full h-140 mt-20">
+                            <ClockLoader
+                                className='flex justify-center items-center w-full mt-20'
+                                color='#5EEAD4'
+                                cssOverride={{
+                                    display: 'block',
+                                    margin: '0 auto',
+                                    borderColor: 'blue'
+                                }}
+                                loading
+                                speedMultiplier={3}
+                                size={40}
+                            />
+                        </div>
+                    </div>
+                )}
                 <>
                     <AvatarEditor
                         ref={cropRef}

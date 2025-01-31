@@ -1,11 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FiShoppingCart, FiUser, FiMenu, FiBell } from "react-icons/fi";
 import { FaPlus, FaMinus } from "react-icons/fa";
 import { IoMdArrowDropdown } from "react-icons/io";
 import LOGO from "../assets/logo.png"
 import { Link, useNavigate } from "react-router-dom";
 import { signOut } from "../routers/ApiRoutes";
-import { getFromLocalStorage, removeAllLocalStorage } from "../utils/functions";
 import ROUTES from '../constants/Page';
 import { toast } from "react-toastify";
 import { useDispatch } from 'react-redux';
@@ -23,9 +22,6 @@ export default function Header() {
     const [showCartDropdown, setShowCartDropdown] = useState(false);
     const [showUserDropdown, setShowUserDropdown] = useState(false);
     const [showBellDropdown, setShowBellDropdown] = useState(false);
-
-    // const ls = getFromLocalStorage('persist:auth');
-    // const currentUser = ls?.currentUser
     const user = useSelector((state) => state.auth.user);
     const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
     const products = [

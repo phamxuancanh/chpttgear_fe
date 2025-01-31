@@ -11,10 +11,6 @@ const AuthRoute = ({ children, allowedRoles }) => {
   const location = useLocation();
   const authen = getFromLocalStorage('persist:auth');
 
-  //  const isAuthenticated = useMemo(() => {
-  //     console.log(authen, 'authen');
-  //    return authen?.isLoggedIn;
-  //  }, [authen?.isLoggedIn]);
   const isAuthenticated = authen?.isLoggedIn;
   const publicRoutes = [
     ROUTES.LOGIN_PAGE.path,

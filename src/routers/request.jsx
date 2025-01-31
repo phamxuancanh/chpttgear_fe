@@ -1,9 +1,11 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import axios from 'axios'
-import { getFromLocalStorage, setToLocalStorage, removeAllLocalStorage, reload } from '../utils/functions'
+import { getFromLocalStorage, removeAllLocalStorage, reload } from '../utils/functions'
 import { refresh } from './ApiRoutes'
 import { jwtDecode } from 'jwt-decode'
-import { toast } from 'react-toastify'
 import Swal from 'sweetalert2'
+import { logout, setToken } from '../redux/authSlice'
+import { store } from '../redux/store'; // Import your Redux store
 const gatewayURL = 'http://localhost:6868/api/v1'
 export const requestWithJwt = axios.create({
   baseURL: gatewayURL,
@@ -23,45 +25,94 @@ const checkTokenValidity = (token) => {
     return false
   }
 }
-
 const handleTokenRefresh = async () => {
-  console.log('Refreshing token')
-  const tokens = getFromLocalStorage('persist:auth')
-  const currentUser = tokens?.currentUser
-  console.log(tokens)
-  if (tokens?.accessToken && checkTokenValidity(tokens.accessToken)) {
-    return tokens.accessToken
-  }
-  if (!tokens) {
-    return null
-  }
-  try {
-    console.log('Refreshing token2')
-    const response = await refresh()
-    const newAccessToken = response.data.accessToken
-    const updatedTokens = {
-      currentUser: currentUser,
-      accessToken: newAccessToken
-    }
+  console.log('Refreshing token');
+  const persistedAuthString = getFromLocalStorage('persist:auth'); // Retrieve persisted data
 
-    setToLocalStorage('persist:auth', JSON.stringify(updatedTokens))
-    return newAccessToken
-  } catch (error) {
-    Swal.fire({
-      title: 'Warning',
-      text: 'Your session has expired. Please log in again.',
-      icon: 'warning',
-      confirmButtonText: 'OK',
-      allowOutsideClick: false
-    }).then((result) => {
-      if (result.isConfirmed) {
-        removeAllLocalStorage()
-        reload()
-      }
-    })
-    return null
+  if (!persistedAuthString) {
+      console.log('No persisted auth data found');
+      return null;
   }
-}
+
+  try {
+      const persistedAuth = (persistedAuthString)
+      const isLoggedIn = persistedAuth.isLoggedIn === 'true';
+      const user = JSON.parse(persistedAuth.user); // Parse user JSON string
+      console.log('Persisted User:', user);
+      console.log('Is logged in:', isLoggedIn);
+      const token = JSON.parse(persistedAuth.token); // Parse token JSON string (removes double quotes)
+      console.log('Persisted Auth:', persistedAuth);
+
+      if (token && checkTokenValidity(token)) {
+          console.log('Token is valid')
+          return token;
+      }
+
+      console.log('Refreshing token...');
+      const response = await refresh();
+      const newAccessToken = response.data.accessToken;
+      // Dispatch the setToken action to update Redux state with new token
+      store.dispatch(setToken(newAccessToken));
+
+      console.log('New access token:', newAccessToken);
+      return newAccessToken;
+  } catch (error) {
+      console.error('Token refresh failed:', error);
+      Swal.fire({
+          title: 'Warning',
+          text: 'Your session has expired. Please log in again.',
+          icon: 'warning',
+          confirmButtonText: 'OK',
+          allowOutsideClick: false
+      }).then((result) => {
+          if (result.isConfirmed) {
+              store.dispatch(logout()); // Clear auth state
+              removeAllLocalStorage();
+              window.location.reload()
+          }
+      });
+      return null;
+  }
+};
+
+// const handleTokenRefresh = async () => {
+//   console.log('Refreshing token')
+//   const tokens = getFromLocalStorage('persist:auth')
+//   const currentUser = tokens?.currentUser
+//   console.log(tokens)
+//   if (tokens?.accessToken && checkTokenValidity(tokens.accessToken)) {
+//     return tokens.accessToken
+//   }
+//   if (!tokens) {
+//     return null
+//   }
+//   try {
+//     console.log('Refreshing token2')
+//     const response = await refresh()
+//     const newAccessToken = response.data.accessToken
+//     const updatedTokens = {
+//       currentUser: currentUser,
+//       accessToken: newAccessToken
+//     }
+//     console.log(updatedTokens)
+//     // setToLocalStorage('persist:auth', JSON.stringify(updatedTokens))
+//     return newAccessToken
+//   } catch (error) {
+//     Swal.fire({
+//       title: 'Warning',
+//       text: 'Your session has expired. Please log in again.',
+//       icon: 'warning',
+//       confirmButtonText: 'OK',
+//       allowOutsideClick: false
+//     }).then((result) => {
+//       if (result.isConfirmed) {
+//         removeAllLocalStorage()
+//         reload()
+//       }
+//     })
+//     return null
+//   }
+// }
 
 requestWithJwt.interceptors.request.use(async (config) => {
   const persistAuthData = getFromLocalStorage('persist:auth')
