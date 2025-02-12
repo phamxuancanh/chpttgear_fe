@@ -266,7 +266,7 @@ export default function Profile() {
         const email = formData?.email ?? user?.email ?? "";
         const phone = formData?.phone ?? user?.phone ?? "";
         const birthOfDate = formData?.birthOfDate ?? user?.birthOfDate ?? "";
-    
+
         if (!firstName || !nameRegex.test(firstName)) {
             toast.error("Tên không hợp lệ");
             return false;
@@ -287,21 +287,21 @@ export default function Profile() {
             toast.error("Vui lòng nhập ngày sinh");
             return false;
         }
-    
+
         const birthYear = new Date(birthOfDate).getFullYear();
         const currentYear = new Date().getFullYear();
         if (currentYear - birthYear < 13) {
             toast.error("Bạn phải từ 13 tuổi trở lên");
             return false;
         }
-    
+
         return true;
     };
-    
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validateForm()) return;
-    
+
         setLoading(true);
         console.log(formData);
         const response = await editUserById(userFromRedux.id, formData);
@@ -316,7 +316,7 @@ export default function Profile() {
         setIsEditing(false);
         setLoading(false);
     };
-    
+
     const validatePassword = () => {
         if (!formData.newPassword || formData.newPassword.trim().length < 6) {
             toast.error("Mật khẩu mới phải có ít nhất 6 ký tự");
@@ -332,11 +332,11 @@ export default function Profile() {
         }
         return true;
     };
-    
+
     const handlePasswordChange = async (e) => {
         e.preventDefault();
         if (!validatePassword()) return;
-    
+
         try {
             setLoading(true);
             const response = await changePassword(userFromRedux.id, formData);
@@ -669,11 +669,11 @@ export default function Profile() {
                                         <div>
                                             <div className="flex items-center space-x-3 mb-2">
                                                 <label className="block text-gray-700 font-bold" htmlFor="address">New Address</label>
-                                                <button className="text-blue-600 hover:text-blue-700" onClick={(e) => handleAddAddress(e)}>Lưu</button>
-                                                <button className="text-red-600 hover:text-red-700" onClick={handleCancelAddAddress}>Hủy</button>
+                                                <button className="text-white hover:bg-blue-700 bg-blue-600 px-3 py-1 rounded-lg" onClick={(e) => handleAddAddress(e)}>Lưu</button>
+                                                <button className="text-white hover:bg-red-700 bg-red-600 px-3 py-1 rounded-lg" onClick={handleCancelAddAddress}>Hủy</button>
                                             </div>
 
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
                                                 {/* Province Dropdown */}
                                                 <div className="col-span-1">
                                                     <Select

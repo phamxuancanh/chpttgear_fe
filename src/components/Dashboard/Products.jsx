@@ -1,8 +1,27 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FiHome, FiUsers, FiBox, FiShoppingCart, FiEdit, FiTrash2, FiLogOut, FiPackage, FiEye, FiX } from "react-icons/fi";
-
+import { MdWarehouse } from "react-icons/md";
+import { FiChevronDown } from "react-icons/fi";
+import { getAllInventory } from "../../routers/ApiRoutes";
 
 export default function Products() {
+    const [selectedInventory, setSelectedInventory] = useState(null);
+    const [searchQuery1, setSearchQuery1] = useState("");
+    const [isOpen, setIsOpen] = useState(false);
+    const [inventorys, setInventorys] = useState([])
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const res = await getAllInventory();
+                console.log(res.data)
+                setInventorys(res.data)
+            } catch (error) {
+                console.error("Error fetching inventory:", error);
+            }
+        };
+        fetchData();
+    }, []);
     const [showProductModal, setShowProductModal] = useState(false);
     const [productForm, setProductForm] = useState({
         name: "",
@@ -54,6 +73,45 @@ export default function Products() {
                 title="Add/Edit Product"
             >
                 <form onSubmit={handleProductSubmit} className="space-y-4">
+                    <div className="mb-8">
+                        <label className="block text-sm font-medium mb-2">Chọn Kho</label>
+                        <div className="relative">
+                            <button
+                                onClick={() => setIsOpen(!isOpen)}
+                                className="w-full p-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white flex justify-between items-center"
+                            >
+                                <span className="flex items-center">
+                                    {selectedInventory ? (
+                                        <>
+                                            <MdWarehouse className="mr-2 text-blue-600" />
+                                            Tên kho: {selectedInventory.name} - Địa chỉ: {selectedInventory.address}
+                                        </>
+                                    ) : (
+                                        "Select inventory..."
+                                    )}
+                                </span>
+                                <FiChevronDown className={`transition-transform duration-200 ${isOpen ? "transform rotate-180" : ""}`} />
+                            </button>
+                            {isOpen && (
+                                <div className="absolute w-full mt-1 max-h-48 overflow-y-auto bg-white border rounded-lg shadow-lg z-10">
+                                    {inventorys.map((inventory) => (
+                                        <button
+                                            key={inventory.inventory_id}
+                                            className={`w-full text-left px-4 py-2 hover:bg-blue-50 flex items-center ${selectedInventory?.inventory_id === inventory.inventory_id ? "bg-blue-100" : ""
+                                                }`}
+                                            onClick={() => {
+                                                setSelectedInventory(inventory);
+                                                setIsOpen(false);
+                                            }}
+                                        >
+                                            <MdWarehouse className="mr-2 text-blue-600" />
+                                            Tên kho: {inventory.name} - Địa chỉ: {inventory.address}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Name</label>
                         <input

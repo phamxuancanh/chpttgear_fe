@@ -31,7 +31,7 @@ export const findUserById = async (id) => {
     return await requestWithJwt.get(`/users/${id}`);
 };
 export const editUserById = async (id, payload) => {
-    return await requestWithJwt.put(`/users/${id}`, {data: payload});
+    return await requestWithJwt.put(`/users/${id}`, { data: payload });
 };
 export const refresh = async () => {
     return await requestWithJwt.post('/users/refreshToken', {}, { withCredentials: true });
@@ -78,7 +78,7 @@ export const googleSignIn = async () => {
         const result = await signInWithPopup(auth, provider);
         const token = await result.user.getIdToken();
         console.log('Token:', token);
-        const response = await fetch('http://localhost:6868/api/v1/users/google', { 
+        const response = await fetch('http://localhost:6868/api/v1/users/google', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -119,7 +119,9 @@ export const googleSignIn = async () => {
 // productService
 
 // inventoryService
-
+export const getAllInventory = async () => {
+    return await requestWithJwt.get(`/inventory`);
+};
 // cartService
 
 // orderService
