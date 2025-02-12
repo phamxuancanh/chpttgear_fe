@@ -131,7 +131,7 @@ export default function Header() {
         try {
             const response = await signOut()
             if (response) {
-                
+
                 // removeAllLocalStorage()
                 navigate(ROUTES.LOGIN_PAGE.path)
                 toast.success('Đăng xuất thành công!')
@@ -291,7 +291,7 @@ export default function Header() {
                                             ))}
                                             <div className="w-full flex justify-center items-center ">
                                                 <Link to="/cart" onClick={handleLinkClick}>
-                                                    <button className=" bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600">
+                                                    <button className=" bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 mt-3">
                                                         Xem giỏ hàng
                                                     </button>
                                                 </Link>
