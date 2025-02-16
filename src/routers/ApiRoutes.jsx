@@ -117,7 +117,15 @@ export const googleSignIn = async () => {
 
 
 // productService
-
+export const findAllCategory = async () => {
+    return await requestWithJwt.get(`/products/categories/findAllCategories`);
+};
+export const searchProducts = async ({ params } = {}) => {
+    return await requestWithJwt.get('/products/products/searchProducts', { params });
+};
+export const getSuggestions = async (search) => {
+    return await requestWithJwt.get('/products/products/getSuggestions', { params: { search } });
+};
 // inventoryService
 
 // cartService

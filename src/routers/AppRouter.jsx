@@ -90,7 +90,10 @@ const NotFound = loadable(async () => {
     const module = await import('../pages/NotFound');
     return module;
 }, { fallback: <Loading /> });
-
+const SearchResults = loadable(async () => {
+    const module = await import('../pages/SearchResult');
+    return module;
+}, { fallback: <Loading /> });
 
 const ChatButtonWrapper = () => {
     const location = useLocation();
@@ -251,6 +254,16 @@ const AppRouter = () => {
                         <AuthRoute>
                             <Layout>
                                 <Profile />
+                            </Layout>
+                        </AuthRoute>
+                    }
+                />
+                <Route
+                    path={Page.SEARCH_RESULTS.path}
+                    element={
+                        <AuthRoute>
+                            <Layout>
+                                <SearchResults />
                             </Layout>
                         </AuthRoute>
                     }
