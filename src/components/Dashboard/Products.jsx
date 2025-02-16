@@ -1,34 +1,12 @@
-import { useEffect, useState } from "react";
-import { FiHome, FiUsers, FiBox, FiShoppingCart, FiEdit, FiTrash2, FiLogOut, FiPackage, FiEye, FiX } from "react-icons/fi";
-import { MdWarehouse } from "react-icons/md";
-import { FiChevronDown } from "react-icons/fi";
-import { getAllInventory } from "../../routers/ApiRoutes";
+import { useState } from "react";
+import { FiEdit } from "react-icons/fi";
+
+import AddProductModal from "../Modal/AddProductModal";
 
 export default function Products() {
-    const [selectedInventory, setSelectedInventory] = useState(null);
-    const [searchQuery1, setSearchQuery1] = useState("");
-    const [isOpen, setIsOpen] = useState(false);
-    const [inventorys, setInventorys] = useState([])
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const res = await getAllInventory();
-                console.log(res.data)
-                setInventorys(res.data)
-            } catch (error) {
-                console.error("Error fetching inventory:", error);
-            }
-        };
-        fetchData();
-    }, []);
     const [showProductModal, setShowProductModal] = useState(false);
-    const [productForm, setProductForm] = useState({
-        name: "",
-        category: "",
-        price: "",
-        stock: ""
-    });
+
     const products = [
         { id: 1, name: "Product 1", category: "Electronics", price: "$999", stock: 50, image: "https://images.unsplash.com/photo-1526406915894-7bcd65f60845?ixlib=rb-1.2.1" },
         { id: 2, name: "Product 2", category: "Clothing", price: "$59", stock: 100, image: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?ixlib=rb-1.2.1" },
@@ -43,116 +21,9 @@ export default function Products() {
         </button>
     );
 
-    const Modal = ({ show, onClose, title, children }) => {
-        if (!show) return null;
 
-        return (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-lg p-6 w-full max-w-lg">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-xl font-semibold">{title}</h3>
-                        <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full">
-                            <FiX className="w-5 h-5" />
-                        </button>
-                    </div>
-                    {children}
-                </div>
-            </div>
-        );
-    };
-
-    const handleProductSubmit = (e) => {
-        e.preventDefault();
-        setShowProductModal(false);
-    };
     return (
         <div className="flex-1 p-8">
-            <Modal
-                show={showProductModal}
-                onClose={() => setShowProductModal(false)}
-                title="Add/Edit Product"
-            >
-                <form onSubmit={handleProductSubmit} className="space-y-4">
-                    <div className="mb-8">
-                        <label className="block text-sm font-medium mb-2">Chọn Kho</label>
-                        <div className="relative">
-                            <button
-                                onClick={() => setIsOpen(!isOpen)}
-                                className="w-full p-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white flex justify-between items-center"
-                            >
-                                <span className="flex items-center">
-                                    {selectedInventory ? (
-                                        <>
-                                            <MdWarehouse className="mr-2 text-blue-600" />
-                                            Tên kho: {selectedInventory.name} - Địa chỉ: {selectedInventory.address}
-                                        </>
-                                    ) : (
-                                        "Select inventory..."
-                                    )}
-                                </span>
-                                <FiChevronDown className={`transition-transform duration-200 ${isOpen ? "transform rotate-180" : ""}`} />
-                            </button>
-                            {isOpen && (
-                                <div className="absolute w-full mt-1 max-h-48 overflow-y-auto bg-white border rounded-lg shadow-lg z-10">
-                                    {inventorys.map((inventory) => (
-                                        <button
-                                            key={inventory.inventory_id}
-                                            className={`w-full text-left px-4 py-2 hover:bg-blue-50 flex items-center ${selectedInventory?.inventory_id === inventory.inventory_id ? "bg-blue-100" : ""
-                                                }`}
-                                            onClick={() => {
-                                                setSelectedInventory(inventory);
-                                                setIsOpen(false);
-                                            }}
-                                        >
-                                            <MdWarehouse className="mr-2 text-blue-600" />
-                                            Tên kho: {inventory.name} - Địa chỉ: {inventory.address}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Name</label>
-                        <input
-                            type="text"
-                            value={productForm.name}
-                            onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-                            className="mt-1 block w-full rounded-md border border-gray-300 p-2"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Category</label>
-                        <input
-                            type="text"
-                            value={productForm.category}
-                            onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
-                            className="mt-1 block w-full rounded-md border border-gray-300 p-2"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Price</label>
-                        <input
-                            type="text"
-                            value={productForm.price}
-                            onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
-                            className="mt-1 block w-full rounded-md border border-gray-300 p-2"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Stock</label>
-                        <input
-                            type="number"
-                            value={productForm.stock}
-                            onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
-                            className="mt-1 block w-full rounded-md border border-gray-300 p-2"
-                        />
-                    </div>
-                    <button type="submit" className="w-full bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700">
-                        Save Product
-                    </button>
-                </form>
-            </Modal>
             <div>
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-semibold">Products</h2>
@@ -163,6 +34,7 @@ export default function Products() {
                         Add Product
                     </button>
                 </div>
+                {showProductModal && <AddProductModal setShowProductModal={setShowProductModal} />}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {products.map((product) => (
                         <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
