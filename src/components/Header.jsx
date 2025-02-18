@@ -4,11 +4,13 @@ import { FaPlus, FaMinus } from "react-icons/fa";
 import { IoMdArrowDropdown } from "react-icons/io";
 import LOGO from "../assets/logo.png"
 import { Link, useNavigate } from "react-router-dom";
-import { signOut } from "../routers/ApiRoutes";
+import { getSuggestions, signOut } from "../routers/ApiRoutes";
 import ROUTES from '../constants/Page';
 import { toast } from "react-toastify";
 import { useDispatch } from 'react-redux';
 import { useSelector } from 'react-redux';
+import { debounce } from 'lodash'
+import { FiSearch } from "react-icons/fi";
 
 import { logout, setToken } from '../redux/authSlice';
 export default function Header() {
@@ -24,6 +26,43 @@ export default function Header() {
     const [showBellDropdown, setShowBellDropdown] = useState(false);
     const user = useSelector((state) => state.auth.user);
     const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [suggestions, setSuggestions] = useState([]);
+    const fetchSuggestions = debounce(async (value) => {
+        try {
+            const response = await getSuggestions(value);
+            console.log(response);
+            setSuggestions(response.data);
+        } catch (error) {
+            console.error('Error fetching suggestions:', error);
+        }
+    }, 300);
+    console.log(suggestions);
+
+    const handleSearchClick = async () => {
+        // const response = await searchProducts({ params: { search: searchTerm } });
+        // console.log(response.data);
+        setSuggestions([])
+        const encodedSearchTerm = encodeURIComponent(searchTerm);
+        navigate(`${ROUTES.SEARCH_RESULTS.path}?name=${encodedSearchTerm}`);
+    };
+
+    const handleSearch = (e) => {
+        const value = e.target.value;
+        setSearchTerm(value);
+
+        if (value.length > 1) {
+            fetchSuggestions(value);
+        } else {
+            setSuggestions([]);
+        }
+    };
+
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            handleSearchClick();
+        }
+    };
     const products = [
         {
             name: "Microcontrollers",
@@ -157,13 +196,13 @@ export default function Header() {
     };
     return (
         <div>
-            <nav className="bg-black text-white shadow-lg py-2 sticky z-10 ">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <nav className="bg-black text-white shadow-lg py-2 sticky z-10 flex items-center justify-center">
+                <div className="w-4/5">
                     <div className="flex items-center justify-between h-16 ">
                         <Link to="/">
                             <img src={LOGO} width={100} height={100} />
                         </Link>
-                        <div className="hidden md:flex items-center space-x-8">
+                        <div className="hidden md:flex items-center space-x-8 w-3/5">
                             <Link to="/" onClick={handleLinkClick} className="hover:text-blue-400 transition duration-300">
                                 Trang chủ
                             </Link>
@@ -202,6 +241,41 @@ export default function Header() {
                                         ))}
                                     </div>
                                 )}
+                            </div>
+                            <div className="container mx-auto px-4 py-4 flex items-center justify-between text-black">
+                                <div className="flex-1 w-full flex items-center">
+                                    <div className="relative flex-grow">
+                                        <input
+                                            type="text"
+                                            value={searchTerm}
+                                            onChange={handleSearch}
+                                            onKeyDown={handleKeyPress}
+                                            placeholder="Tìm kiếm sản phẩm..."
+                                            className="w-full py-2 px-4 pr-10 rounded-md border border-input focus:outline-none focus:ring-2 focus:ring-ring bg-card text-foreground"
+                                        />
+                                        <FiSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+
+                                        {suggestions?.length > 0 && (
+                                            <ul className="absolute left-0 top-full mt-1 bg-white border border-gray-300 w-full max-h-96 overflow-y-auto z-50 shadow-2xl rounded-b-lg">
+                                                {suggestions.map((suggestion) => (
+                                                    <li
+                                                        key={suggestion.id}
+                                                        className="p-2 hover:bg-gray-100 hover:font-bold cursor-pointer"
+                                                        onClick={() => setSearchTerm(suggestion.name)}
+                                                    >
+                                                        {suggestion.name}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
+                                    <button
+                                        onClick={handleSearchClick}
+                                        className="ml-4 px-4 py-2 bg-green-200  text-black rounded-md hover:bg-primary-dark transition-colors"
+                                    >
+                                        Tìm kiếm
+                                    </button>
+                                </div>
                             </div>
                             <a href="#" className="hover:text-blue-400 transition duration-300">
                                 Tin tức

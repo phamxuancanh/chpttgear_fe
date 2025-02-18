@@ -14,6 +14,7 @@ import EmailVerifySuccessPage from "../pages/EmailVerifySuccessPage";
 import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ResetPassword";
 import Profile from "../pages/Profile";
+import SearchResult from "../pages/SearchResult";
 import NotFound from "../pages/NotFound";
 import ConfirmCheckout from "../pages/ConfirmCheckout";
 const HOME_PAGE = {
@@ -116,6 +117,12 @@ const PROFILE_PAGE = {
     path: "/profile",
     element: <Profile />,
 };
+const SEARCH_RESULTS = {
+    name: "SEARCH_RESULTS",
+    displayName: "Kết quả tìm kiếm",
+    path: "/search_results",
+    element: <SearchResult />,
+};
 const NOT_FOUND = {
     name: "NOT_FOUND",
     displayName: "Không tìm thấy",
@@ -128,6 +135,7 @@ const CONFIRM_CHECKOUT = {
     path: "/confirm-checkout",
     element: <ConfirmCheckout />,
 };
+
 const Page = {
     LOGIN_PAGE,
     REGISTER_PAGE,
@@ -145,6 +153,7 @@ const Page = {
     ORDER_PAGE,
     DASHBOARD,
     PROFILE_PAGE,
+    SEARCH_RESULTS,
     NOT_FOUND,
     CONFIRM_CHECKOUT
 };

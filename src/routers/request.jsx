@@ -75,44 +75,6 @@ const handleTokenRefresh = async () => {
   }
 };
 
-// const handleTokenRefresh = async () => {
-//   console.log('Refreshing token')
-//   const tokens = getFromLocalStorage('persist:auth')
-//   const currentUser = tokens?.currentUser
-//   console.log(tokens)
-//   if (tokens?.accessToken && checkTokenValidity(tokens.accessToken)) {
-//     return tokens.accessToken
-//   }
-//   if (!tokens) {
-//     return null
-//   }
-//   try {
-//     console.log('Refreshing token2')
-//     const response = await refresh()
-//     const newAccessToken = response.data.accessToken
-//     const updatedTokens = {
-//       currentUser: currentUser,
-//       accessToken: newAccessToken
-//     }
-//     console.log(updatedTokens)
-//     // setToLocalStorage('persist:auth', JSON.stringify(updatedTokens))
-//     return newAccessToken
-//   } catch (error) {
-//     Swal.fire({
-//       title: 'Warning',
-//       text: 'Your session has expired. Please log in again.',
-//       icon: 'warning',
-//       confirmButtonText: 'OK',
-//       allowOutsideClick: false
-//     }).then((result) => {
-//       if (result.isConfirmed) {
-//         removeAllLocalStorage()
-//         reload()
-//       }
-//     })
-//     return null
-//   }
-// }
 
 requestWithJwt.interceptors.request.use(async (config) => {
   const persistAuthData = getFromLocalStorage('persist:auth')

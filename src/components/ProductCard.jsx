@@ -1,13 +1,12 @@
 import React from "react";
 import { FiShoppingCart } from "react-icons/fi";
 import { Link } from "react-router-dom";
-
 export default function ProductCard({ product }) {
     return (
         <div className="bg-card rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105">
             <Link to="/product/123">
                 <img
-                    src={product.image}
+                    src="/aa.jpg"
                     alt={product.name}
                     loading="lazy" // Lazy load the image
                     className="w-full h-48 object-cover"
