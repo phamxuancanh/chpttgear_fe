@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { FaPaypal, FaMoneyBillWave } from "react-icons/fa";
 import { TbTruckDelivery } from "react-icons/tb";
+import { Link } from "react-router-dom";
 
 export default function Payment() {
   const [formData, setFormData] = useState({
@@ -82,9 +83,8 @@ export default function Payment() {
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                  errors.fullName ? "border-red-500" : "border-gray-300"
-                }`}
+                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${errors.fullName ? "border-red-500" : "border-gray-300"
+                  }`}
               />
               {errors.fullName && (
                 <p className="text-red-500 mt-1 text-sm">{errors.fullName}</p>
@@ -104,9 +104,8 @@ export default function Payment() {
                 name="phoneNumber"
                 value={formData.phoneNumber}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                  errors.phoneNumber ? "border-red-500" : "border-gray-300"
-                }`}
+                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${errors.phoneNumber ? "border-red-500" : "border-gray-300"
+                  }`}
               />
               {errors.phoneNumber && (
                 <p className="text-red-500 mt-1 text-sm">
@@ -128,9 +127,8 @@ export default function Payment() {
                 value={formData.deliveryAddress}
                 onChange={handleInputChange}
                 rows="3"
-                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                  errors.deliveryAddress ? "border-red-500" : "border-gray-300"
-                }`}
+                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${errors.deliveryAddress ? "border-red-500" : "border-gray-300"
+                  }`}
               />
               {errors.deliveryAddress && (
                 <p className="text-red-500 mt-1 text-sm">
@@ -152,9 +150,8 @@ export default function Payment() {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                  errors.email ? "border-red-500" : "border-gray-300"
-                }`}
+                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${errors.email ? "border-red-500" : "border-gray-300"
+                  }`}
               />
               {errors.email && (
                 <p className="text-red-500 mt-1 text-sm">{errors.email}</p>
@@ -168,11 +165,10 @@ export default function Payment() {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <label
-                className={`flex items-center p-4 rounded-lg border shadow-sm ${
-                  formData.paymentMethod === "paypal"
-                    ? "border-indigo-500 bg-indigo-50"
-                    : "border-gray-300"
-                } cursor-pointer hover:shadow-md`}
+                className={`flex items-center p-4 rounded-lg border shadow-sm ${formData.paymentMethod === "paypal"
+                  ? "border-indigo-500 bg-indigo-50"
+                  : "border-gray-300"
+                  } cursor-pointer hover:shadow-md`}
               >
                 <input
                   type="radio"
@@ -187,11 +183,10 @@ export default function Payment() {
               </label>
 
               <label
-                className={`flex items-center p-4 rounded-lg border shadow-sm ${
-                  formData.paymentMethod === "cod"
-                    ? "border-indigo-500 bg-indigo-50"
-                    : "border-gray-300"
-                } cursor-pointer hover:shadow-md`}
+                className={`flex items-center p-4 rounded-lg border shadow-sm ${formData.paymentMethod === "cod"
+                  ? "border-indigo-500 bg-indigo-50"
+                  : "border-gray-300"
+                  } cursor-pointer hover:shadow-md`}
               >
                 <input
                   type="radio"
@@ -225,12 +220,14 @@ export default function Payment() {
             </p>
           </div>
 
-          <button
-            type="submit"
-            className="w-full bg-indigo-500 text-white py-3 rounded-lg font-semibold hover:bg-indigo-600 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-          >
-            Complete Payment
-          </button>
+          <Link to="/confirm-checkout">
+            <button
+              type="submit"
+              className="w-full bg-indigo-500 text-white py-3 rounded-lg font-semibold hover:bg-indigo-600 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            >
+              Continue
+            </button>
+          </Link>
         </form>
       </div>
     </div>

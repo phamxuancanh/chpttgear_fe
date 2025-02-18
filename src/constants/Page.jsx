@@ -15,6 +15,7 @@ import ForgotPassword from "../pages/ForgotPassword";
 import ResetPassword from "../pages/ResetPassword";
 import Profile from "../pages/Profile";
 import NotFound from "../pages/NotFound";
+import ConfirmCheckout from "../pages/ConfirmCheckout";
 const HOME_PAGE = {
     name: "HOME_PAGE",
     displayName: "Trang chủ",
@@ -121,6 +122,12 @@ const NOT_FOUND = {
     path: "/*",
     element: <NotFound />,
 };
+const CONFIRM_CHECKOUT = {
+    name: "CONFIRM_CHECKOUT",
+    displayName: "CONFIRM_CHECKOUT",
+    path: "/confirm-checkout",
+    element: <ConfirmCheckout />,
+};
 const Page = {
     LOGIN_PAGE,
     REGISTER_PAGE,
@@ -139,5 +146,6 @@ const Page = {
     DASHBOARD,
     PROFILE_PAGE,
     NOT_FOUND,
+    CONFIRM_CHECKOUT
 };
 export default Page;

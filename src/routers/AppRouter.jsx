@@ -90,6 +90,10 @@ const NotFound = loadable(async () => {
     const module = await import('../pages/NotFound');
     return module;
 }, { fallback: <Loading /> });
+const ConfirmCheckout = loadable(async () => {
+    const module = await import('../pages/ConfirmCheckout');
+    return module;
+}, { fallback: <Loading /> });
 
 
 const ChatButtonWrapper = () => {
@@ -258,6 +262,16 @@ const AppRouter = () => {
                 <Route
                     path={Page.NOT_FOUND.path}
                     element={<NotFound />}
+                />
+                <Route
+                    path={Page.CONFIRM_CHECKOUT.path}
+                    element={
+                        <AuthRoute>
+                            <Layout>
+                                <ConfirmCheckout />
+                            </Layout>
+                        </AuthRoute>
+                    }
                 />
             </Routes>
         </BrowserRouter>
