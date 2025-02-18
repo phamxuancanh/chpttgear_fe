@@ -122,6 +122,55 @@ export const googleSignIn = async () => {
 export const getAllInventory = async () => {
     return await requestWithJwt.get(`/inventory`);
 };
+export const createStockIn = async (payload) => {
+    console.log(payload)
+    return await requestWithJwt.post(`/inventory/stock-in`, {
+        data: payload,
+    });
+};
+export const increaseQuantity = async (inventory_id, payload) => {
+
+    try {
+        const response = await requestWithJwt.put(`/inventory/${inventory_id}/increase`, {
+            quantity: payload,
+        });
+        return response.data; // Trả về dữ liệu từ phản hồi của API
+    } catch (error) {
+        console.error('Error increasing quantity:', error);
+        throw error; // Ném lỗi để xử lý ở nơi gọi hàm
+    }
+};
+
+export const getProductsByInventoryId = async (inventory_id) => {
+
+    try {
+        const response = await requestWithJwt.get(`/inventory/${inventory_id}/products`)
+        return response.data; // Trả về dữ liệu từ phản hồi của API
+    } catch (error) {
+        console.error('Error get products: ', error);
+        throw error; // Ném lỗi để xử lý ở nơi gọi hàm
+    }
+};
+export const getStockInByInventoryId = async (inventory_id) => {
+
+    try {
+        const response = await requestWithJwt.get(`/inventory/stock-in/getByInventoryId/${inventory_id}`)
+        return response.data; // Trả về dữ liệu từ phản hồi của API
+    } catch (error) {
+        console.error('Error get products: ', error);
+        throw error; // Ném lỗi để xử lý ở nơi gọi hàm
+    }
+};
+export const getStockOutByInventoryId = async (inventory_id) => {
+
+    try {
+        const response = await requestWithJwt.get(`/inventory/stock-out/getByInventoryId/${inventory_id}`)
+        return response.data; // Trả về dữ liệu từ phản hồi của API
+    } catch (error) {
+        console.error('Error get products: ', error);
+        throw error; // Ném lỗi để xử lý ở nơi gọi hàm
+    }
+};
 // cartService
 
 // orderService

@@ -10,6 +10,7 @@
     "chpttgear_fe": "file:",
     "cra-template": "1.2.0",
     "crypto-js": "^4.2.0",
+    "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
     "env-cmd": "^10.1.0",
     "firebase": "^10.13.1",
@@ -27,6 +28,7 @@
     "react-spinners": "^0.13.8",
     "react-toastify": "^11.0.2",
     "react-transition-group": "^4.4.5",
+    "react-window": "^1.8.11",
     "redux-devtools-extension": "^2.13.9",
     "redux-persist": "^6.0.0",
     "sweetalert2": "^11.12.4"

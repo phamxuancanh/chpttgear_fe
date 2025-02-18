@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { FiHome, FiUsers, FiBox, FiShoppingCart, FiEdit, FiTrash2, FiPlus, FiUpload, FiLogOut, FiPackage, FiEye, FiX } from "react-icons/fi";
+import { FiTrash2, FiPlus, FiUpload } from "react-icons/fi";
 import { MdWarehouse } from "react-icons/md";
 import { FiChevronDown } from "react-icons/fi";
 import { getAllInventory } from "../../routers/ApiRoutes";
 import { useDropzone } from "react-dropzone";
 import { ClockLoader } from "react-spinners";
+import { FaTimes } from "react-icons/fa";
 
 export default function AddProductModal({ setShowProductModal }) {
 
@@ -248,15 +249,21 @@ export default function AddProductModal({ setShowProductModal }) {
           </div>
         </div>
       )}
-      <div className="min-h-[80vh] max-h-[80vh] bg-gray-50 py-8 px-4 sm:px-6 lg:px-8 w-10/12 overflow-y-auto">
-        <div className="w-full mx-auto">
+      <div className="min-h-[80vh] max-h-[80vh] bg-gray-50 py-8 px-4 sm:px-6 lg:px-8 w-10/12 ">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-2xl font-bold leading-6 text-gray-900">Product Information</h3>
+          <button
+            type="button"
+            onClick={() => setShowProductModal(false)}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <FaTimes size={24} />
+          </button>
+
+        </div>
+        <div className="w-full mx-auto max-h-[65vh] overflow-y-auto">
           <div className="space-y-8 divide-y divide-gray-200 w-full">
             <div className="space-y-6">
-              <div>
-                <h3 className="text-2xl font-bold leading-6 text-gray-900">Product Information</h3>
-                <p className="mt-1 text-sm text-gray-500">Please fill in the product details below.</p>
-              </div>
-
               <div className="w-full ">
                 <div className="mb-8">
                   <label className="block text-sm font-medium mb-2">Chọn Kho</label>
@@ -304,7 +311,7 @@ export default function AddProductModal({ setShowProductModal }) {
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="mt-1 block w-full p-3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="mt-1 block w-full p-3 border   rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   />
 
 
@@ -316,7 +323,7 @@ export default function AddProductModal({ setShowProductModal }) {
                     type="text"
                     value={brand}
                     onChange={(e) => setBrand(e.target.value)}
-                    className="mt-1 block w-full p-3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="mt-1 block w-full p-3 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   />
 
 
@@ -328,7 +335,7 @@ export default function AddProductModal({ setShowProductModal }) {
                     type="text"
                     value={color}
                     onChange={(e) => setColor(e.target.value)}
-                    className="mt-1 block w-full p-3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="mt-1 block w-full p-3 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   />
 
 
@@ -340,7 +347,7 @@ export default function AddProductModal({ setShowProductModal }) {
                     type="text"
                     value={size}
                     onChange={(e) => setSize(e.target.value)}
-                    className="mt-1 block w-full p-3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="mt-1 block w-full p-3 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   />
 
 
@@ -352,7 +359,7 @@ export default function AddProductModal({ setShowProductModal }) {
                     type="number"
                     value={weight}
                     onChange={(e) => setWeight(e.target.value)}
-                    className="mt-1 block w-full p-3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="mt-1 block w-full p-3 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   />
 
 
@@ -363,7 +370,7 @@ export default function AddProductModal({ setShowProductModal }) {
                     type="number"
                     value={guaranteePeriod}
                     onChange={(e) => setGuaranteePeriod(e.target.value)}
-                    className="mt-1 block w-full p-3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="mt-1 block w-full p-3 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   />
                 </div>
 
@@ -377,7 +384,7 @@ export default function AddProductModal({ setShowProductModal }) {
                       type="text"
                       value={price}
                       onChange={handlePriceChange}
-                      className="mt-1 block w-full pl-16 p-3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      className="mt-1 block w-full pl-16 p-3 border rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                     />
                   </div>
 
@@ -390,7 +397,7 @@ export default function AddProductModal({ setShowProductModal }) {
                     rows={3}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="mt-1 p-3 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="mt-1 p-3 block w-full shadow-sm border border-gray-300   rounded-md  focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   />
                 </div>
 
@@ -467,7 +474,7 @@ export default function AddProductModal({ setShowProductModal }) {
                         {selectedCategory && productSpecs[selectedCategory.name] && (
                           <>
                             <select
-                              className="flex-1 p-3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                              className="flex-1 p-3 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                               value={spec.name}
                               onChange={(e) => handleSpecificationChange(index, "name", e.target.value)}
 
@@ -487,7 +494,7 @@ export default function AddProductModal({ setShowProductModal }) {
                               placeholder="Value"
                               value={spec.value}
                               onChange={(e) => handleSpecificationChange(index, "value", e.target.value)}
-                              className="flex-1 p-3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                              className="flex-1 p-3 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                             />
                             {index > 0 && (
                               <button
@@ -509,7 +516,7 @@ export default function AddProductModal({ setShowProductModal }) {
             </div>
 
             <div className="pt-5">
-              <div className="flex justify-end gap-3">
+              <div className="flex justify-end gap-3 mb-8">
                 <button
                   type="button"
                   className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"

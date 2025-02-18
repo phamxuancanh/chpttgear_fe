@@ -1,171 +1,196 @@
-import React from 'react'
-import { useState } from "react";
-import { FiHome, FiUsers, FiBox, FiShoppingCart, FiEdit, FiTrash2, FiLogOut, FiPackage, FiEye, FiX } from "react-icons/fi";
+import React, { useState } from "react";
+import { format } from "date-fns";
+import { FaSearch, FaEye, FaEdit } from "react-icons/fa";
+import OrderDetailsModal from "../Modal/OrderDetailsModal";
 
 export default function Order() {
-    const [showOrderModal, setShowOrderModal] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
-    const products = [
-        { id: 1, name: "Product 1", category: "Electronics", price: "$999", stock: 50, image: "https://images.unsplash.com/photo-1526406915894-7bcd65f60845?ixlib=rb-1.2.1" },
-        { id: 2, name: "Product 2", category: "Clothing", price: "$59", stock: 100, image: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?ixlib=rb-1.2.1" },
-        { id: 3, name: "Product 3", category: "Accessories", price: "$29", stock: 75, image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-1.2.1" }
-    ];
-    const orderDetails = [
+    const [dateRange, setDateRange] = useState({ start: "", end: "" });
+    const [statusFilter, setStatusFilter] = useState("all");
+    const [searchQuery, setSearchQuery] = useState("");
+
+    const dummyOrders = [
         {
             id: "ORD001",
-            customer: "Alice Brown",
-            status: "Pending",
-            date: "2024-01-15",
+            date: new Date(),
+            total: 1500000,
+            paymentMethod: "Thanh toán khi nhận hàng",
+            status: "Đang Chuẩn Bị",
+            customer: {
+                name: "Nguyễn Văn A",
+                phone: "0123456789",
+                address: "123 Đường ABC, Quận 1, TP.HCM"
+            },
             items: [
-                { productId: 1, quantity: 2, price: "$1998" },
-                { productId: 2, quantity: 1, price: "$59" }
-            ]
+                { name: "Sản phẩm 1", quantity: 2, price: 500000 },
+                { name: "Sản phẩm 2", quantity: 1, price: 500000 }
+            ],
+            notes: "Giao hàng giờ hành chính"
         },
         {
             id: "ORD002",
-            customer: "Bob Wilson",
-            status: "Completed",
-            date: "2024-01-14",
+            date: new Date(),
+            total: 2000000,
+            paymentMethod: "Chuyển khoản ngân hàng",
+            status: "Đã Xác Nhận",
+            customer: {
+                name: "Trần Thị B",
+                phone: "0987654321",
+                address: "456 Đường XYZ, Quận 2, TP.HCM"
+            },
             items: [
-                { productId: 3, quantity: 3, price: "$87" }
-            ]
-        },
-        {
-            id: "ORD003",
-            customer: "Carol White",
-            status: "Processing",
-            date: "2024-01-13",
-            items: [
-                { productId: 1, quantity: 1, price: "$999" },
-                { productId: 3, quantity: 2, price: "$58" }
-            ]
+                { name: "Sản phẩm 3", quantity: 1, price: 2000000 }
+            ],
+            notes: ""
         }
     ];
 
-    const ActionButton = ({ icon: Icon, onClick, color }) => (
-        <button
-            onClick={onClick}
-            className={`p-2 rounded-full ${color} text-white hover:opacity-80 transition-opacity mr-2`}
-        >
-            <Icon className="w-4 h-4" />
-        </button>
-    );
-
-    const Modal = ({ show, onClose, title, children }) => {
-        if (!show) return null;
-
-        return (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-lg p-6 w-full max-w-lg">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-xl font-semibold">{title}</h3>
-                        <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full">
-                            <FiX className="w-5 h-5" />
-                        </button>
-                    </div>
-                    {children}
-                </div>
-            </div>
-        );
+    const statusColors = {
+        "Đang Chuẩn Bị": "bg-yellow-100 text-yellow-800",
+        "Đã Xác Nhận": "bg-blue-100 text-blue-800",
+        "Đang Vận Chuyển": "bg-purple-100 text-purple-800",
+        "Đã Giao": "bg-green-100 text-green-800",
+        "Đã Hủy": "bg-red-100 text-red-800"
     };
 
-
-    const handleViewOrder = (order) => {
+    const handleViewDetails = (order) => {
         setSelectedOrder(order);
-        setShowOrderModal(true);
+        setIsModalOpen(true);
     };
-    return (
-        <div className="flex-1 p-8">
 
-            <Modal
-                show={showOrderModal}
-                onClose={() => setShowOrderModal(false)}
-                title="Order Details"
-            >
-                {selectedOrder && (
-                    <div className="space-y-4">
-                        <div className="flex justify-between">
-                            <div>
-                                <p className="font-medium">Order ID: {selectedOrder.id}</p>
-                                <p>Customer: {selectedOrder.customer}</p>
-                                <p>Date: {selectedOrder.date}</p>
-                            </div>
-                            <span className={`px-2 py-1 rounded-full text-xs ${selectedOrder.status === "Completed" ? "bg-green-100 text-green-800" : selectedOrder.status === "Processing" ? "bg-yellow-100 text-yellow-800" : "bg-blue-100 text-blue-800"}`}>
-                                {selectedOrder.status}
-                            </span>
+    const filteredOrders = dummyOrders.filter((order) => {
+        const matchesSearchQuery =
+            searchQuery === "" ||
+            order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            order.customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            order.customer.phone.includes(searchQuery);
+
+        const matchesStatus = statusFilter === "all" || order.status === statusFilter;
+
+        const matchesDateRange =
+            (!dateRange.start || new Date(order.date) >= new Date(dateRange.start)) &&
+            (!dateRange.end || new Date(order.date) <= new Date(dateRange.end));
+
+        return matchesSearchQuery && matchesStatus && matchesDateRange;
+    });
+
+    return (
+        <div className="min-h-screen bg-gray-50 p-4">
+            <div className="max-w-7xl mx-auto">
+                <h1 className="text-3xl font-bold text-gray-800 mb-8">Quản Lý Đơn Hàng</h1>
+
+                <div className="bg-white rounded-lg shadow mb-6 p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Trạng Thái</label>
+                            <select
+                                className="w-full border border-gray-300 rounded-md p-2"
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                            >
+                                <option value="all">Tất Cả</option>
+                                <option value="Đang Chuẩn Bị">Đang Chuẩn Bị</option>
+                                <option value="Đã Xác Nhận">Đã Xác Nhận</option>
+                                <option value="Đang Vận Chuyển">Đang Vận Chuyển</option>
+                                <option value="Đã Giao">Đã Giao</option>
+                                <option value="Đã Hủy">Đã Hủy</option>
+                            </select>
                         </div>
-                        <div className="border-t pt-4">
-                            <h4 className="font-medium mb-2">Order Items</h4>
-                            <div className="space-y-2">
-                                {selectedOrder.items.map((item, index) => {
-                                    const product = products.find(p => p.id === item.productId);
-                                    return (
-                                        <div key={index} className="flex items-center space-x-4 border-b pb-2">
-                                            <img src={product?.image} alt={product?.name} className="w-16 h-16 object-cover rounded" />
-                                            <div className="flex-1">
-                                                <p className="font-medium">{product?.name}</p>
-                                                <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
-                                                <p className="text-sm text-gray-600">Price: {item.price}</p>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Từ Ngày</label>
+                            <input
+                                type="date"
+                                className="w-full border border-gray-300 rounded-md p-2"
+                                value={dateRange.start}
+                                onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Đến Ngày</label>
+                            <input
+                                type="date"
+                                className="w-full border border-gray-300 rounded-md p-2"
+                                value={dateRange.end}
+                                onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                            />
                         </div>
                     </div>
-                )}
-            </Modal>
 
-
-            <div>
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-semibold">Orders</h2>
-                    <div className="flex">
+                    <div className="relative">
                         <input
                             type="text"
-                            placeholder="Search orders..."
-                            className="px-4 py-2 border rounded-lg mr-4"
+                            placeholder="Tìm kiếm đơn hàng..."
+                            className="w-full border border-gray-300 rounded-md p-2 pl-10"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                         />
-                        <select className="px-4 py-2 border rounded-lg">
-                            <option value="all">All Status</option>
-                            <option value="pending">Pending</option>
-                            <option value="processing">Processing</option>
-                            <option value="completed">Completed</option>
-                        </select>
+                        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     </div>
                 </div>
-                <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                    <table className="w-full">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order ID</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                            {orderDetails.map((order) => (
-                                <tr key={order.id}>
-                                    <td className="px-6 py-4">{order.id}</td>
-                                    <td className="px-6 py-4">{order.customer}</td>
-                                    <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 rounded-full text-xs ${order.status === "Completed" ? "bg-green-100 text-green-800" : order.status === "Processing" ? "bg-yellow-100 text-yellow-800" : "bg-blue-100 text-blue-800"}`}>
-                                            {order.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4">{order.date}</td>
-                                    <td className="px-6 py-4">
-                                        <ActionButton icon={FiEye} color="bg-green-500" onClick={() => handleViewOrder(order)} />
-                                        <ActionButton icon={FiEdit} color="bg-blue-500" onClick={() => { }} />
-                                    </td>
+
+                <div className="bg-white rounded-lg shadow overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="bg-gray-50">
+                                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Mã Đơn Hàng</th>
+                                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Ngày Đặt</th>
+                                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Tổng Giá</th>
+                                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Phương Thức Thanh Toán</th>
+                                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Trạng Thái</th>
+                                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Hành Động</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200">
+                                {filteredOrders.length > 0 ? (
+                                    filteredOrders.map((order) => (
+                                        <tr key={order.id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 whitespace-nowrap">{order.id}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                {format(order.date, "dd/MM/yyyy HH:mm")}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                {order.total.toLocaleString()}đ
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">{order.paymentMethod}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[order.status]}`}>
+                                                    {order.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap space-x-2">
+                                                <button
+                                                    onClick={() => handleViewDetails(order)}
+                                                    className="text-blue-600 hover:text-blue-900"
+                                                >
+                                                    <FaEye className="inline mr-1" /> Xem
+                                                </button>
+                                                {/* <button className="text-green-600 hover:text-green-900">
+                                                    <FaEdit className="inline mr-1" /> Cập nhật
+                                                </button> */}
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (<tr>
+                                    <td colSpan="6" className="text-center py-4 text-gray-500">Không tìm thấy đơn hàng phù hợp</td>
+                                </tr>)}
+
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
+
+            {isModalOpen && (
+                <OrderDetailsModal
+                    order={selectedOrder}
+                    onClose={() => setIsModalOpen(false)}
+                />
+            )}
         </div>
-    )
-}
+    );
+};
+
