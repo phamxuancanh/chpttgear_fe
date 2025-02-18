@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { FaTrash, FaEdit, FaPlus, FaTimes, FaSearch } from "react-icons/fa";
+import {  FaTimes, FaSearch } from "react-icons/fa";
 
 export default function CreateOrderModal({ orders, setOrders, setShowForm, setNotification }) {
     const [searchQuery, setSearchQuery] = useState("");

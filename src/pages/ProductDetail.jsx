@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { FaArrowLeft, FaArrowRight, FaStar, FaStarHalf } from "react-icons/fa";
+import { FaArrowLeft, FaArrowRight, FaStar, FaStarHalfAlt } from "react-icons/fa";
 import ProductCard from "../components/ProductCard";
+import { DateConverter } from './../utils/DateConverter';
+import { BiSolidCommentEdit } from "react-icons/bi";
 
 
 export default function ProductDetail() {
@@ -31,7 +33,29 @@ export default function ProductDetail() {
             price: 1299.99,
             rating: 4.9,
             image: "https://images.unsplash.com/photo-1587202372599-36e756f1a00e"
+        },
+        {
+            id: 3,
+            name: "NVIDIA GeForce RTX 3090",
+            price: 1299.99,
+            rating: 4.9,
+            image: "https://images.unsplash.com/photo-1587202372599-36e756f1a00e"
+        },
+        {
+            id: 3,
+            name: "NVIDIA GeForce RTX 3090",
+            price: 1299.99,
+            rating: 4.9,
+            image: "https://images.unsplash.com/photo-1587202372599-36e756f1a00e"
         }
+    ];
+
+    const ratings = [
+        { product_id: 4090, user: "John Doe", score: 2, comment: "được tặng 2 thanh ram là có lắp vô máy chưa ad, nếu mua thêm ổ cứng ssd thì có gắn vô dùm không? hay phải tự mình gắn, còn cài win nữa?", date: "2024-01-15" },
+        { product_id: 4090, user: "Jane Smith", score: 2.5, comment: "Lên tảng nước aio thì sao admin nhỉ", date: "2024-01-10" },
+        { product_id: 4090, user: "Alice Johnson", score: 4.8, comment: "Nâng lên i512400 được k ạ", date: "2024-02-05" },
+        { product_id: 4090, user: "Bob Williams", score: 2.2, comment: "Good but a bit pricey.", date: "2024-02-01" },
+        { product_id: 4090, user: "Charlie Brown", score: 2, comment: "Worth every penny!", date: "2024-02-08" }
     ];
 
     const product = {
@@ -52,10 +76,6 @@ export default function ProductDetail() {
             { label: "Power Consumption", value: "450W" },
             { label: "Manufacturing Process", value: "4nm" }
         ],
-        reviews: [
-            { id: 1, name: "John Doe", rating: 5, comment: "Amazing performance!", date: "2024-01-15" },
-            { id: 2, name: "Jane Smith", rating: 4.5, comment: "Great card but runs hot.", date: "2024-01-10" }
-        ]
     };
 
     const handleImageNavigation = (direction) => {
@@ -68,20 +88,53 @@ export default function ProductDetail() {
 
     const renderStars = (rating) => {
         const stars = [];
-        const fullStars = Math.floor(rating);
-        const hasHalfStar = rating % 1 !== 0;
-
-        for (let i = 0; i < fullStars; i++) {
-            stars.push(<FaStar key={`star-${i}`} className="text-yellow-400" />);
-        }
-        if (hasHalfStar) {
-            stars.push(<FaStarHalf key="half-star" className="text-yellow-400" />);
+        for (let i = 1; i <= 5; i++) {
+            if (i <= Math.floor(rating)) {
+                // Full star
+                stars.push(
+                    <FaStar
+                        key={i}
+                        className="inline-block text-sm text-yellow-400"
+                    />
+                );
+            } else if (i === Math.ceil(rating) && rating % 1 !== 0) {
+                // Half star
+                stars.push(
+                    <FaStarHalfAlt
+                        key={i}
+                        className="inline-block text-sm text-yellow-400"
+                    />
+                );
+            } else {
+                // Empty star
+                stars.push(
+                    <FaStar
+                        key={i}
+                        className="inline-block text-sm text-gray-300"
+                    />
+                );
+            }
         }
         return stars;
     };
 
+    const calculateAverageScore = (ratings) => {
+        if (!ratings || ratings.length === 0) return 0;
+        const totalScore = ratings.reduce((sum, { score }) => sum + score, 0);
+        return totalScore / ratings.length;
+    };
+
+    const calculateStarDistribution = (ratings) => {
+        const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        ratings.forEach(({ score }) => {
+            distribution[Math.round(score)] += 1;
+        });
+        return distribution;
+    };
+
+
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 -mt-20">
 
             <main className="container mx-auto px-4 pt-24 pb-12">
                 {/* Product Information */}
@@ -131,6 +184,9 @@ export default function ProductDetail() {
                             <button className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">
                                 Add to Cart
                             </button>
+                            <button className="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition-colors">
+                                By Now
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -154,78 +210,75 @@ export default function ProductDetail() {
                 {/* Similar Products Section */}
                 <div className="mb-12">
                     <h2 className="text-2xl font-bold mb-6">Similar Products</h2>
-                    <div className="grid md:grid-cols-3 gap-6">
+                    <div className="grid md:grid-cols-5 gap-6">
                         {similarProducts.map((similarProduct) => (
                             <ProductCard key={similarProduct.id} product={similarProduct} />
                         ))}
                     </div>
                 </div>
 
-                {/* Reviews Section */}
-                <div>
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold">Customer Reviews</h2>
-                        <select
-                            value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value)}
-                            className="border rounded-md px-3 py-2"
-                        >
-                            <option value="recent">Most Recent</option>
-                            <option value="rating">Highest Rated</option>
-                        </select>
+                {/* overall review */}
+                <div className="w-full  shadow-lg bg-gray-50 rounded-sm py-10 px-7">
+                    <h2 className="text-2xl font-bold mb-6 ">Đánh giá & Nhận xét PC GVN Intel i5-12400F/ VGA RTX 4060</h2>
+                    <div className="w-full flex flex-col  items-center border-b border-gray-200 ">
+                        <div className="w-full  p-6 shadow-sm text-center ">
+                            <h2 className="text-2xl font-bold mb-6">Đánh giá & Nhận xét</h2>
+                            <div className="flex flex-col items-center">
+                                <h2 className="text-4xl font-bold text-red-500">{calculateAverageScore(ratings).toFixed(1)}/5</h2>
+                                <div className="flex justify-center my-2">{renderStars(calculateAverageScore(ratings))}</div>
+                                <h2 className="text-sm font-bold">({ratings.length}) đánh giá & nhận xét</h2>
+                            </div>
+                            <div className="w-full mt-6 ">
+                                {[5, 4, 3, 2, 1].map((star) => (
+                                    <div key={star} className="flex items-center mb-2 justify-center">
+                                        <span className="w-10 text-right mr-2">{star} ⭐</span>
+                                        <div className="w-3/4 h-4 bg-gray-200 rounded overflow-hidden">
+                                            <div
+                                                className="h-full bg-yellow-400"
+                                                style={{
+                                                    width: `${(calculateStarDistribution(ratings)[star] / ratings.length) * 100 || 0
+                                                        }%`,
+                                                }}
+                                            ></div>
+                                        </div>
+                                        <span className="ml-4">{calculateStarDistribution(ratings)[star]}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Review List */}
-                    <div className="space-y-4 mb-8">
-                        {product.reviews.map((review) => (
-                            <div key={review.id} className="bg-white p-4 rounded-lg shadow">
-                                <div className="flex items-center mb-2">
-                                    <span className="font-semibold mr-2">{review.name}</span>
-                                    <div className="flex">{renderStars(review.rating)}</div>
+                    <div className="py-10 ">
+                        {ratings.map((rating, index) => (
+                            <div key={index} className="w-8/12 border-b border-gray-200">
+                                <div className="w-full flex justify-start items-center">
+                                    <p className="mr-3 font-semibold">{rating.user}</p>
+                                    <p className="text-gray-400">{DateConverter(rating.date)}</p>
                                 </div>
-                                <p className="text-gray-600">{review.comment}</p>
-                                <span className="text-sm text-gray-400">{review.date}</span>
+                                <div className="w-full flex justify-start my-3">
+                                    <div className="w-1/6">
+                                        {renderStars(rating.score)}
+                                    </div>
+                                    <div className="w-10/12">
+                                        <p className="text-sm">{rating.comment}</p>
+                                        <div className="mt-3 rounded-md bg-gray-200 w-full p-3">
+                                            <div className="w-full flex justify-start items-center">
+                                                <p className="mr-3 font-semibold text-red-500">{"Admin"}</p>
+                                                <p className="text-gray-400">{"26-11-2024"}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm leading-6 mt-3">{"Dạ RAM mới lúc lắp máy mình cho lắp luôn ạ, hoặc nếu Anh Minh Tiến có nhu cầu nâng cấp mình có thể nâng cấp ngay lúc lắp máy, về việc gắn thêm ổ cứng GEARVN sẽ hộ trợ mình gắn luôn, cài win cũng vậy ạ. Anh Tiến để lại thông tin (SĐT ...) để GEARVN gọi lại tư vấn cho mình rõ hơn ạ."}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         ))}
                     </div>
-
-                    {/* Add Review Form */}
-                    <div className="bg-white p-6 rounded-lg shadow">
-                        <h3 className="text-xl font-bold mb-4">Write a Review</h3>
-                        <form className="space-y-4">
-                            <div>
-                                <label className="block mb-1">Name</label>
-                                <input
-                                    type="text"
-                                    value={newReview.name}
-                                    onChange={(e) => setNewReview({ ...newReview, name: e.target.value })}
-                                    className="w-full border rounded-md px-3 py-2"
-                                />
-                            </div>
-                            <div>
-                                <label className="block mb-1">Rating</label>
-                                <select
-                                    value={newReview.rating}
-                                    onChange={(e) => setNewReview({ ...newReview, rating: Number(e.target.value) })}
-                                    className="border rounded-md px-3 py-2"
-                                >
-                                    {[5, 4, 3, 2, 1].map((num) => (
-                                        <option key={num} value={num}>{num} Stars</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block mb-1">Comment</label>
-                                <textarea
-                                    value={newReview.comment}
-                                    onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
-                                    className="w-full border rounded-md px-3 py-2 h-24"
-                                />
-                            </div>
-                            <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">
-                                Submit Review
-                            </button>
-                        </form>
+                    <div className="w-full">
+                        <button className="bg-blue-500 text-white text-sm font-semibold rounded-md flex justify-center items-center px-4 py-2 w-4/12">
+                            <BiSolidCommentEdit className="text-2xl mr-2" />Gửi đánh giá của bạn
+                        </button>
                     </div>
                 </div>
             </main>

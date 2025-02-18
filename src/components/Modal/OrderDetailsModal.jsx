@@ -48,7 +48,6 @@ export default function OrderDetailsModal({ order, onClose }) {
 
                     <div className="flex justify-end gap-2">
                         <button
-
                             className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
                         >
                             <FaShippingFast className="inline mr-2" />
