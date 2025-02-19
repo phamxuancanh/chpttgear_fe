@@ -197,10 +197,10 @@ export default function Header() {
     return (
         <div>
             <nav className="bg-black text-white shadow-lg py-2 sticky z-10 flex items-center justify-center">
-                <div className="w-4/5">
+                <div className="w-11/12">
                     <div className="flex items-center justify-between h-16 ">
                         <Link to="/">
-                            <img src={LOGO} width={100} height={100} />
+                            <img src={LOGO} width={150} height={150} />
                         </Link>
                         <div className="hidden md:flex items-center space-x-8 w-3/5">
                             <Link to="/" onClick={handleLinkClick} className="hover:text-blue-400 transition duration-300">
@@ -242,8 +242,8 @@ export default function Header() {
                                     </div>
                                 )}
                             </div>
-                            <div className="container mx-auto px-4 py-4 flex items-center justify-between text-black">
-                                <div className="flex-1 w-full flex items-center">
+                            <div className="container mx-auto px-4 py-4 flex items-center justify-between text-black w-6/12">
+                                <div className="flex-1 w-10/12 flex items-center ">
                                     <div className="relative flex-grow">
                                         <input
                                             type="text"
@@ -251,9 +251,9 @@ export default function Header() {
                                             onChange={handleSearch}
                                             onKeyDown={handleKeyPress}
                                             placeholder="Tìm kiếm sản phẩm..."
-                                            className="w-full py-2 px-4 pr-10 rounded-md border border-input focus:outline-none focus:ring-2 focus:ring-ring bg-card text-foreground"
+                                            className="w-full py-2 px-4 pr-10 text-base rounded-md border border-input focus:outline-none focus:ring-2 focus:ring-ring bg-card text-foreground"
                                         />
-                                        <FiSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                                        <FiSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
 
                                         {suggestions?.length > 0 && (
                                             <ul className="absolute left-0 top-full mt-1 bg-white border border-gray-300 w-full max-h-96 overflow-y-auto z-50 shadow-2xl rounded-b-lg">
@@ -271,7 +271,7 @@ export default function Header() {
                                     </div>
                                     <button
                                         onClick={handleSearchClick}
-                                        className="ml-4 px-4 py-2 bg-green-200  text-black rounded-md hover:bg-primary-dark transition-colors"
+                                        className="ml-1 px-4 py-2 w-[13vh] bg-green-200 text-base font-semibold  text-black rounded-md hover:bg-primary-dark transition-colors"
                                     >
                                         Tìm kiếm
                                     </button>
@@ -424,11 +424,19 @@ export default function Header() {
                                                 >
                                                     Hồ sơ
                                                 </Link>
-                                                <Link onClick={handleLinkClick}
+                                                <Link
+                                                    onClick={handleLinkClick}
+                                                    to="/dashboard"
+                                                    className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
+                                                >
+                                                    Vào trang quản lý
+                                                </Link>
+                                                <Link
+                                                    onClick={handleLinkClick}
                                                     to="/orders"
                                                     className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
                                                 >
-                                                    Đơn hàng của tôi
+                                                    Đơn đã đặt
                                                 </Link>
                                                 <button
                                                     onClick={handleLogout}
@@ -583,6 +591,13 @@ export default function Header() {
                                                     className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
                                                 >
                                                     Hồ sơ
+                                                </Link>
+                                                <Link
+                                                    onClick={handleLinkClick}
+                                                    to="/dashboard"
+                                                    className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
+                                                >
+                                                    Vào trang quản lý
                                                 </Link>
                                                 <Link
                                                     onClick={handleLinkClick}

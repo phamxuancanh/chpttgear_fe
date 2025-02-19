@@ -213,44 +213,6 @@ export default function Home() {
 
     return (
         <div className="min-h-screen bg-background">
-            <header className="bg-card shadow-sm top-0 z-10">
-                <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-                    <div className="flex-1 w-full flex items-center">
-                        <div className="relative flex-grow">
-                            <input
-                                type="text"
-                                value={searchTerm}
-                                onChange={handleSearch}
-                                onKeyDown={handleKeyPress}
-                                placeholder="Search for components..."
-                                className="w-full py-2 px-4 pr-10 rounded-md border border-input focus:outline-none focus:ring-2 focus:ring-ring bg-card text-foreground"
-                            />
-                            <FiSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-
-                            {suggestions?.length > 0 && (
-                                <ul className="absolute left-0 top-full mt-1 bg-white border border-gray-300 w-full max-h-96 overflow-y-auto z-50 shadow-2xl rounded-b-lg">
-                                    {suggestions.map((suggestion) => (
-                                        <li
-                                            key={suggestion.id}
-                                            className="p-2 hover:bg-gray-100 hover:font-bold cursor-pointer"
-                                            onClick={() => setSearchTerm(suggestion.name)}
-                                        >
-                                            {suggestion.name}
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </div>
-                        <button
-                            onClick={handleSearchClick}
-                            className="ml-4 px-4 py-2 bg-green-200  text-black rounded-md hover:bg-primary-dark transition-colors"
-                        >
-                            Tìm kiếm
-                        </button>
-                    </div>
-                </div>
-            </header>
-
             <main className="container mx-auto px-4 py-8">
                 <section className="mb-12">
                     <h2 className="text-2xl font-bold text-foreground mb-6">Categories</h2>

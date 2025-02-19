@@ -3,9 +3,10 @@ import { FaPlus, FaEye, FaSearch, FaTimes } from "react-icons/fa";
 import { DateConverter } from "../../utils/DateConverter";
 import { MdWarehouse } from "react-icons/md";
 import { FiChevronDown } from "react-icons/fi";
-import { getAllInventory, getProductsByInventoryId, getStockInByInventoryId, getStockOutByInventoryId } from "../../routers/ApiRoutes";
+import { getAllInventory, getAllProduct, getProductsByInventoryId, getProductsByListId, getStockInByInventoryId, getStockOutByInventoryId } from "../../routers/ApiRoutes";
 import CreatePurchaseOrderModal from './../Modal/CreatePurchaseOrderModal';
 import { toast } from "react-toastify";
+import AddInventoryModal from "../Modal/AddInventoryModal";
 
 export default function Inventory() {
 
@@ -13,11 +14,11 @@ export default function Inventory() {
     const [isOpen, setIsOpen] = useState(false);
     const [productInInventory, setProductInInventory] = useState([])
     const [inventorys, setInventorys] = useState([])
-    const [products, setProducts] = useState([]);
     const [stock_outs, setStockOuts] = useState([])
     const [stock_ins, setStockIns] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [showCreateOrder, setShowCreateOrder] = useState(false);
+    const [showCreateInventory, setShowCreateInventory] = useState(false);
     const [showDetails, setShowDetails] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
 
@@ -27,6 +28,8 @@ export default function Inventory() {
                 const res = await getAllInventory();
                 console.log(res.data)
                 setInventorys(res.data)
+                const res1 = await getAllProduct();
+                console.log(res1.data)
             } catch (error) {
                 console.error("Error fetching inventory:", error);
             }
@@ -37,43 +40,21 @@ export default function Inventory() {
     const handleChangeInventory = async (inventory) => {
         setSelectedInventory(inventory);
         setIsOpen(false);
-        const res = await getProductsByInventoryId(inventory?.inventory_id)
-        const res1 = await getStockInByInventoryId(inventory?.inventory_id)
-        const res2 = await getStockOutByInventoryId(inventory?.inventory_id)
-        setProductInInventory(res)
-        setStockIns(res1)
-        setStockOuts(res2)
-    }
 
-    // Giả sử bạn sử dụng useEffect để gọi hàm tính toán khi component mount
-    // useEffect(() => {
-    //     const calculateAverageCost = () => {
-    //         const stockByProduct = stock_ins.reduce((acc, stock) => {
-    //             if (!acc[stock.product_id]) {
-    //                 acc[stock.product_id] = [];
-    //             }
-    //             acc[stock.product_id].push(stock.price);
-    //             return acc;
-    //         }, {});
+        const [res, res1, res2] = await Promise.all([
+            getProductsByInventoryId(inventory?.inventory_id),
+            getStockInByInventoryId(inventory?.inventory_id),
+            getStockOutByInventoryId(inventory?.inventory_id)
+        ]);
 
-    //         const updatedProducts = products.map(product => {
-    //             const productStock = stockByProduct[product.product_id];
-    //             if (productStock) {
-    //                 const avgCost = productStock.reduce((sum, price) => sum + price, 0) / productStock.length;
-    //                 return {
-    //                     ...product,
-    //                     cost: avgCost
-    //                 };
-    //             }
-    //             return product;
-    //         });
-    //         return updatedProducts
+        const queryString = res.join(",");
+        const res3 = await getProductsByListId(queryString)
 
-    //     };
-    //     const updatedProducts = calculateAverageCost()
-    //     setProducts(updatedProducts)
+        setProductInInventory(res3.data || []);
+        setStockIns(res1 || []);
+        setStockOuts(res2 || []);
 
-    // }, []);
+    };
 
     const filteredProducts = productInInventory.filter(
         (product) =>
@@ -90,91 +71,38 @@ export default function Inventory() {
         setShowCreateOrder(true);
     };
 
+
+    const handleInventory = () => {
+
+
+        setShowCreateInventory(true);
+    };
+
     const handleViewDetails = (product) => {
         setSelectedProduct(product);
         setShowDetails(true);
     };
 
-    // const handleSubmitOrder = (e) => {
-    //     e.preventDefault(); // Prevent default event behavior
+    const getProductStock = (productId) => {
+        const stockIn = stock_ins
+            .filter(item => item.product_id === productId)
+            .reduce((acc, item) => acc + item.quantity, 0);
 
-    //     // Check required fields
-    //     if (!orderForm.quantity || !orderForm.price) {
-    //         alert("Please fill all fields");
-    //         return;
-    //     }
+        const stockOut = stock_outs
+            .filter(item => item.product_id === productId)
+            .reduce((acc, item) => acc + item.quantity, 0);
 
-    //     const quantity = parseInt(orderForm.quantity, 10);
-    //     const price = parseFloat(orderForm.price);
+        return stockIn - stockOut;
+    };
 
-    //     // Validate quantity and price
-    //     if (isNaN(quantity) || isNaN(price) || quantity <= 0 || price <= 0) {
-    //         alert("Invalid quantity or price");
-    //         return;
-    //     }
+    const getProductCost = (productId) => {
+        const productStockIns = stock_ins.filter(item => item.product_id === productId);
 
-    //     // Ensure a product is selected
-    //     if (!selectedProduct || !selectedProduct.product_id) {
-    //         alert("Please select a product before placing an order.");
-    //         return;
-    //     }
+        const totalCost = productStockIns.reduce((acc, item) => acc + (item.quantity * item.price), 0);
+        const totalQuantity = productStockIns.reduce((acc, item) => acc + item.quantity, 0);
 
-    //     // Update product stock
-    //     const updatedProducts = products.map((product) =>
-    //         product.product_id === selectedProduct.product_id
-    //             ? { ...product, quantity_in_stock: product.quantity_in_stock + quantity }
-    //             : product
-    //     );
-    //     console.log("tới đây", quantity, selectedProduct)
-    //     // Update purchase history
-    //     const updatedHistory = [
-    //         ...purchaseHistory,
-    //         {
-    //             productId: selectedProduct.product_id,
-    //             date: new Date().toISOString(), // Converts the current time to a formatted string (dd/mm/yyyy hh:mm:ss)
-    //             quantity,
-    //             price,
-    //         },
-    //     ];
-
-    //     // Calculate new average cost
-    //     const totalQuantity = updatedHistory
-    //         .filter((order) => order.productId === selectedProduct.product_id) // Get orders of the selected product
-    //         .reduce((acc, order) => acc + order.quantity, 0); // Calculate total quantity
-
-    //     const totalCost = updatedHistory
-    //         .filter((order) => order.productId === selectedProduct.product_id) // Get orders of the selected product
-    //         .reduce((acc, order) => acc + order.quantity * order.price, 0); // Calculate total cost
-
-    //     const newAverageCost = totalQuantity > 0 ? totalCost / totalQuantity : 0; // Avoid division by zero
-
-    //     // Update the selected product's price (average cost)
-    //     const updatedProductWithPrice = updatedProducts.map((product) =>
-    //         product.product_id === selectedProduct.product_id
-    //             ? { ...product, average_cost: newAverageCost } // Update price to average cost
-    //             : product
-    //     );
-
-    //     // Set the updated state values
-    //     setPurchaseHistory(updatedHistory); // Set the updated purchase history
-    //     setProducts(updatedProductWithPrice); // Set the updated products list
-
-    //     // Reset the form and close modal
-    //     setShowCreateOrder(false);
-    //     setOrderForm({ quantity: "", price: "" });
-
-    //     // Update selected product and products list
-    //     setSelectedProduct({
-    //         ...selectedProduct,
-    //         quantity_in_stock: selectedProduct.quantity_in_stock + quantity, // Update stock
-    //         average_cost: newAverageCost, // Update the price with the new average cost
-    //     });
-    // };
-
-    // const filteredWarehouses = inventorys.filter((inventory) =>
-    //     inventory.name.toLowerCase().includes(searchQuery1.toLowerCase())
-    // );
-
+        return totalQuantity > 0 ? (totalCost / totalQuantity).toFixed(2) : 0;
+    };
 
 
     return (
@@ -182,12 +110,20 @@ export default function Inventory() {
             <div className="max-w-7xl mx-auto">
                 <div className="flex justify-between items-center">
                     <h1 className="text-3xl font-bold text-gray-900 mb-8 mt-3">Product Inventory Management</h1>
-                    <button
-                        onClick={() => handleCreateOrder()}
-                        className="text-gray-50 hover:text-indigo-900 mr-4 bg-green-500 p-3 rounded-lg"
-                    >
-                        <FaPlus className="inline mr-1" /> Create Order
-                    </button>
+                    <div>
+                        <button
+                            onClick={() => handleInventory()}
+                            className="text-gray-50 hover:text-indigo-900 mr-4 bg-green-500 p-3 rounded-lg"
+                        >
+                            <FaPlus className="inline mr-1" /> Create Inventory
+                        </button>
+                        <button
+                            onClick={() => handleCreateOrder()}
+                            className="text-gray-50 hover:text-indigo-900 mr-4 bg-green-500 p-3 rounded-lg"
+                        >
+                            <FaPlus className="inline mr-1" /> Create Order
+                        </button>
+                    </div>
 
                 </div>
                 <div className="mb-6 flex items-center bg-white rounded-lg p-3 shadow-sm">
@@ -211,7 +147,7 @@ export default function Inventory() {
                                 {selectedInventory ? (
                                     <>
                                         <MdWarehouse className="mr-2 text-blue-600" />
-                                        Tên kho: {selectedInventory.name} - Địa chỉ: {selectedInventory.address} - Tồn kho: {selectedInventory.quantity_in_stock}
+                                        Tên kho: {selectedInventory.name} - Địa chỉ: {selectedInventory.address.split('|')[0].trim()} - Tồn kho: {selectedInventory.quantity_in_stock}
                                     </>
                                 ) : (
                                     "Select inventory..."
@@ -231,7 +167,7 @@ export default function Inventory() {
                                         }}
                                     >
                                         <MdWarehouse className="mr-2 text-blue-600" />
-                                        Tên kho: {inventory.name} - Địa chỉ: {inventory.address} - Tồn kho: {inventory.quantity_in_stock}
+                                        Tên kho: {inventory.name} - Địa chỉ: {inventory.address.split('|')[0].trim()} - Tồn kho: {inventory.quantity_in_stock}
                                     </button>
                                 ))}
                             </div>
@@ -262,8 +198,8 @@ export default function Inventory() {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${product.cost && product.cost.toFixed(2)}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{0}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${getProductCost(product.id)}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getProductStock(product.id)}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <button
                                             onClick={() => handleViewDetails(product)}
@@ -279,7 +215,11 @@ export default function Inventory() {
                 </div>
 
                 {showCreateOrder && (
-                    <CreatePurchaseOrderModal setShowCreateOrder={setShowCreateOrder} productList={products} inventory={selectedInventory} />
+                    <CreatePurchaseOrderModal setShowCreateOrder={setShowCreateOrder} inventory={selectedInventory} />
+                )}
+
+                {showCreateInventory && (
+                    <AddInventoryModal setShowCreateInventory={setShowCreateInventory} />
                 )}
 
                 {showDetails && selectedProduct && (
@@ -311,19 +251,29 @@ export default function Inventory() {
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
                                             </tr>
                                         </thead>
-                                        {/* <tbody className="bg-white divide-y divide-gray-200">
-                                            {purchaseHistory
-                                                .filter((order) => order.productId === selectedProduct.product_id)
-                                                .sort((a, b) => new Date(b.date) - new Date(a.date)) // Sorting by most recent date first
-                                                .map((order, index) => (
-                                                    <tr key={index}>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{DateConverter(order.date)}</td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.quantity}</td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${order.price}</td>
-                                                    </tr>
-                                                ))}
-                                        </tbody> */}
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {stock_ins?.filter(stock_in => stock_in.product_id === selectedProduct.id).length > 0 ? (
+                                                stock_ins
+                                                    .filter(stock_in => stock_in.product_id === selectedProduct.id)
+                                                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                                                    .map((stock_in, index) => (
+                                                        <tr key={index} className="hover:bg-gray-100">
+                                                            <td className="px-6 py-4 text-sm text-gray-900">{DateConverter(stock_in.createdAt)}</td>
+                                                            <td className="px-6 py-4 text-sm text-gray-900">{stock_in.quantity}</td>
+                                                            <td className="px-6 py-4 text-sm text-gray-900">{stock_in.price}</td>
+                                                        </tr>
+                                                    ))
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan="3" className="px-6 py-4 text-center text-gray-500">
+                                                        No data available
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+
                                     </table>
+
                                 </div>
                             </div>
                         </div>
