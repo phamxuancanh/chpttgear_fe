@@ -4,21 +4,34 @@ import { debounce } from "lodash";
 import { FaTimes } from "react-icons/fa";
 import { toast } from "react-toastify";
 import axios from "axios";
-import { createStockIn, increaseQuantity } from "../../routers/ApiRoutes";
+import { createStockIn, getAllProduct, increaseQuantity } from "../../routers/ApiRoutes";
 
-export default function CreatePurchaseOrderModal({ setShowCreateOrder, productList, inventory }) {
+export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory }) {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedProducts, setSelectedProducts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [quantities, setQuantities] = useState({});
     const [prices, setPrices] = useState({});
-    const [products, setProducts] = useState(productList);
+    const [products, setProducts] = useState([]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const res1 = await getAllProduct();
+                console.log(res1.data)
+                setProducts(res1.data)
+            } catch (error) {
+                console.error("Error fetching inventory:", error);
+            }
+        };
+        fetchData();
+    }, []);
 
     const debouncedSearch = debounce((term) => {
         setLoading(true);
         try {
-            const filtered = productList.filter(product =>
+            const filtered = products.filter(product =>
                 product.name.toLowerCase().includes(term.toLowerCase())
             );
             setProducts(filtered);
@@ -36,33 +49,33 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, productLi
 
     const handleSelectAll = (e) => {
         if (e.target.checked) {
-            setSelectedProducts(products.map(p => p.product_id));
+            setSelectedProducts(products.map(p => p.id));
             console.log(products)
         } else {
             setSelectedProducts([]);
         }
     };
 
-    const handleSelectProduct = (product_id) => {
+    const handleSelectProduct = (id) => {
         setSelectedProducts(prevSelected =>
-            prevSelected.includes(product_id)
-                ? prevSelected.filter(id => id !== product_id)
-                : [...prevSelected, product_id]
+            prevSelected.includes(id)
+                ? prevSelected.filter(id => id !== id)
+                : [...prevSelected, id]
         );
     };
 
-    const handleQuantityChange = (product_id, value) => {
+    const handleQuantityChange = (id, value) => {
         const quantity = parseInt(value) || 0;
         setQuantities(prev => ({
             ...prev,
-            [product_id]: Math.max(0, quantity)
+            [id]: Math.max(0, quantity)
         }));
     };
-    const handlePriceChange = (product_id, value) => {
+    const handlePriceChange = (id, value) => {
         const quantity = parseInt(value) || 0;
         setPrices(prev => ({
             ...prev,
-            [product_id]: Math.max(0, quantity)
+            [id]: Math.max(0, quantity)
         }));
     };
 
@@ -187,13 +200,13 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, productLi
                                 <div>
                                     {products.map((product) => (
                                         <div
-                                            key={product.product_id}
+                                            key={product.id}
                                             className="flex items-center p-4 hover:bg-gray-50 border-b border-gray-200"
                                         >
                                             <input
                                                 type="checkbox"
-                                                checked={selectedProducts.includes(product.product_id)}
-                                                onChange={() => handleSelectProduct(product.product_id)}
+                                                checked={selectedProducts.includes(product.id)}
+                                                onChange={() => handleSelectProduct(product.id)}
                                                 className="h-5 w-5 text-blue-600 rounded"
                                                 aria-label={`Select ${product.name}`}
                                             />
@@ -207,25 +220,25 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, productLi
                                                 <h3 className="font-medium text-gray-900">{product.name}</h3>
                                             </div>
                                             <div className="flex items-center space-x-2 mr-4">
-                                                <label htmlFor={`price-${product.product_id}`} className="text-sm text-gray-600">Đơn giá:</label>
+                                                <label htmlFor={`price-${product.id}`} className="text-sm text-gray-600">Đơn giá:</label>
                                                 <input
-                                                    id={`price-${product.product_id}`}
+                                                    id={`price-${product.id}`}
                                                     type="number"
                                                     min="0"
-                                                    value={prices[product.product_id] || 0}
-                                                    onChange={(e) => handlePriceChange(product.product_id, e.target.value)}
+                                                    value={prices[product.id] || 0}
+                                                    onChange={(e) => handlePriceChange(product.id, e.target.value)}
                                                     className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                     aria-label={`price for ${product.name}`}
                                                 />
                                             </div>
                                             <div className="flex items-center space-x-2">
-                                                <label htmlFor={`quantity-${product.product_id}`} className="text-sm text-gray-600">Số lượng:</label>
+                                                <label htmlFor={`quantity-${product.id}`} className="text-sm text-gray-600">Số lượng:</label>
                                                 <input
-                                                    id={`quantity-${product.product_id}`}
+                                                    id={`quantity-${product.id}`}
                                                     type="number"
                                                     min="0"
-                                                    value={quantities[product.product_id] || 0}
-                                                    onChange={(e) => handleQuantityChange(product.product_id, e.target.value)}
+                                                    value={quantities[product.id] || 0}
+                                                    onChange={(e) => handleQuantityChange(product.id, e.target.value)}
                                                     className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                     aria-label={`Quantity for ${product.name}`}
                                                 />
