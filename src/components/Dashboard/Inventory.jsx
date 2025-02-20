@@ -28,8 +28,6 @@ export default function Inventory() {
                 const res = await getAllInventory();
                 console.log(res.data)
                 setInventorys(res.data)
-                const res1 = await getAllProduct();
-                console.log(res1.data)
             } catch (error) {
                 console.error("Error fetching inventory:", error);
             }

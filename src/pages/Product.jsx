@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FiSearch, FiSliders, FiStar, FiShoppingCart, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import ProductCard from './../components/ProductCard';
 import { Link } from "react-router-dom";
+import { getAllProduct } from "../routers/ApiRoutes";
 
 export default function Product() {
 
@@ -10,7 +11,23 @@ export default function Product() {
     const [selectedCategories, setSelectedCategories] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [filteredProducts, setFilteredProducts] = useState([]);
+    const [products, setProducts] = useState([])
     const productsPerPage = 6;
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const res1 = await getAllProduct();
+                setProducts(res1.data)
+                setSearchQuery("")
+                setPriceRange(1000)
+                setSelectedCategories([])
+            } catch (error) {
+                console.error("Error fetching inventory:", error);
+            }
+        };
+        fetchData();
+    }, []);
 
     const categories = [
         "Graphics Cards",
@@ -21,119 +38,8 @@ export default function Product() {
         "Power Supply",
     ];
 
-    const dummyProducts = [
-        {
-            id: 1,
-            name: "RTX 4090 Graphics Card",
-            price: 1499.99,
-            rating: 4.8,
-            reviews: 245,
-            image: "https://images.unsplash.com/photo-1587202372775-e229f172b9d7",
-            category: "Graphics Cards",
-        },
-        {
-            id: 2,
-            name: "Intel i9 13900K Processor",
-            price: 599.99,
-            rating: 4.9,
-            reviews: 189,
-            image: "https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea",
-            category: "Processors",
-        },
-        {
-            id: 3,
-            name: "ROG STRIX Z790-E Gaming Motherboard",
-            price: 499.99,
-            rating: 4.7,
-            reviews: 156,
-            image: "https://images.unsplash.com/photo-1518770660439-4636190af475",
-            category: "Motherboards",
-        },
-        {
-            id: 4,
-            name: "Corsair Vengeance 32GB RAM",
-            price: 129.99,
-            rating: 4.6,
-            reviews: 320,
-            image: "https://images.unsplash.com/photo-1562976540-1502c2145186",
-            category: "RAM",
-        },
-        {
-            id: 5,
-            name: "Samsung 2TB NVMe SSD",
-            price: 199.99,
-            rating: 4.9,
-            reviews: 427,
-            image: "https://images.unsplash.com/photo-1597872200969-2b65d56bd16b",
-            category: "Storage",
-        },
-        {
-            id: 6,
-            name: "Seasonic 850W Power Supply",
-            price: 149.99,
-            rating: 4.8,
-            reviews: 265,
-            image: "https://images.unsplash.com/photo-1587202372555-e229f172b9d7",
-            category: "Power Supply",
-        },
-        {
-            id: 7,
-            name: "RTX 4080 Graphics Card",
-            price: 1199.99,
-            rating: 4.7,
-            reviews: 178,
-            image: "https://images.unsplash.com/photo-1587202372775-e229f172b9d7",
-            category: "Graphics Cards",
-        },
-        {
-            id: 8,
-            name: "AMD Ryzen 9 7950X",
-            price: 699.99,
-            rating: 4.8,
-            reviews: 234,
-            image: "https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea",
-            category: "Processors",
-        },
-        {
-            id: 9,
-            name: "MSI MPG B550 Motherboard",
-            price: 189.99,
-            rating: 4.5,
-            reviews: 145,
-            image: "https://images.unsplash.com/photo-1518770660439-4636190af475",
-            category: "Motherboards",
-        },
-        {
-            id: 10,
-            name: "G.Skill Trident Z5 RGB 64GB",
-            price: 299.99,
-            rating: 4.9,
-            reviews: 89,
-            image: "https://images.unsplash.com/photo-1562976540-1502c2145186",
-            category: "RAM",
-        },
-        {
-            id: 11,
-            name: "WD Black 4TB NVMe SSD",
-            price: 399.99,
-            rating: 4.8,
-            reviews: 156,
-            image: "https://images.unsplash.com/photo-1597872200969-2b65d56bd16b",
-            category: "Storage",
-        },
-        {
-            id: 12,
-            name: "Corsair 1000W Power Supply",
-            price: 229.99,
-            rating: 4.7,
-            reviews: 198,
-            image: "https://images.unsplash.com/photo-1587202372555-e229f172b9d7",
-            category: "Power Supply",
-        }
-    ];
-
     useEffect(() => {
-        let filtered = [...dummyProducts];
+        let filtered = [...products];
 
         if (searchQuery) {
             filtered = filtered.filter(product =>

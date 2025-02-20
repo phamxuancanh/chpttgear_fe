@@ -138,6 +138,11 @@ export const createProduct = async (payload) => {
     return await requestWithJwt.post('/products', { data: payload });
 };
 
+export const findProductById = async (payload) => {
+    console.log(payload);
+    return await requestWithJwt.get(`/products/products/findById/${payload}`);
+};
+
 
 export const getProductsByListId = async (productIds) => {
     return await requestWithJwt.get('/products/products/findByIds', { params: { productIds } });
@@ -203,9 +208,50 @@ export const getStockInByInventoryId = async (inventory_id) => {
     }
 };
 
+export const getStockInByProductId = async (product_id) => {
+    try {
+        console.log(product_id)
+        const response = await requestWithJwt.get(`/inventory/stock-in/getByProductId/${product_id}`);
+        return response.data; // Trả về dữ liệu từ phản hồi của API
+    } catch (error) {
+        console.log(error)
+        if (error && error.status === 404) {
+            return []; // Trả về mảng rỗng nếu API trả về 404
+        }
+        console.error('Error get stock-in: ', error);
+        throw error; // Ném lỗi nếu không phải lỗi 404
+    }
+};
+export const getStockOutByProductId = async (product_id) => {
+    try {
+        console.log(product_id)
+        const response = await requestWithJwt.get(`/inventory/stock-out/getByProductId/${product_id}`);
+        return response.data; // Trả về dữ liệu từ phản hồi của API
+    } catch (error) {
+        console.log(error)
+        if (error && error.status === 404) {
+            return []; // Trả về mảng rỗng nếu API trả về 404
+        }
+        console.error('Error get stock-in: ', error);
+        throw error; // Ném lỗi nếu không phải lỗi 404
+    }
+};
+
 export const getStockOutByInventoryId = async (inventory_id) => {
     try {
         const response = await requestWithJwt.get(`/inventory/stock-out/getByInventoryId/${inventory_id}`);
+        return response.data; // Trả về dữ liệu từ phản hồi của API
+    } catch (error) {
+        if (error && error.status === 404) {
+            return []; // Trả về mảng rỗng nếu API trả về 404
+        }
+        console.error('Error get stock-out: ', error);
+        throw error; // Ném lỗi nếu không phải lỗi 404
+    }
+};
+export const getQuantityInStock = async (product_id) => {
+    try {
+        const response = await requestWithJwt.get(`/inventory/getQuantityInStockByProductId/${product_id}`);
         return response.data; // Trả về dữ liệu từ phản hồi của API
     } catch (error) {
         if (error && error.status === 404) {
