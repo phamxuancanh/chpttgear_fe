@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FaArrowLeft, FaArrowRight, FaStar, FaStarHalfAlt } from "react-icons/fa";
 import ProductCard from "../components/ProductCard";
 import { DateConverter } from './../utils/DateConverter';
 import { BiSolidCommentEdit } from "react-icons/bi";
+import { useParams } from "react-router-dom";
+import { findProductById, getQuantityInStock, getStockInByProductId, getStockOutByProductId } from "../routers/ApiRoutes";
 
 
 export default function ProductDetail() {
@@ -10,6 +12,73 @@ export default function ProductDetail() {
     const [quantity, setQuantity] = useState(1);
     const [sortBy, setSortBy] = useState("recent");
     const [newReview, setNewReview] = useState({ name: "", rating: 5, comment: "" });
+    const { id } = useParams();
+    const [product, setProduct] = useState({})
+    const [quantityInStock, setQuantityInStock] = useState(0)
+    const [stockIns, setStockIns] = useState([]);
+    const [stockOuts, setStockOuts] = useState([]);
+    const reviewsRef = useRef(null);
+
+    const scrollToReviews = () => {
+        console.log("a")
+        if (reviewsRef.current) {
+            reviewsRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+    };
+
+    // useEffect(() => {
+    //     const fetchData = async () => {
+    //         try {
+    //             const [productRes, stockInRes, stockOutRes] = await Promise.all([
+    //                 findProductById(id),
+    //                 getStockInByProductId(id),
+    //                 getStockOutByProductId(id),
+    //             ]);
+
+    //             if (productRes?.data) setProduct(productRes.data);
+    //             if (Array.isArray(stockInRes)) setStockIns(stockInRes);
+    //             if (Array.isArray(stockOutRes)) setStockOuts(stockOutRes);
+    //             setQuantityInStock(getProductStock())
+    //             console.log(getProductStock())
+    //         } catch (error) {
+    //             console.error("Error fetching product data:", error);
+    //         }
+    //     };
+
+    //     if (id) fetchData();
+    // }, [id]); // Gọi lại khi id thay đổi
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [productRes, quantityInStockRes] = await Promise.all([
+                    findProductById(id),
+                    getQuantityInStock(id)
+                ]);
+
+                if (productRes?.data) setProduct(productRes.data);
+                if (quantityInStockRes) setQuantityInStock(quantityInStockRes.quantityInStock);
+                
+            } catch (error) {
+                console.error("Error fetching product data:", error);
+            }
+        };
+
+        if (id) fetchData();
+    }, [id]); // Gọi lại khi id thay đổi
+
+    const getProductStock = () => {
+        return (
+            stockIns.reduce(
+                (acc, item) => (item.product_id === id ? acc + item.quantity : acc),
+                0
+            ) -
+            stockOuts.reduce(
+                (acc, item) => (item.product_id === id ? acc + item.quantity : acc),
+                0
+            )
+        );
+    };
 
     // Added similar products data
     const similarProducts = [
@@ -58,31 +127,17 @@ export default function ProductDetail() {
         { product_id: 4090, user: "Charlie Brown", score: 2, comment: "Worth every penny!", date: "2024-02-08" }
     ];
 
-    const product = {
-        name: "NVIDIA GeForce RTX 4090 Graphics Card",
-        price: 1599.99,
-        rating: 4.8,
-        description: "Experience unprecedented gaming performance with the NVIDIA GeForce RTX 4090, featuring next-gen ray tracing capabilities and advanced AI-powered graphics.",
-        images: [
-            "https://images.unsplash.com/photo-1587202372634-32705e3bf49c",
-            "https://images.unsplash.com/photo-1591488320449-011701bb6704",
-            "https://images.unsplash.com/photo-1592664474505-51c549ad15c5"
-        ],
-        specs: [
-            { label: "CUDA Cores", value: "16384" },
-            { label: "Memory", value: "24GB GDDR6X" },
-            { label: "Clock Speed", value: "2.52 GHz" },
-            { label: "Ray Tracing Cores", value: "128" },
-            { label: "Power Consumption", value: "450W" },
-            { label: "Manufacturing Process", value: "4nm" }
-        ],
-    };
+    const images = [
+        "https://images.unsplash.com/photo-1587202372634-32705e3bf49c",
+        "https://images.unsplash.com/photo-1591488320449-011701bb6704",
+        "https://images.unsplash.com/photo-1592664474505-51c549ad15c5"
+    ]
 
     const handleImageNavigation = (direction) => {
         if (direction === "next") {
-            setCurrentImageIndex((prev) => (prev + 1) % product.images.length);
+            setCurrentImageIndex((prev) => (prev + 1) % images.length);
         } else {
-            setCurrentImageIndex((prev) => (prev - 1 + product.images.length) % product.images.length);
+            setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
         }
     };
 
@@ -132,6 +187,9 @@ export default function ProductDetail() {
         return distribution;
     };
 
+    const handleIncrease = () => setQuantity((prev) => Math.min(prev + 1, quantityInStock));
+    const handleDecrease = () => setQuantity((prev) => Math.max(prev - 1, 1));
+
 
     return (
         <div className="min-h-screen bg-gray-50 -mt-20">
@@ -142,7 +200,7 @@ export default function ProductDetail() {
                     {/* Image Carousel */}
                     <div className="relative">
                         <img
-                            src={product.images[currentImageIndex]}
+                            src={images[currentImageIndex]}
                             alt={`Product view ${currentImageIndex + 1}`}
                             className="w-full h-[400px] object-cover rounded-lg"
                         />
@@ -163,29 +221,50 @@ export default function ProductDetail() {
                     {/* Product Details */}
                     <div>
                         <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
-                        <div className="flex items-center mb-4">
-                            {renderStars(product.rating)}
-                            <span className="ml-2 text-gray-600">({product.rating})</span>
+                        <div className="flex items-center mb-4 text-lg text-orange-400">
+                            <p className="font-bold mr-1 ">{calculateAverageScore(ratings).toFixed(1)}</p>
+                            <FaStar className="mr-10 " />
+                            <p
+                                className="font-bold text-blue-500 cursor-pointer "
+                                onClick={() => scrollToReviews()}
+                            >
+                                Xem đánh giá
+                            </p>
                         </div>
-                        <p className="text-2xl font-bold text-blue-600 mb-4">${product.price}</p>
-                        <p className="text-gray-600 mb-6">{product.description}</p>
+                        <p className="text-3xl font-bold text-blue-600 mb-4">${product.price}</p>
+                        <p className="text-gray-600 mb-6 ">{product.description}</p>
+                        <p className={`text-gray-600 mb-6 text-lg`}>Tình trạng: <span className={`font-semibold text-base ${quantityInStock > 0 ? "text-green-500" : "text-red-500"}`}>{quantityInStock > 0 ? "Còn hàng" : "Hết hàng"}</span></p>
 
                         {/* Add to Cart Section */}
                         <div className="flex items-center space-x-4 mb-6">
-                            <select
-                                value={quantity}
-                                onChange={(e) => setQuantity(Number(e.target.value))}
-                                className="border rounded-md px-3 py-2"
-                            >
-                                {[1, 2, 3, 4, 5].map((num) => (
-                                    <option key={num} value={num}>{num}</option>
-                                ))}
-                            </select>
+                            <div className="flex items-center border rounded-md">
+                                <button
+                                    onClick={handleDecrease}
+                                    className="px-3 py-2 bg-gray-200 hover:bg-gray-300"
+                                >
+                                    -
+                                </button>
+                                <input
+                                    type="number"
+                                    value={quantity}
+                                    onChange={(e) => {
+                                        let val = Number(e.target.value);
+                                        if (val >= 1 && val <= 5) setQuantity(val);
+                                    }}
+                                    className="w-12 text-center border-none outline-none"
+                                />
+                                <button
+                                    onClick={handleIncrease}
+                                    className="px-3 py-2 bg-gray-200 hover:bg-gray-300"
+                                >
+                                    +
+                                </button>
+                            </div>
                             <button className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">
                                 Add to Cart
                             </button>
                             <button className="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition-colors">
-                                By Now
+                                Buy Now
                             </button>
                         </div>
                     </div>
@@ -195,14 +274,14 @@ export default function ProductDetail() {
                     <h2 className="text-2xl font-bold mb-4">Technical Specifications</h2>
                     <div className="overflow-x-auto">
                         <table className="table-auto w-full border-collapse border border-gray-300">
-                            <tbody>
+                            {/* <tbody>
                                 {product.specs.map((spec, index) => (
                                     <tr key={index} className="even:bg-gray-100">
                                         <td className="border border-gray-300 px-4 py-2 font-semibold">{spec.label}</td>
                                         <td className="border border-gray-300 px-4 py-2">{spec.value}</td>
                                     </tr>
                                 ))}
-                            </tbody>
+                            </tbody> */}
                         </table>
                     </div>
                 </div>
@@ -218,7 +297,7 @@ export default function ProductDetail() {
                 </div>
 
                 {/* overall review */}
-                <div className="w-full  shadow-lg bg-gray-50 rounded-sm py-10 px-7">
+                <div className="w-full  shadow-lg bg-gray-50 rounded-sm py-10 px-7 " >
                     <h2 className="text-2xl font-bold mb-6 ">Đánh giá & Nhận xét PC GVN Intel i5-12400F/ VGA RTX 4060</h2>
                     <div className="w-full flex flex-col  items-center border-b border-gray-200 ">
                         <div className="w-full  p-6 shadow-sm text-center ">
@@ -248,7 +327,7 @@ export default function ProductDetail() {
                         </div>
                     </div>
 
-                    <div className="py-10 ">
+                    <div className="py-10 " ref={reviewsRef}>
                         {ratings.map((rating, index) => (
                             <div key={index} className="w-8/12 border-b border-gray-200">
                                 <div className="w-full flex justify-start items-center">

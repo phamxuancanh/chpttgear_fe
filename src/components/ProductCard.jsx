@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 export default function ProductCard({ product }) {
     return (
         <div className="bg-card rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105">
-            <Link to="/product/123">
+            <Link to={`/product/${product.id}`}>
                 <img
                     src="/aa.jpg"
                     alt={product.name}
@@ -17,7 +17,7 @@ export default function ProductCard({ product }) {
             </Link>
 
             <div className="p-4">
-                <Link to="/product/123">
+                <Link to={`/product/${product.id}`}>
                     <h3 className="text-lg font-semibold text-foreground mb-2 cursor-pointer">{product.name}</h3>
                 </Link>
 
