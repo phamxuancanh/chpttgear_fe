@@ -2,15 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import { FiTrash2, FiPlus, FiUpload } from "react-icons/fi";
 import { MdWarehouse } from "react-icons/md";
 import { FiChevronDown } from "react-icons/fi";
-import { getAllInventory } from "../../routers/ApiRoutes";
+import { getAllInventory, findAllCategory, findAllSpecification, createProduct} from "../../routers/ApiRoutes";
 import { useDropzone } from "react-dropzone";
 import { ClockLoader } from "react-spinners";
 import { FaTimes } from "react-icons/fa";
 
 export default function AddProductModal({ setShowProductModal }) {
-
+  
   const [name, setName] = useState("");
-  const [productNumber, setProductNumber] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState('');
   const [brand, setBrand] = useState("");
@@ -18,43 +17,22 @@ export default function AddProductModal({ setShowProductModal }) {
   const [size, setSize] = useState("");
   const [weight, setWeight] = useState(0);
   const [guaranteePeriod, setGuaranteePeriod] = useState(0);
-  const [selectedCategory, setSelectedCategory] = useState({ id: "", name: "" });
-  const [specifications, setSpecifications] = useState([{ name: "", value: "" }]);
+  const [images, setImages] = useState([]);
 
+  const [selectedCategory, setSelectedCategory] = useState({id: "", name: ""});
+  const [specifications, setSpecifications] = useState([{ name: "", value: "" }]);
   const [selectedInventory, setSelectedInventory] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [inventorys, setInventorys] = useState([])
   const [loading, setLoading] = useState(false)
   const [selectedSpec, setSelectedSpec] = useState("");
-  const [images, setImages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await getAllInventory();
-        console.log(res.data)
-        setInventorys(res.data)
-      } catch (error) {
-        console.error("Error fetching inventory:", error);
-      }
-    };
-    fetchData();
-  }, []);
+  const [categories, setCategories] = useState([]);
+  const [specifications01, setSpecifications01] = useState([]);
 
-
-  const onDrop = useCallback(acceptedFiles => {
-    setImages(prev => [...prev, ...acceptedFiles.map(file => Object.assign(file, {
-      preview: URL.createObjectURL(file)
-    }))]);
-  }, []);
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: { "image/*": [] },
-    maxSize: 5242880
-  });
+  
   const productSpecs = {
     Headphones: [
       { key: "brand", value: "Thương hiệu" },
@@ -79,7 +57,7 @@ export default function AddProductModal({ setShowProductModal }) {
       { key: "key_rollover", value: "Số lượng phím nhận diện cùng lúc" },
       { key: "size", value: "Kích thước" },
       { key: "weight", value: "Trọng lượng" },
-      { key: "color", value: "Màu sắc" }
+      { key: "color", value: "Màu sắc" } 
     ],
     Mice: [
       { key: "brand", value: "Thương hiệu" },
@@ -117,36 +95,49 @@ export default function AddProductModal({ setShowProductModal }) {
     ]
   };
 
+  useEffect(() => {
+    const fetchInvention = async () => {
+      try {
+        const res = await getAllInventory();
+        console.log(res.data)
+        setInventorys(res.data)
+      } catch (error) {
+        console.error("Error fetching inventory:", error);
+      }
+    };
+    const fetchCategories = async () => {
+      try {
+          const response = await findAllCategory();
+          setCategories(response.data);
+      } catch (error) {
+          console.error('Error fetching categories:', error);
+      }
+    };
+    const fetchSpecifications = async () => {
+        try {
+            const response = await findAllSpecification();
+            setSpecifications01(response.data);
+            specifications01.forEach(specification => console.log(specification.name));
+        } catch (error) {
+            console.error('Error fetching specifications:', error);
+        }
+    };
+    fetchInvention();
+    fetchCategories();
+    fetchSpecifications();
+  }, []);
 
-  const productCategory = [
-    { id: 1, name: "Headphones", description: "Các loại tai nghe có dây và không dây" },
-    { id: 2, name: "Keyboards", description: "Bàn phím cơ, bàn phím không dây, bàn phím gaming" },
-    { id: 3, name: "Mice", description: "Chuột máy tính, chuột gaming, chuột không dây" },
-    { id: 4, name: "RAM", description: "Bộ nhớ RAM cho máy tính, laptop" },
-    { id: 5, name: "Monitors", description: "Màn hình máy tính với nhiều kích thước và độ phân giải khác nhau" },
-    { id: 6, name: "CPUs", description: "Bộ vi xử lý dành cho PC và laptop" },
-    { id: 7, name: "GPUs", description: "Card đồ họa cho máy tính gaming và thiết kế đồ họa" },
-    { id: 8, name: "Motherboards", description: "Bo mạch chủ hỗ trợ nhiều dòng CPU khác nhau" },
-    { id: 9, name: "Power Supplies", description: "Nguồn máy tính với công suất đa dạng" },
-    { id: 10, name: "Storage", description: "Ổ cứng SSD, HDD cho PC và laptop" },
-    { id: 11, name: "Cooling Systems", description: "Hệ thống tản nhiệt CPU, GPU, quạt case" },
-    { id: 12, name: "Cases", description: "Vỏ case máy tính với nhiều kiểu dáng và kích thước" },
-    { id: 13, name: "Sound Cards", description: "Card âm thanh nâng cao trải nghiệm âm thanh" },
-    { id: 14, name: "Capture Cards", description: "Card ghi hình phục vụ livestream và quay video" },
-    { id: 15, name: "External Hard Drives", description: "Ổ cứng di động lưu trữ dữ liệu" },
-    { id: 16, name: "USB Flash Drives", description: "USB lưu trữ dữ liệu với nhiều dung lượng khác nhau" },
-    { id: 17, name: "Networking Equipment", description: "Thiết bị mạng như router, switch, card mạng" },
-    { id: 18, name: "Cables & Adapters", description: "Cáp kết nối, bộ chuyển đổi HDMI, USB, Type-C" },
-    { id: 19, name: "Power Banks", description: "Pin sạc dự phòng hỗ trợ các thiết bị điện tử" },
-    { id: 20, name: "Webcams", description: "Camera webcam phục vụ học online, họp trực tuyến" },
-    { id: 21, name: "Microphones", description: "Microphone dành cho streaming, thu âm, hội nghị" },
-    { id: 22, name: "VR Headsets", description: "Kính thực tế ảo (VR) cho gaming và trải nghiệm số" },
-    { id: 23, name: "Game Controllers", description: "Tay cầm chơi game cho PC và console" },
-    { id: 24, name: "Docking Stations", description: "Dock mở rộng cổng kết nối cho laptop, PC" }
-  ];
+  const onDrop = useCallback(acceptedFiles => {
+    setImages(prev => [...prev, ...acceptedFiles.map(file => Object.assign(file, {
+      preview: URL.createObjectURL(file)
+    }))]);
+  }, []);
 
-
-
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: { "image/*": [] },
+    maxSize: 5242880
+  });
 
   const handleSpecificationChange = (index, field, value) => {
     setSpecifications((prev) =>
@@ -155,7 +146,6 @@ export default function AddProductModal({ setShowProductModal }) {
       )
     );
   };
-
 
   const addSpecification = () => {
     setSpecifications((prev) => [...prev, { name: "", value: "" }]);
@@ -169,12 +159,11 @@ export default function AddProductModal({ setShowProductModal }) {
     setImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("submit")
     console.log({
       name,
-      productNumber,
       description,
       price,
       brand,
@@ -183,16 +172,51 @@ export default function AddProductModal({ setShowProductModal }) {
       size,
       weight,
       guaranteePeriod,
-      category_id: selectedCategory?.id,
+      category: categories.find((category) => category.id === selectedCategory.id),
       specifications,
       inventory_id: selectedInventory?.inventory_id,
+      modifiedDate: new Date().toISOString()
     });
+    const product = {
+      name,
+      description,
+      price,
+      brand,
+      images,
+      color,
+      size,
+      weight,
+      guaranteePeriod,
+      category: categories.find((category) => category.id === selectedCategory.id),
+      inventory_id: selectedInventory?.inventory_id,
+      modifiedDate: new Date().toISOString()
+    };
+    try {
+      // const response = await createProduct(product);
+      const category = categories.find((category) => category.id === selectedCategory.id);
+      const newProduct = await createProduct({
+        name: name,
+        description: description,
+        brand: brand,
+        color: color,
+        guaranteePeriod: guaranteePeriod,
+        image: images,
+        modifiedDate: new Date().toISOString(),
+        price: price,
+        size: size,
+        weight: weight,
+        category: category,
+        inventoryId: selectedInventory?.inventory_id
+      });
+      console.log("Thêm sản phẩm thành công:", newProduct);
+    } catch (error) {
+        console.error("Lỗi khi thêm sản phẩm:", error.response?.data || error.message);
+    }
     handleReset()
   };
 
   const handleReset = () => {
     setName("");
-    setProductNumber("");
     setDescription("");
     setPrice("");
     setBrand("");
@@ -201,7 +225,7 @@ export default function AddProductModal({ setShowProductModal }) {
     setSize("");
     setWeight("");
     setGuaranteePeriod("");
-    setSelectedCategory({ id: "", name: "" });
+    setSelectedCategory({id: "", name: ""});
     setSpecifications([{ name: "", value: "" }]);
     setShowProductModal(false)
   };
@@ -215,6 +239,7 @@ export default function AddProductModal({ setShowProductModal }) {
     const selectedIndex = e.target.selectedIndex;
     const selectedId = e.target.value;
     const selectedName = e.target.options[selectedIndex].text;
+    // const category = categories.find((category) => category.id === selectedId);
 
     setSelectedCategory({ id: selectedId, name: selectedName });
     setSelectedSpec(""); // Reset thông số khi đổi loại sản phẩm
@@ -251,7 +276,7 @@ export default function AddProductModal({ setShowProductModal }) {
       )}
       <div className="min-h-[80vh] max-h-[80vh] bg-gray-50 py-8 px-4 sm:px-6 lg:px-8 w-10/12 ">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-2xl font-bold leading-6 text-gray-900">Product Information</h3>
+          <h3 className="text-2xl font-bold leading-6 text-gray-900">Thông tin sản phẩm</h3>
           <button
             type="button"
             onClick={() => setShowProductModal(false)}
@@ -266,7 +291,7 @@ export default function AddProductModal({ setShowProductModal }) {
             <div className="space-y-6">
               <div className="w-full ">
                 <div className="mb-8">
-                  <label className="block text-sm font-medium mb-2">Chọn Kho</label>
+                  <label className="block text-sm font-medium mb-2">Kho</label>
                   <div className="relative">
                     <button
                       onClick={() => setIsOpen(!isOpen)}
@@ -279,7 +304,7 @@ export default function AddProductModal({ setShowProductModal }) {
                             Tên kho: {selectedInventory.name} - Địa chỉ: {selectedInventory.address}
                           </>
                         ) : (
-                          "Select inventory..."
+                          "Chọn kho"
                         )}
                       </span>
                       <FiChevronDown className={`transition-transform duration-200 ${isOpen ? "transform rotate-180" : ""}`} />
@@ -305,8 +330,7 @@ export default function AddProductModal({ setShowProductModal }) {
                   </div>
                 </div>
                 <div className="w-full">
-                  <label className="block text-sm font-medium text-gray-700">Product Name</label>
-
+                  <label className="block text-sm font-medium text-gray-700">Tên sản phẩm</label>
                   <input
                     type="text"
                     value={name}
@@ -375,7 +399,7 @@ export default function AddProductModal({ setShowProductModal }) {
                 </div>
 
                 <div className="w-full">
-                  <label className="block text-sm font-medium text-gray-700">Price</label>
+                  <label className="block text-sm font-medium text-gray-700">Giá bán</label>
                   <div className="mt-1 relative rounded-md shadow-sm">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <span className="text-gray-500 sm:text-sm">VND</span>
@@ -391,7 +415,7 @@ export default function AddProductModal({ setShowProductModal }) {
                 </div>
 
                 <div className="w-full">
-                  <label className="block text-sm font-medium text-gray-700">Description</label>
+                  <label className="block text-sm font-medium text-gray-700">Mô tả</label>
                   <textarea
                     name="description"
                     rows={3}
@@ -403,27 +427,27 @@ export default function AddProductModal({ setShowProductModal }) {
 
                 <div className="w-full">
                   <label htmlFor="productType" className="block text-sm font-medium text-gray-700">
-                    Product Type
+                    Loại sản phẩm
                   </label>
                   <select
                     id="productType"
                     name="productType"
-                    value={selectedCategory.name}
+                    value={selectedCategory.id}
                     onChange={handleCategoryChange}
                     className="mt-1 block w-full p-3 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                     aria-label="Select a product type"
                   >
-                    <option value="" disabled>Select a type</option>
-                    {productCategory.map((type) => (
-                      <option key={type.id} value={type.id}>
-                        {type.name}
+                    <option value="" disabled>Chọn loại sản phẩm</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
                       </option>
                     ))}
                   </select>
                 </div>
 
                 <div className="w-full">
-                  <label className="block text-sm font-medium text-gray-700">Product Images</label>
+                  <label className="block text-sm font-medium text-gray-700">Hình ảnh</label>
                   <div {...getRootProps()} className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-indigo-500 transition-colors">
                     <div className="space-y-1 text-center">
                       <FiUpload className="mx-auto h-12 w-12 text-gray-400" />
@@ -458,14 +482,14 @@ export default function AddProductModal({ setShowProductModal }) {
 
                 <div className="w-full">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-lg font-medium text-gray-900">Technical Specifications</h4>
+                    <h4 className="text-lg font-medium text-gray-900">Thông số kỹ thuật</h4>
                     <button
                       type="button"
                       onClick={addSpecification}
                       className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
                     >
                       <FiPlus className="-ml-1 mr-2 h-5 w-5" />
-                      Add Specification
+                      Thêm thông số
                     </button>
                   </div>
                   <div className="mt-4 space-y-4">
@@ -479,7 +503,7 @@ export default function AddProductModal({ setShowProductModal }) {
                               onChange={(e) => handleSpecificationChange(index, "name", e.target.value)}
 
                             >
-                              <option value="" disabled>Select a type</option>
+                              <option value="" disabled>Chọn loại thông số</option>
                               {productSpecs[selectedCategory.name].map((spec1, index) => (
                                 <option key={index} value={spec1.key}
 
@@ -522,7 +546,7 @@ export default function AddProductModal({ setShowProductModal }) {
                   className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
                   onClick={handleReset}
                 >
-                  Cancel
+                  Hủy
                 </button>
                 <button
                   type="submit"
@@ -530,7 +554,7 @@ export default function AddProductModal({ setShowProductModal }) {
                   disabled={isSubmitting}
                   className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? "Saving..." : "Save Product"}
+                  {isSubmitting ? "Đang lưu..." : "Lưu"}
                 </button>
               </div>
             </div>

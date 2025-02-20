@@ -1,17 +1,36 @@
-import { useState } from "react";
+import { use, useState, useEffect } from "react";
 import { FiEdit } from "react-icons/fi";
 
 import AddProductModal from "../Modal/AddProductModal";
+import { findAllProduct, findAllCategory, findAllSpecification } from "../../routers/ApiRoutes";
 
 export default function Products() {
 
+    const quantityInStock = 100;
+    const imageTemp = "https://images.unsplash.com/photo-1526406915894-7bcd65f60845?ixlib=rb-1.2.1";
     const [showProductModal, setShowProductModal] = useState(false);
+    const [products, setProducts] = useState([]);
 
-    const products = [
-        { id: 1, name: "Product 1", category: "Electronics", price: "$999", stock: 50, image: "https://images.unsplash.com/photo-1526406915894-7bcd65f60845?ixlib=rb-1.2.1" },
-        { id: 2, name: "Product 2", category: "Clothing", price: "$59", stock: 100, image: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?ixlib=rb-1.2.1" },
-        { id: 3, name: "Product 3", category: "Accessories", price: "$29", stock: 75, image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-1.2.1" }
-    ];
+    // const products = [
+    //     { id: 1, name: "Product 1", category: "Electronics", price: "$999", stock: 50, image: "https://images.unsplash.com/photo-1526406915894-7bcd65f60845?ixlib=rb-1.2.1" },
+    //     { id: 2, name: "Product 2", category: "Clothing", price: "$59", stock: 100, image: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?ixlib=rb-1.2.1" },
+    //     { id: 3, name: "Product 3", category: "Accessories", price: "$29", stock: 75, image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-1.2.1" }
+    // ];
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                const response = await findAllProduct();
+                setProducts(response.data);
+                products.forEach(product => console.log(product.name));
+                console.log("Đây là ds productx")
+            } catch (error) {
+                console.error('Error fetching products:', error);
+            }
+        };
+        fetchProducts();
+    }, []);
+
     const ActionButton = ({ icon: Icon, onClick, color }) => (
         <button
             onClick={onClick}
@@ -26,12 +45,12 @@ export default function Products() {
         <div className="flex-1 p-8">
             <div>
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-semibold">Products</h2>
+                    <h2 className="text-2xl font-semibold">Danh sách sản phẩm</h2>
                     <button
                         onClick={() => setShowProductModal(true)}
                         className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                     >
-                        Add Product
+                        Thêm sản phẩm
                     </button>
                 </div>
                 {showProductModal && <AddProductModal setShowProductModal={setShowProductModal} />}
@@ -39,16 +58,16 @@ export default function Products() {
                     {products.map((product) => (
                         <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
                             <img
-                                src={product.image}
+                                src={imageTemp}
                                 alt={product.name}
                                 className="w-full h-48 object-cover"
                             />
                             <div className="p-4">
                                 <h3 className="text-lg font-semibold">{product.name}</h3>
-                                <p className="text-gray-600">{product.category}</p>
+                                <p className="text-gray-600">{product.category.name}</p>
                                 <div className="flex justify-between items-center mt-4">
                                     <span className="text-blue-600 font-bold">{product.price}</span>
-                                    <span className="text-gray-500">Stock: {product.stock}</span>
+                                    <span className="text-gray-500">Số lượng tồn: {quantityInStock}</span>
                                 </div>
                                 <div className="mt-4 flex justify-end">
                                     <ActionButton icon={FiEdit} color="bg-blue-500" onClick={() => setShowProductModal(true)} />
