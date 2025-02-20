@@ -1,15 +1,18 @@
-import { useCallback, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import { FiTrash2, FiPlus, FiUpload } from "react-icons/fi";
 import { MdWarehouse } from "react-icons/md";
 import { FiChevronDown } from "react-icons/fi";
-import { getAllInventory, findAllCategory, findAllSpecification, createProduct} from "../../routers/ApiRoutes";
+import { getAllInventory, findAllCategory, findAllSpecification, createProduct, createSpecification } from "../../routers/ApiRoutes";
 import { useDropzone } from "react-dropzone";
 import { ClockLoader } from "react-spinners";
 import { FaTimes } from "react-icons/fa";
 
-export default function AddProductModal({ setShowProductModal }) {
-  
+export default function AddProductModal({ setShowProductModal, length, productId }) {
+
+  const updateProductId = productId;
+  const productLength = length;
   const [name, setName] = useState("");
+  const [productNumber, setProductNumber] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState('');
   const [brand, setBrand] = useState("");
@@ -19,9 +22,10 @@ export default function AddProductModal({ setShowProductModal }) {
   const [guaranteePeriod, setGuaranteePeriod] = useState(0);
   const [images, setImages] = useState([]);
 
-  const [selectedCategory, setSelectedCategory] = useState({id: "", name: ""});
+  const [selectedCategory, setSelectedCategory] = useState({ id: "", name: "" });
   const [specifications, setSpecifications] = useState([{ name: "", value: "" }]);
   const [selectedInventory, setSelectedInventory] = useState(null);
+  const [selectedColor, setSelectedColor] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [inventorys, setInventorys] = useState([])
   const [loading, setLoading] = useState(false)
@@ -32,10 +36,9 @@ export default function AddProductModal({ setShowProductModal }) {
   const [categories, setCategories] = useState([]);
   const [specifications01, setSpecifications01] = useState([]);
 
-  
+
   const productSpecs = {
     Headphones: [
-      { key: "brand", value: "Thương hiệu" },
       { key: "model", value: "Mẫu" },
       { key: "warranty", value: "Bảo hành" },
       { key: "type", value: "Kiểu" },
@@ -44,35 +47,25 @@ export default function AddProductModal({ setShowProductModal }) {
       { key: "noise_cancellation", value: "Khử tiếng ồn chủ động" },
       { key: "microphone", value: "Microphone" },
       { key: "frequency_response", value: "Dải tần số" },
-      { key: "weight", value: "Trọng lượng" },
-      { key: "color", value: "Màu sắc" }
     ],
     Keyboards: [
-      { key: "brand", value: "Thương hiệu" },
       { key: "model", value: "Mẫu" },
       { key: "warranty", value: "Bảo hành" },
       { key: "switch_type", value: "Loại switch" },
       { key: "connection", value: "Kết nối" },
       { key: "backlight", value: "Đèn nền" },
       { key: "key_rollover", value: "Số lượng phím nhận diện cùng lúc" },
-      { key: "size", value: "Kích thước" },
-      { key: "weight", value: "Trọng lượng" },
-      { key: "color", value: "Màu sắc" } 
     ],
     Mice: [
-      { key: "brand", value: "Thương hiệu" },
       { key: "model", value: "Mẫu" },
       { key: "warranty", value: "Bảo hành" },
       { key: "sensor_type", value: "Loại cảm biến" },
       { key: "dpi", value: "Độ phân giải DPI" },
       { key: "connection", value: "Kết nối" },
       { key: "buttons", value: "Số nút" },
-      { key: "weight", value: "Trọng lượng" },
       { key: "battery_life", value: "Thời lượng pin" },
-      { key: "color", value: "Màu sắc" }
     ],
     RAM: [
-      { key: "brand", value: "Thương hiệu" },
       { key: "model", value: "Mẫu" },
       { key: "warranty", value: "Bảo hành" },
       { key: "capacity", value: "Dung lượng" },
@@ -80,10 +73,8 @@ export default function AddProductModal({ setShowProductModal }) {
       { key: "latency", value: "Độ trễ CAS" },
       { key: "voltage", value: "Điện áp" },
       { key: "type", value: "Loại RAM" },
-      { key: "color", value: "Màu sắc" }
     ],
     CPUs: [
-      { key: "brand", value: "Thương hiệu" },
       { key: "model", value: "Mẫu" },
       { key: "warranty", value: "Bảo hành" },
       { key: "cores", value: "Số nhân" },
@@ -95,32 +86,47 @@ export default function AddProductModal({ setShowProductModal }) {
     ]
   };
 
+  const colors = [
+    { key: "black", value: "Đen" },
+    { key: "white", value: "Trắng" },
+    { key: "red", value: "Đỏ" },
+    { key: "blue", value: "Xanh" },
+    { key: "green", value: "Xanh lá" },
+    { key: "yellow", value: "Vàng" },
+    { key: "purple", value: "Tím" },
+    { key: "gray", value: "Xám" },
+    { key: "brown", value: "Nâu" },
+    { key: "pink", value: "Hồng" },
+    { key: "orange", value: "Cam" }
+  ]
+
   useEffect(() => {
     const fetchInvention = async () => {
       try {
         const res = await getAllInventory();
-        console.log(res.data)
         setInventorys(res.data)
+        console.log("Kho hàng");
       } catch (error) {
         console.error("Error fetching inventory:", error);
       }
     };
     const fetchCategories = async () => {
       try {
-          const response = await findAllCategory();
-          setCategories(response.data);
+        const response = await findAllCategory();
+        setCategories(response.data);
+        console.log("Danh sách loại sản phẩm:");
       } catch (error) {
-          console.error('Error fetching categories:', error);
+        console.error('Error fetching categories:', error);
       }
     };
     const fetchSpecifications = async () => {
-        try {
-            const response = await findAllSpecification();
-            setSpecifications01(response.data);
-            specifications01.forEach(specification => console.log(specification.name));
-        } catch (error) {
-            console.error('Error fetching specifications:', error);
-        }
+      try {
+        const response = await findAllSpecification();
+        setSpecifications01(response.data);
+        console.log("Danh sách thông số kỹ thuật:");
+      } catch (error) {
+        console.error('Error fetching specifications:', error);
+      }
     };
     fetchInvention();
     fetchCategories();
@@ -159,60 +165,132 @@ export default function AddProductModal({ setShowProductModal }) {
     setImages(prev => prev.filter((_, i) => i !== index));
   };
 
+  /** Kiểm tra giá trị nhập product */
+  const validateProduct = () => {
+    if (!selectedInventory) {
+      alert("Kho hàng không được để trống");
+      return false;
+    }
+
+    if (!name.trim()) {
+      alert("Tên sản phẩm không được để trống");
+      return false;
+    }
+  
+    if (!brand.trim()) {
+      alert("Nhà sản xuất không được để trống");
+      return false;
+    }
+  
+    if (!color) {
+      alert("Màu sắc không được để trống");
+      return false;
+    }
+
+    if (!size) {
+      alert("Kích thước không được để trống");
+      return false;
+    } else {
+      if (!isFinite(size) || Number(size) <= 0) {
+        alert("Kích thước nhập số nguyên dương");
+        return false;
+      }
+    }
+
+    if (!weight) {
+      alert("Trọng lượng không được để trống");
+      return false;
+    } else {
+      if (!isFinite(weight) || Number(weight) <= 0) {
+        alert("Trọng lượng  nhập số nguyên dương");
+        return false;
+      }
+    }
+
+    if (!guaranteePeriod) {
+      alert("Thời gian bảo hành không được để trống");
+      return false;
+    } else {
+      if (!isFinite(guaranteePeriod)) {
+        alert("Thời gian bảo hành nhập số");
+        return false;
+      }
+      if (guaranteePeriod <= 0 || guaranteePeriod > 36) {
+        alert("Thời gian bảo hành là từ 1 đến 36 tháng");
+        return false;
+      }
+    }
+    if (!price.trim()) {
+      alert("Giá sản phẩm không được để trống");
+      return false;
+    } else {
+      let purchasePrice = 10;
+      let priceNumber = price.trim().replace(/\,/g, '');
+      if (priceNumber <= (purchasePrice+purchasePrice*0.1)) {
+        alert("Giá sản phẩm phải lớn hơn giá nhập");
+        return false;
+      }
+      setPrice(Number(priceNumber));
+    }
+
+    if (!selectedCategory.id) {
+      alert("Loại sản phẩm không được để trống");
+      return false;
+    }
+
+    // if (!images.length) {
+    //   alert("Hình ảnh không được để trống");
+    //   return false;
+    // }
+  
+      return true;
+  };
+
+  /** Kiểm tra giá trị nhập specification */
+  const validateSpecification = () => {
+    if (!selectedCategory.id) {
+      alert("Loại sản phẩm không được để trống");
+      return false;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("submit")
-    console.log({
-      name,
-      description,
-      price,
-      brand,
-      images,
-      color,
-      size,
-      weight,
-      guaranteePeriod,
-      category: categories.find((category) => category.id === selectedCategory.id),
-      specifications,
-      inventory_id: selectedInventory?.inventory_id,
-      modifiedDate: new Date().toISOString()
-    });
-    const product = {
-      name,
-      description,
-      price,
-      brand,
-      images,
-      color,
-      size,
-      weight,
-      guaranteePeriod,
-      category: categories.find((category) => category.id === selectedCategory.id),
-      inventory_id: selectedInventory?.inventory_id,
-      modifiedDate: new Date().toISOString()
-    };
-    try {
-      // const response = await createProduct(product);
-      const category = categories.find((category) => category.id === selectedCategory.id);
-      const newProduct = await createProduct({
-        name: name,
-        description: description,
-        brand: brand,
-        color: color,
-        guaranteePeriod: guaranteePeriod,
-        image: images,
-        modifiedDate: new Date().toISOString(),
-        price: price,
-        size: size,
-        weight: weight,
-        category: category,
-        inventoryId: selectedInventory?.inventory_id
-      });
-      console.log("Thêm sản phẩm thành công:", newProduct);
-    } catch (error) {
+    if (validateProduct()) {
+      try {
+        const category = categories.find((category) => category.id === selectedCategory.id);
+        const newProduct = {
+          name,
+          description,
+          price,
+          brand,
+          images,
+          color,
+          size,
+          weight,
+          guaranteePeriod,
+          category,
+          inventoryId: selectedInventory?.inventory_id,
+          modifiedDate: new Date().toISOString()
+        };
+        const responseProduct = await createProduct(newProduct);
+        if (responseProduct.status === 201) {
+          specifications.map(async (spec) => {
+            const responseSpecification = await createSpecification({
+              product: responseProduct.data, 
+              name: spec.name, 
+              value: spec.value});
+            if (responseSpecification.status === 201) {
+              console.log("Thêm thông số kỹ thuật thành công");
+            }
+          });
+        };
+      } catch (error) {
         console.error("Lỗi khi thêm sản phẩm:", error.response?.data || error.message);
-    }
-    handleReset()
+      }
+      handleReset()
+    };
   };
 
   const handleReset = () => {
@@ -225,24 +303,24 @@ export default function AddProductModal({ setShowProductModal }) {
     setSize("");
     setWeight("");
     setGuaranteePeriod("");
-    setSelectedCategory({id: "", name: ""});
+    setSelectedCategory({ id: "", name: "" });
     setSpecifications([{ name: "", value: "" }]);
     setShowProductModal(false)
   };
-
-  // const handleProductSubmit = (e) => {
-  //   e.preventDefault();
-  //   setShowProductModal(false);
-  // };
 
   const handleCategoryChange = (e) => {
     const selectedIndex = e.target.selectedIndex;
     const selectedId = e.target.value;
     const selectedName = e.target.options[selectedIndex].text;
-    // const category = categories.find((category) => category.id === selectedId);
 
     setSelectedCategory({ id: selectedId, name: selectedName });
     setSelectedSpec(""); // Reset thông số khi đổi loại sản phẩm
+  };
+
+  const handleColorChange = (e) => {
+    setSelectedColor(e.target.value);
+    setColor(e.target.value);
+    console.log("Màu sắc:", e.target.value);
   };
 
   const handlePriceChange = (e) => {
@@ -284,7 +362,6 @@ export default function AddProductModal({ setShowProductModal }) {
           >
             <FaTimes size={24} />
           </button>
-
         </div>
         <div className="w-full mx-auto max-h-[65vh] overflow-y-auto">
           <div className="space-y-8 divide-y divide-gray-200 w-full">
@@ -337,8 +414,6 @@ export default function AddProductModal({ setShowProductModal }) {
                     onChange={(e) => setName(e.target.value)}
                     className="mt-1 block w-full p-3 border   rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   />
-
-
                 </div>
                 <div className="w-full">
                   <label className="block text-sm font-medium text-gray-700">Nhà sản xuất</label>
@@ -354,14 +429,21 @@ export default function AddProductModal({ setShowProductModal }) {
                 </div>
                 <div className="w-full">
                   <label className="block text-sm font-medium text-gray-700">Màu sắc</label>
-
-                  <input
-                    type="text"
-                    value={color}
-                    onChange={(e) => setColor(e.target.value)}
+                  <select
+                    id="productColor"
+                    name="productColor"
+                    value={selectedColor}
+                    onChange={handleColorChange}
                     className="mt-1 block w-full p-3 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                  />
-
+                    aria-label="Select a product type"
+                  >
+                    <option value="" disabled>Chọn màu</option>
+                    {colors.map((color) => (
+                      <option key={color.key} value={color.key}>
+                        {color.value}
+                      </option>
+                    ))}
+                  </select>
 
                 </div>
                 <div className="w-full">
@@ -385,7 +467,6 @@ export default function AddProductModal({ setShowProductModal }) {
                     onChange={(e) => setWeight(e.target.value)}
                     className="mt-1 block w-full p-3 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                   />
-
 
                 </div>
                 <div className="w-full">
