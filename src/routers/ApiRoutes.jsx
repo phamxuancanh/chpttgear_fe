@@ -126,6 +126,16 @@ export const searchProducts = async ({ params } = {}) => {
 export const getSuggestions = async (search) => {
     return await requestWithJwt.get('/products/products/getSuggestions', { params: { search } });
 };
+export const findAllProduct = async () => {
+    return await requestWithJwt.get('/products/products/findAllProducts');
+};
+export const findAllSpecification = async () => {
+    return await requestWithJwt.get('/products/specifications/findAllSpecifications');
+};
+export const createProduct = async (payload) => {
+    console.log(payload);
+    return await requestWithJwt.post('/products', { data: payload });
+};
 // inventoryService
 export const getAllInventory = async () => {
     return await requestWithJwt.get(`/inventory`);
