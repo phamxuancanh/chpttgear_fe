@@ -126,6 +126,7 @@ export const searchProducts = async ({ params } = {}) => {
 export const getSuggestions = async (search) => {
     return await requestWithJwt.get('/products/products/getSuggestions', { params: { search } });
 };
+
 export const findAllProduct = async () => {
     return await requestWithJwt.get('/products/products/findAllProducts');
 };
@@ -136,7 +137,23 @@ export const createProduct = async (payload) => {
     console.log(payload);
     return await requestWithJwt.post('/products', { data: payload });
 };
+
+
+export const getProductsByListId = async (productIds) => {
+    return await requestWithJwt.get('/products/products/findByIds', { params: { productIds } });
+};
+
+export const getAllProduct = async () => {
+    return await requestWithJwt.get('/products/products');
+};
+
+
 // inventoryService
+export const createInventory = async (payload) => {
+    return await requestWithJwt.post(`/inventory/`, {
+        data: payload,
+    });
+};
 export const getAllInventory = async () => {
     return await requestWithJwt.get(`/inventory`);
 };
@@ -160,35 +177,45 @@ export const increaseQuantity = async (inventory_id, payload) => {
 };
 
 export const getProductsByInventoryId = async (inventory_id) => {
-
     try {
-        const response = await requestWithJwt.get(`/inventory/${inventory_id}/products`)
-        return response.data; // Trả về dữ liệu từ phản hồi của API
+        const response = await requestWithJwt.get(`/inventory/${inventory_id}/products`);
+        return response.data.data; // Trả về dữ liệu từ phản hồi của API
     } catch (error) {
+        if (error.response && error.response.status === 404) {
+            return []; // Trả về mảng rỗng nếu API trả về 404
+        }
         console.error('Error get products: ', error);
-        throw error; // Ném lỗi để xử lý ở nơi gọi hàm
+        throw error; // Ném lỗi nếu không phải lỗi 404
     }
 };
+
 export const getStockInByInventoryId = async (inventory_id) => {
-
     try {
-        const response = await requestWithJwt.get(`/inventory/stock-in/getByInventoryId/${inventory_id}`)
+        const response = await requestWithJwt.get(`/inventory/stock-in/getByInventoryId/${inventory_id}`);
         return response.data; // Trả về dữ liệu từ phản hồi của API
     } catch (error) {
-        console.error('Error get products: ', error);
-        throw error; // Ném lỗi để xử lý ở nơi gọi hàm
+        console.log(error)
+        if (error && error.status === 404) {
+            return []; // Trả về mảng rỗng nếu API trả về 404
+        }
+        console.error('Error get stock-in: ', error);
+        throw error; // Ném lỗi nếu không phải lỗi 404
     }
 };
+
 export const getStockOutByInventoryId = async (inventory_id) => {
-
     try {
-        const response = await requestWithJwt.get(`/inventory/stock-out/getByInventoryId/${inventory_id}`)
+        const response = await requestWithJwt.get(`/inventory/stock-out/getByInventoryId/${inventory_id}`);
         return response.data; // Trả về dữ liệu từ phản hồi của API
     } catch (error) {
-        console.error('Error get products: ', error);
-        throw error; // Ném lỗi để xử lý ở nơi gọi hàm
+        if (error && error.status === 404) {
+            return []; // Trả về mảng rỗng nếu API trả về 404
+        }
+        console.error('Error get stock-out: ', error);
+        throw error; // Ném lỗi nếu không phải lỗi 404
     }
 };
+
 // cartService
 
 // orderService
