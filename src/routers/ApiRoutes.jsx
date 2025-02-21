@@ -130,14 +130,29 @@ export const getSuggestions = async (search) => {
 export const findAllProduct = async () => {
     return await requestWithJwt.get('/products/products/findAllProducts');
 };
+
 export const findAllSpecification = async () => {
     return await requestWithJwt.get('/products/specifications/findAllSpecifications');
 };
 export const createProduct = async (payload) => {
-    console.log(payload);
-    return await requestWithJwt.post('/products', { data: payload });
+    try {
+        console.log(payload);
+        const response = await requestWithJwt.post(`/products/products/createProduct`, payload);
+        return response;
+    } catch (error) {
+        console.error('Error creating product:', error);
+        throw error;
+    }
 };
-
+export const createSpecification = async (payload) => {
+    try {
+        const response = await requestWithJwt.post(`/products/specifications/createSpecification`, payload);
+        return response;
+    } catch (error) {
+        console.error('Error creating specification:', error);
+        throw error;
+    }
+};
 export const findProductById = async (payload) => {
     console.log(payload);
     return await requestWithJwt.get(`/products/products/findById/${payload}`);

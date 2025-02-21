@@ -10,19 +10,13 @@ export default function Products() {
     const imageTemp = "https://images.unsplash.com/photo-1526406915894-7bcd65f60845?ixlib=rb-1.2.1";
     const [showProductModal, setShowProductModal] = useState(false);
     const [products, setProducts] = useState([]);
-
-    // const products = [
-    //     { id: 1, name: "Product 1", category: "Electronics", price: "$999", stock: 50, image: "https://images.unsplash.com/photo-1526406915894-7bcd65f60845?ixlib=rb-1.2.1" },
-    //     { id: 2, name: "Product 2", category: "Clothing", price: "$59", stock: 100, image: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?ixlib=rb-1.2.1" },
-    //     { id: 3, name: "Product 3", category: "Accessories", price: "$29", stock: 75, image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-1.2.1" }
-    // ];
+    const [selectedProduct, setSelectedProduct] = useState({});
 
     useEffect(() => {
         const fetchProducts = async () => {
             try {
                 const response = await findAllProduct();
                 setProducts(response.data);
-                products.forEach(product => console.log(product.name));
                 console.log("Đây là ds productx")
             } catch (error) {
                 console.error('Error fetching products:', error);
@@ -40,6 +34,11 @@ export default function Products() {
         </button>
     );
 
+    const handleActionButton = ({product}) => {
+        setSelectedProduct(product);
+        setShowProductModal(true);
+    }
+
 
     return (
         <div className="flex-1 p-8">
@@ -53,7 +52,13 @@ export default function Products() {
                         Thêm sản phẩm
                     </button>
                 </div>
-                {showProductModal && <AddProductModal setShowProductModal={setShowProductModal} />}
+                {
+                    showProductModal && 
+                    <AddProductModal 
+                        setShowProductModal={setShowProductModal} 
+                        length={products.length} 
+                        productId={selectedProduct.id}/>
+                }
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {products.map((product) => (
                         <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -70,7 +75,7 @@ export default function Products() {
                                     <span className="text-gray-500">Số lượng tồn: {quantityInStock}</span>
                                 </div>
                                 <div className="mt-4 flex justify-end">
-                                    <ActionButton icon={FiEdit} color="bg-blue-500" onClick={() => setShowProductModal(true)} />
+                                    <ActionButton icon={FiEdit} color="bg-blue-500" onClick={() => handleActionButton({product})} />
                                 </div>
                             </div>
                         </div>
