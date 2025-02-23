@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { FiShoppingCart, FiUser, FiMenu, FiBell } from "react-icons/fi";
 import { FaPlus, FaMinus } from "react-icons/fa";
 import { IoMdArrowDropdown } from "react-icons/io";
@@ -28,6 +28,7 @@ export default function Header() {
     const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
     const [searchTerm, setSearchTerm] = useState('');
     const [suggestions, setSuggestions] = useState([]);
+    const searchRef = useRef(null); 
     const fetchSuggestions = debounce(async (value) => {
         try {
             const response = await getSuggestions(value);
@@ -194,6 +195,17 @@ export default function Header() {
         setShowCartDropdown(false);
         setShowUserDropdown(false);
     };
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (searchRef.current && !searchRef.current.contains(event.target)) {
+                setSuggestions([]);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
     return (
         <div>
             <nav className="bg-black text-white shadow-lg py-2 sticky z-10 flex items-center justify-center">
@@ -243,7 +255,8 @@ export default function Header() {
                                 )}
                             </div>
                             <div className="container mx-auto px-4 py-4 flex items-center justify-between text-black w-6/12">
-                                <div className="flex-1 w-10/12 flex items-center ">
+                            <div className="flex-1 w-10/12 flex items-center" ref={searchRef}>
+
                                     <div className="relative flex-grow">
                                         <input
                                             type="text"
