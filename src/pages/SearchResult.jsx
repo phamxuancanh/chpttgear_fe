@@ -3,8 +3,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { styled } from '@mui/system'
 import { Pagination, Slider } from '@mui/material'
-import { searchProducts } from "../routers/ApiRoutes";
+import { findAllCategory, findAllSpecification, searchProducts } from "../routers/ApiRoutes";
 import ProductCard from "../components/ProductCard";
+import { ClockLoader } from "react-spinners"
 
 const useQuery = () => {
     return new URLSearchParams(useLocation().search);
@@ -71,123 +72,105 @@ export default function SearchResult() {
         }
     })
     const [selectedCategory, setSelectedCategory] = useState("");
-    const categories = [
-        { value: "laptop", label: "Laptop" },
-        { value: "pc", label: "PC" },
-        { value: "components", label: "Linh kiện" },
-        { value: "case_psu_cooling", label: "Vỏ máy, PSU & Tản nhiệt" },
-        { value: "storage", label: "Ổ cứng & Lưu trữ" },
-        { value: "audio_video", label: "Thiết bị âm thanh & Video" },
-        { value: "monitor", label: "Màn hình" },
-        { value: "keyboard", label: "Bàn phím" },
-        { value: "mouse_pad", label: "Chuột & Bàn di chuột" },
-        { value: "headphone", label: "Tai nghe" },
-        { value: "furniture", label: "Bàn & Ghế gaming" },
-        { value: "accessories", label: "Phụ kiện khác" },
-    ];
-    const filterOptions = {
-        laptop: {
-            "CPU": ["Intel i5", "Intel i7", "AMD Ryzen 5", "AMD Ryzen 7"],
-            "Kích thước màn hình": ["13 inch", "14 inch", "15.6 inch", "17 inch"],
-            "Nhu cầu sử dụng": ["Học tập", "Văn phòng", "Gaming", "Đồ họa"],
-            "RAM": ["8GB", "16GB", "32GB"],
-            "SSD": ["256GB", "512GB", "1TB"],
-            "VGA": ["Intel Iris Xe", "NVIDIA RTX 3050", "NVIDIA RTX 4060"]
-        },
-        pc: {
-            "CPU": ["Intel i5", "Intel i7", "AMD Ryzen 5", "AMD Ryzen 9"],
-            "RAM": ["16GB", "32GB", "64GB"],
-            "SSD": ["512GB", "1TB", "2TB"],
-            "VGA": ["RTX 3060", "RTX 3070", "RTX 4080"]
-        },
-        components: {
-            "Dòng": ["Core i3", "Core i5", "Ryzen 5", "Ryzen 7"],
-            "Thế hệ": ["Gen 10", "Gen 11", "Gen 12", "Gen 13"],
-            "Nhân": ["4 nhân", "6 nhân", "8 nhân", "12 nhân"],
-            "Dung lượng bộ nhớ": ["8GB", "16GB", "32GB"]
-        },
-        case_psu_cooling: {
-            "Công suất": ["500W", "600W", "750W"],
-            "Loại tản nhiệt": ["Khí", "Nước"],
-            "RGB": ["Có", "Không"]
-        },
-        storage: {
-            "Bus": ["3200MHz", "3600MHz", "4000MHz"],
-            "Dung lượng": ["256GB", "512GB", "1TB", "2TB"],
-            "Đèn LED": ["Có", "Không"]
-        },
-        audio_video: {
-            "Bluetooth": ["Có", "Không"],
-            "Nhu cầu sử dụng": ["Nghe nhạc", "Xem phim", "Chơi game"]
-        },
-        monitor: {
-            "Độ phân giải": ["1080p", "1440p", "4K", "8K"],
-            "Kích thước": ["24 inch", "27 inch", "32 inch"],
-            "Tần số quét": ["60Hz", "120Hz", "144Hz", "240Hz"]
-        },
-        keyboard: {
-            "Kết nối": ["Có dây", "Không dây"],
-            "Key Cap": ["PBT", "ABS"],
-            "LED": ["RGB", "Đơn sắc", "Không có"]
-        },
-        mouse_pad: {
-            "Kết nối": ["Có dây", "Không dây"],
-            "LED": ["RGB", "Không có"]
-        },
-        headphone: {
-            "Kết nối": ["3.5mm", "USB", "Bluetooth"],
-            "Kiểu tai nghe": ["In-ear", "Over-ear", "On-ear"]
-        },
-        furniture: {
-            "Chất liệu": ["Gỗ", "Kim loại", "Nhựa"],
-            "Chiều cao": ["1m", "1.2m", "1.5m"],
-            "Tải trọng": ["50kg", "100kg", "150kg"]
-        },
-        accessories: {
-            "Loại phụ kiện": ["Dây cáp", "Adapter", "Pin dự phòng"]
-        }
+    const [categories, setCategories] = useState([]);
+    const [specifications01, setSpecifications01] = useState([]);
+    const [specsFields, setSpecsFields] = useState([]);
+    const [productData, setProductData] = useState({});
+    const [loading, setLoading] = useState(false);
+    const [selectedColor, setSelectedColor] = useState("");
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await findAllCategory();
+                setCategories(response.data);
+                console.log("Danh sách loại sản phẩm:");
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+            }
+        };
+        const fetchSpecifications = async () => {
+            try {
+                const response = await findAllSpecification();
+                setSpecifications01(response.data);
+                console.log("Danh sách thông số kỹ thuật:");
+            } catch (error) {
+                console.error('Error fetching specifications:', error);
+            }
+        };
+        fetchCategories();
+        fetchSpecifications();
+    }, []);
+    const handleCategoryChange = (e) => {
+        const selectedIndex = e.target.selectedIndex;
+        const selectedId = e.target.value;
+        const selectedName = e.target.options[selectedIndex].text;
+        setSelectedCategory({ id: selectedId, name: selectedName });
     };
-    const brandOptions = [
-            "Dell",
-            "Corsair",
-            "ASUS",
-            "Logitech",
-            "Samsung",
-            "MSI",
-            "Gigabyte",
-            "AMD",
-            "Intel",
-            "NVIDIA",
-            "Kingston",
-            "Crucial",
-            "Shure",
-            "Western Digital",
-            "APC",
-            "Lian Li",
-            "NZXT",
-            "Elgato",
-            "Netgear",
-            "Razer",
-            "Garmin",
-            "JBL",
-            "Sony",
-            "G-Skill",
-            "SteelSeries",
-            "HyperX",
-            "Netgear"
+    useEffect(() => {
+        if (selectedCategory.name) {
+            setSpecsFields(specDefinitions[selectedCategory.name] || []);
+        } else {
+            setSpecsFields([]);
+        }
+    }, [selectedCategory]);
+    const colors = [
+        { key: "red", value: "Đỏ" },
+        { key: "blue", value: "Xanh" },
+        { key: "black", value: "Đen" },
+        { key: "white", value: "Trắng" },
+        { key: "green", value: "Xanh lá" },
+        { key: "yellow", value: "Vàng" },
+        { key: "purple", value: "Tím" },
     ];
-    const colorOptions = [
-        "Đỏ",
-        "Xanh",
-        "Đen",
-        "Trắng",
-        "Vàng",
-        "Hồng",
-        "Xám",
-        "Nâu",
-        "Cam",
-        "Tím"
-    ];
+    const specDefinitions = {
+        Headphones: [
+            { key: "model", value: "Mẫu", options: [] },
+            { key: "warranty", value: "Bảo hành", options: [] },
+            { key: "type", value: "Kiểu", options: ["Over-ear", "On-ear", "In-ear"] },
+            { key: "connection", value: "Kết nối", options: ["Wired", "Wireless", "Bluetooth"] },
+            { key: "battery_life", value: "Thời lượng pin", options: [] },
+            { key: "noise_cancellation", value: "Khử tiếng ồn chủ động", options: ["Có", "Không"] },
+            { key: "microphone", value: "Microphone", options: ["Có", "Không"] },
+            { key: "frequency_response", value: "Dải tần số", options: [] },
+        ],
+        Keyboards: [
+            { key: "model", value: "Mẫu", options: [] },
+            { key: "warranty", value: "Bảo hành", options: [] },
+            { key: "switch_type", value: "Loại switch", options: ["Mechanical", "Membrane", "Optical"] },
+            { key: "connection", value: "Kết nối", options: ["Wired", "Wireless", "Bluetooth"] },
+            { key: "backlight", value: "Đèn nền", options: ["Có", "Không", "RGB"] },
+            { key: "key_rollover", value: "Số lượng phím nhận diện cùng lúc", options: [] },
+        ],
+        Mice: [
+            { key: "model", value: "Mẫu", options: [] },
+            { key: "warranty", value: "Bảo hành", options: [] },
+            { key: "sensor_type", value: "Loại cảm biến", options: ["Optical", "Laser"] },
+            { key: "dpi", value: "Độ phân giải DPI", options: [] },
+            { key: "connection", value: "Kết nối", options: ["Wired", "Wireless", "Bluetooth"] },
+            { key: "buttons", value: "Số nút", options: [] },
+            { key: "battery_life", value: "Thời lượng pin", options: [] },
+        ],
+        RAM: [
+            { key: "model", value: "Mẫu", options: [] },
+            { key: "warranty", value: "Bảo hành", options: [] },
+            { key: "capacity", value: "Dung lượng", options: ["4GB", "8GB", "16GB", "32GB", "64GB"] },
+            { key: "speed", value: "Tốc độ bus", options: [] },
+            { key: "latency", value: "Độ trễ CAS", options: [] },
+            { key: "voltage", value: "Điện áp", options: [] },
+            { key: "type", value: "Loại RAM", options: ["DDR3", "DDR4", "DDR5"] },
+        ],
+        CPUs: [
+            { key: "model", value: "Mẫu", options: [] },
+            { key: "warranty", value: "Bảo hành", options: [] },
+            { key: "cores", value: "Số nhân", options: [] },
+            { key: "threads", value: "Số luồng", options: [] },
+            { key: "base_clock", value: "Xung nhịp cơ bản", options: [] },
+            { key: "boost_clock", value: "Xung nhịp tối đa", options: [] },
+            { key: "socket", value: "Socket tương thích", options: ["LGA1200", "LGA1700", "AM4", "AM5"] },
+            { key: "tdp", value: "Công suất tiêu thụ (TDP)", options: [] }
+        ]
+    };
+
     const navigate = useNavigate();
     const query = useQuery();
     const [priceRange, setPriceRange] = useState([0, 10000]);
@@ -199,6 +182,13 @@ export default function SearchResult() {
     const [results, setResults] = useState(null);
     const searchParams = new URLSearchParams(location.search);
     const name = searchParams.get('name');
+    useEffect(() => {
+        // Reset các combobox về giá trị mặc định khi search param "name" thay đổi
+        setSelectedCategory({ id: "all", name: "" });
+        setSelectedColor("");
+        setProductData({});
+        setPriceRange([0, 10000]);
+    }, [name]);
     const fetchResults = async (params) => {
 
         const response = await searchProducts({ params });
@@ -208,9 +198,13 @@ export default function SearchResult() {
     useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
         const currentPage = parseInt(queryParams.get('page') || '1', 10);
+        const category = (queryParams.get('category')) || undefined;
+        const color = (queryParams.get('color')) || undefined;
+        const price_gte = (queryParams.get('price_gte')) || undefined;
+        const price_lte = (queryParams.get('price_lte')) || undefined;
         setPage(currentPage);
         console.log(currentPage);
-        fetchResults({ page: currentPage, search: name || undefined });
+        fetchResults({ page: currentPage, search: name || undefined, category: category || undefined, color: color || undefined, price_gte: price_gte || undefined, price_lte: price_lte || undefined });
     }, [location.search]);
     const totalPage = useMemo(() => {
         const size = (results?.data != null) ? results?.size : 5;
@@ -223,10 +217,56 @@ export default function SearchResult() {
         navigate(`?${queryParams.toString()}`);
     };
     const handleFilterClick = () => {
-        alert('Lọc sản phẩm');
-    }
+        setLoading(true);
+        const queryParams = new URLSearchParams(location.search);
+        // Cập nhật/Thêm các param mới
+        queryParams.set("page", 1);
+        if (name) {
+            queryParams.set("search", name);
+        }
+        if (selectedCategory.name) {
+            queryParams.set("category", selectedCategory.name);
+        }
+        if (selectedColor) {
+            queryParams.set("color", selectedColor);
+        }
+        queryParams.set("price_gte", priceRange[0]);
+        queryParams.set("price_lte", priceRange[1]);
+        // Thêm các param từ productData nếu có
+        for (const key in productData) {
+            if (productData[key]) {
+                queryParams.set(key, productData[key]);
+            }
+        }
+        navigate(`?${queryParams.toString()}`);
+        setLoading(false);
+    };
+    const handleSpecChange = (key, value) => {
+        setProductData(prevData => ({
+            ...prevData,
+            [key]: value,
+        }));
+    };
     return (
         <div className="min-h-screen bg-background">
+            {loading && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black opacity-50">
+                    <div className="flex justify-center items-center w-full h-140 mt-20">
+                        <ClockLoader
+                            className='flex justify-center items-center w-full mt-20'
+                            color='#5EEAD4'
+                            cssOverride={{
+                                display: 'block',
+                                margin: '0 auto',
+                                borderColor: 'blue'
+                            }}
+                            loading
+                            speedMultiplier={3}
+                            size={40}
+                        />
+                    </div>
+                </div>
+            )}
             <div className="container mx-auto bg-white p-6 rounded-lg shadow-lg">
                 <h1 className="text-3xl font-bold text-center mb-4">Kết quả tìm kiếm</h1>
                 <p className="text-lg text-center text-gray-600 mb-6">
@@ -234,44 +274,47 @@ export default function SearchResult() {
                 </p>
 
                 {/* Filter Panel */}
-                <div className="mb-6 bg-gray-50 p-4 rounded-lg shadow-sm">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                        {/* Chọn loại sản phẩm */}
+                <div className="mb-6 bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                    <h3 className="text-xl font-semibold text-gray-800 mb-4">Bộ lọc sản phẩm</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {/* Loại sản phẩm */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Loại Sản Phẩm</label>
                             <select
-                                className="w-full border border-gray-300 rounded-md p-2"
-                                value={selectedCategory}
-                                onChange={(e) => setSelectedCategory(e.target.value)}
+                                id="productType"
+                                name="productType"
+                                value={selectedCategory.id}
+                                onChange={handleCategoryChange}
+                                className="w-full p-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500"
                             >
-                                <option value="">Chọn Loại Sản Phẩm</option>
+                                <option value="">Tất cả sản phẩm</option>
                                 {categories.map((category) => (
-                                    <option key={category.value} value={category.value}>{category.label}</option>
+                                    <option key={category.id} value={category.id}>
+                                        {category.name}
+                                    </option>
                                 ))}
                             </select>
                         </div>
-                        {/* Bộ lọc hãng */}
+
+                        {/* Màu sắc */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Hãng</label>
-                            <select className="w-full border border-gray-300 rounded-md p-2">
-                                <option value="">Hãng</option>
-                                {brandOptions.map((brand, index) => (
-                                    <option key={index} value={brand}>{brand}</option>
-                                ))}
-                            </select>
-                        </div>
-                        {/* Bộ lọc màu sắc */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Màu sắc</label>
-                            <select className="w-full border border-gray-300 rounded-md p-2">
-                                <option value="">Màu sắc</option>
-                                <option value="red">Đỏ</option>
-                                <option value="blue">Xanh</option>
-                                <option value="black">Đen</option>
-                            </select>
-                        </div>
-                        {/* Bộ lọc khoảng giá */}
-                        <div className="lg:col-span-2 relative">
+    <label className="block text-sm font-medium text-gray-700 mb-1">Màu sắc</label>
+    <select
+        value={selectedColor}
+        onChange={(e) => setSelectedColor(e.target.value)}
+        className="w-full p-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500"
+    >
+        <option value="all">Tất cả màu sắc</option>
+        {colors.map((color) => (
+            <option key={color.key} value={color.key}>
+                {color.value}
+            </option>
+        ))}
+    </select>
+</div>
+
+                        {/* Khoảng giá */}
+                        <div className="col-span-2 relative">
                             <label className="block text-sm font-medium text-gray-700 mb-1">Khoảng Giá</label>
                             <div
                                 className="w-full border border-gray-300 rounded-md p-2 cursor-pointer flex justify-between items-center"
@@ -292,39 +335,49 @@ export default function SearchResult() {
                                 </div>
                             )}
                         </div>
-                        {selectedCategory && filterOptions[selectedCategory] && (
-                            <div className="col-span-full">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-2">Tìm kiếm nâng cao</h3>
+
+                        {/* Thông số kỹ thuật */}
+                        {specsFields.length > 0 && specsFields.map((spec) => (
+                            <div key={spec.key}>
+                                <label htmlFor={spec.key} className="block text-sm font-medium text-gray-700">{spec.value}</label>
+                                <select
+                                    id={spec.key}
+                                    name={spec.key}
+                                    value={productData[spec.key] || ''}
+                                    onChange={(e) => handleSpecChange(spec.key, e.target.value)}
+                                    className="w-full p-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500"
+                                >
+                                    <option value="" disabled>Chọn {spec.value}</option>
+                                    {spec.options.map((option) => (
+                                        <option key={option} value={option}>{option}</option>
+                                    ))}
+                                </select>
                             </div>
-                        )}
-                        {/* Hiển thị các bộ lọc theo danh mục */}
-                        {selectedCategory && filterOptions[selectedCategory] &&
-                            Object.entries(filterOptions[selectedCategory]).map(([filterName, values]) => (
-                                <div key={filterName}>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">{filterName}</label>
-                                    <select className="w-full border border-gray-300 rounded-md p-2">
-                                        <option value="">{filterName}</option>
-                                        {values.map((value, index) => (
-                                            <option key={index} value={value}>{value}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            ))
-                        }
+                        ))}
+
                         {/* Nút lọc */}
-                        <div className="sm:col-span-2 md:col-span-1 flex items-end">
-                            <button onClick={handleFilterClick} className="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors">
+                        <div className="col-span-1 sm:col-span-2 md:col-span-1 flex items-end">
+                            <button
+                                onClick={handleFilterClick}
+                                className="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-all"
+                            >
                                 Lọc
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-6">
-                    {results?.data.map((product) => (
-                        <ProductCard key={product.id} product={product} />
-                    ))}
-                </div>
+                {results?.data && results.data.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-6">
+                        {results.data.map((product) => (
+                            <ProductCard key={product.id} product={product} />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center text-lg text-gray-600 mb-6">
+                        Không có sản phẩm hợp lệ
+                    </div>
+                )}
                 <div className="flex justify-center">
                     <CustomPagination
                         count={totalPage}

@@ -460,7 +460,6 @@ export default function AddProductModal({ setShowProductModal, length, productId
                 </div>
                 <div className="w-full">
                   <label className="block text-sm font-medium text-gray-700">Trọng lượng (gram)</label>
-
                   <input
                     type="number"
                     value={weight}
