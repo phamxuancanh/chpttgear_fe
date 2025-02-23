@@ -136,9 +136,7 @@ export const findAllSpecification = async () => {
 };
 export const createProduct = async (payload) => {
     try {
-        console.log(payload);
-        const response = await requestWithJwt.post(`/products/products/createProduct`, payload);
-        return response;
+        return await requestWithJwt.post(`/products/products/createProduct`, payload);
     } catch (error) {
         console.error('Error creating product:', error);
         throw error;
@@ -146,18 +144,72 @@ export const createProduct = async (payload) => {
 };
 export const createSpecification = async (payload) => {
     try {
-        const response = await requestWithJwt.post(`/products/specifications/createSpecification`, payload);
-        return response;
+        return await requestWithJwt.post(`/products/specifications/createSpecification`, payload);
     } catch (error) {
         console.error('Error creating specification:', error);
         throw error;
     }
 };
-export const findProductById = async (payload) => {
+export const findProductById = async (productId) => {
+    try {
+        return await requestWithJwt.get(`/products/products/findById/${productId}`);
+    } catch (error) {
+        console.error('Error fetching product:', error);
+        throw error;
+    }
+};
+export const findSpecificationsByProductId = async (productId) => {
+    console.log(productId);
+    try {
+        return await requestWithJwt.get(`/products/specifications/findByProductId//${productId}`);
+    } catch (error) {
+        console.error('Error fetching product:', error);
+        throw error;
+    }
+};
+export const updateProduct = async (productId, payload) => {
+    console.log(productId);
     console.log(payload);
-    return await requestWithJwt.get(`/products/products/findById/${payload}`);
+    try {
+        return await requestWithJwt.put(`/products/products/updateProduct/${productId}`, payload);
+    } catch (error) {
+        console.error('Error updating product:', error);
+        throw error;
+    }
+};
+export const updateSpecification= async (specificationId, payload) => {
+    try {
+        return await requestWithJwt.put(`/specifications/${specificationId}`, payload);
+    } catch (error) {
+        console.error('Error updating specification:', error);
+        throw error;
+    }
+};
+export const uploadImagesToCloudinary = async (payload) => {
+    const cloud_name = 'chaamz03';
+    try {
+        return await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`, {
+            method: 'POST',
+            body: payload,
+        });
+    } catch (error) {
+        console.error('Error uploading images:', error);
+        throw error;
+    }
+};
+export const getProductsManagementPage = async ({ params } = {}) => {
+    return await requestWithJwt.get('/products/products/managementPage', { params });
 };
 
+export const updatePriceByProductId = async (productId, payload) => {
+    try {
+        const response = await requestWithJwt.put(`/products/${productId}/price`, payload);
+        return response.data;
+    } catch (error) {
+        console.error('Error updating price:', error);
+        throw error;
+    }
+};
 
 export const getProductsByListId = async (productIds) => {
     return await requestWithJwt.get('/products/products/findByIds', { params: { productIds } });

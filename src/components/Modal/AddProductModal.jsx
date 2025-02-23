@@ -2,25 +2,25 @@ import { use, useCallback, useEffect, useState } from "react";
 import { FiTrash2, FiPlus, FiUpload } from "react-icons/fi";
 import { MdWarehouse } from "react-icons/md";
 import { FiChevronDown } from "react-icons/fi";
-import { getAllInventory, findAllCategory, findAllSpecification, createProduct, createSpecification } from "../../routers/ApiRoutes";
+import { getAllInventory, findAllCategory, findSpecificationsByProductId, createProduct, createSpecification, 
+  findProductById, uploadImagesToCloudinary, updateProduct } from "../../routers/ApiRoutes";
 import { useDropzone } from "react-dropzone";
 import { ClockLoader } from "react-spinners";
 import { FaTimes } from "react-icons/fa";
 
-export default function AddProductModal({ setShowProductModal, length, productId }) {
+export default function AddProductModal({ setShowProductModal, product_id }) {
 
-  const updateProductId = productId;
-  const productLength = length;
+  const [updateProductId, setUpdateProductId] = useState(product_id);
   const [name, setName] = useState("");
-  const [productNumber, setProductNumber] = useState("");
   const [description, setDescription] = useState("");
-  const [price, setPrice] = useState('');
+  const [price, setPrice] = useState("");
   const [brand, setBrand] = useState("");
   const [color, setColor] = useState("");
   const [size, setSize] = useState("");
   const [weight, setWeight] = useState(0);
   const [guaranteePeriod, setGuaranteePeriod] = useState(0);
   const [images, setImages] = useState([]);
+  const [inventoryId, setInventoryId] = useState("");
 
   const [selectedCategory, setSelectedCategory] = useState({ id: "", name: "" });
   const [specifications, setSpecifications] = useState([{ name: "", value: "" }]);
@@ -31,10 +31,10 @@ export default function AddProductModal({ setShowProductModal, length, productId
   const [loading, setLoading] = useState(false)
   const [selectedSpec, setSelectedSpec] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isImageExist, setIsImageExist] = useState(false);
 
 
   const [categories, setCategories] = useState([]);
-  const [specifications01, setSpecifications01] = useState([]);
 
 
   const productSpecs = {
@@ -101,37 +101,71 @@ export default function AddProductModal({ setShowProductModal, length, productId
   ]
 
   useEffect(() => {
-    const fetchInvention = async () => {
-      try {
-        const res = await getAllInventory();
-        setInventorys(res.data)
-        console.log("Kho hàng");
-      } catch (error) {
-        console.error("Error fetching inventory:", error);
-      }
-    };
-    const fetchCategories = async () => {
-      try {
-        const response = await findAllCategory();
-        setCategories(response.data);
-        console.log("Danh sách loại sản phẩm:");
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-      }
-    };
-    const fetchSpecifications = async () => {
-      try {
-        const response = await findAllSpecification();
-        setSpecifications01(response.data);
-        console.log("Danh sách thông số kỹ thuật:");
-      } catch (error) {
-        console.error('Error fetching specifications:', error);
-      }
-    };
-    fetchInvention();
     fetchCategories();
-    fetchSpecifications();
-  }, []);
+    fetchInvention(); 
+    fetchUpdateProduct();
+    fetchSpecificationsByProductId();
+  }, [updateProductId]);
+
+  const fetchInvention = async () => {
+    try {
+      const res = await getAllInventory();
+      setInventorys(res.data)
+      if (product_id) {
+        const product = await findProductById(product_id);
+        setInventoryId(product.data.inventoryId);
+        setSelectedInventory(res.data.find((inventory) => inventory.inventory_id === product.data.inventoryId));
+      }
+    } catch (error) {
+      console.error("Error fetching inventory:", error);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const response = await findAllCategory();
+      setCategories(response.data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  const fetchUpdateProduct = async () => {
+    if (!updateProductId) return;
+    try {
+      const response = await findProductById(updateProductId);
+      setName(response.data.name);
+      setDescription(response.data.description);
+      let displayPrice = String(response.data.price).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      setPrice(displayPrice);
+      setBrand(response.data.brand);
+      colors.forEach((color) => {
+        if (color.key === response.data.color) {
+          setSelectedColor(color.key);
+        }
+      });
+      setColor(response.data.color);
+      setSize(response.data.size);
+      setWeight(response.data.weight);
+      setGuaranteePeriod(response.data.guaranteePeriod);
+      setSelectedCategory({ id: response.data.category.id, name: response.data.category.name });
+      setInventoryId(response.data.inventoryId);
+      // setImages(response.data.images);
+    } catch (error) {
+      console.error('Error fetching product:', error);
+    }
+  };
+
+  const fetchSpecificationsByProductId = async () => {
+    try {
+      const response = await findSpecificationsByProductId(updateProductId);
+      console.log("Thông số kỹ thuật của product update:", response.data);
+      setSpecifications(response.data);
+    } catch (error) {
+      console.error('Error fetching specifications:', error);
+    }
+  }
+
 
   const onDrop = useCallback(acceptedFiles => {
     setImages(prev => [...prev, ...acceptedFiles.map(file => Object.assign(file, {
@@ -144,6 +178,21 @@ export default function AddProductModal({ setShowProductModal, length, productId
     accept: { "image/*": [] },
     maxSize: 5242880
   });
+
+  const uploadImages = async () => {
+    console.log("Ds hình ảnh:", images);
+    if (!images) return;
+    const data = new FormData();
+    images.forEach((image) => {
+      data.append("file", image);
+    });
+    data.append("upload_preset", "chptt_gear");
+    data.append("cloud_name", "chaamz03");
+
+    const response = await uploadImagesToCloudinary(data);
+    const res = await response.json();
+    console.log("1 Upload images:", res.url);
+  };
 
   const handleSpecificationChange = (index, field, value) => {
     setSpecifications((prev) =>
@@ -170,33 +219,28 @@ export default function AddProductModal({ setShowProductModal, length, productId
     if (!selectedInventory) {
       alert("Kho hàng không được để trống");
       return false;
-    }
-
+    };
     if (!name.trim()) {
       alert("Tên sản phẩm không được để trống");
       return false;
-    }
-  
+    };
     if (!brand.trim()) {
       alert("Nhà sản xuất không được để trống");
       return false;
-    }
-  
+    };
     if (!color) {
       alert("Màu sắc không được để trống");
       return false;
-    }
-
+    };
     if (!size) {
       alert("Kích thước không được để trống");
       return false;
     } else {
-      if (!isFinite(size) || Number(size) <= 0) {
-        alert("Kích thước nhập số nguyên dương");
+      if (!size.match(/^[1-9]\d*(\.\d+)?x[1-9]\d*(\.\d+)?x[1-9]\d*(\.\d+)?$/)) {
+        alert("Kích thước nhập số dương theo định dạng D x R x C");
         return false;
       }
-    }
-
+    };
     if (!weight) {
       alert("Trọng lượng không được để trống");
       return false;
@@ -205,8 +249,7 @@ export default function AddProductModal({ setShowProductModal, length, productId
         alert("Trọng lượng  nhập số nguyên dương");
         return false;
       }
-    }
-
+    };
     if (!guaranteePeriod) {
       alert("Thời gian bảo hành không được để trống");
       return false;
@@ -225,12 +268,11 @@ export default function AddProductModal({ setShowProductModal, length, productId
       return false;
     } else {
       let purchasePrice = 10;
-      let priceNumber = price.trim().replace(/\,/g, '');
-      if (priceNumber <= (purchasePrice+purchasePrice*0.1)) {
+      let priceNumber = price.trim().replace(/,/g, '');
+      if (priceNumber <= (purchasePrice + purchasePrice * 0.1)) {
         alert("Giá sản phẩm phải lớn hơn giá nhập");
         return false;
       }
-      setPrice(Number(priceNumber));
     }
 
     if (!selectedCategory.id) {
@@ -238,58 +280,105 @@ export default function AddProductModal({ setShowProductModal, length, productId
       return false;
     }
 
-    // if (!images.length) {
-    //   alert("Hình ảnh không được để trống");
-    //   return false;
-    // }
-  
-      return true;
+    return true;
   };
 
   /** Kiểm tra giá trị nhập specification */
   const validateSpecification = () => {
-    if (!selectedCategory.id) {
-      alert("Loại sản phẩm không được để trống");
+    if (specifications.length <= 1) {
       return false;
     }
+    if (specifications.length > 0) {
+      console.log(specifications);
+    }
+    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("submit")
+    uploadImages();
     if (validateProduct()) {
-      try {
-        const category = categories.find((category) => category.id === selectedCategory.id);
-        const newProduct = {
-          name,
-          description,
-          price,
-          brand,
-          images,
-          color,
-          size,
-          weight,
-          guaranteePeriod,
-          category,
-          inventoryId: selectedInventory?.inventory_id,
-          modifiedDate: new Date().toISOString()
-        };
-        const responseProduct = await createProduct(newProduct);
+      if (updateProductId) {
+        handlerUpdateProduct();
+      } else {
+        handlerCreateProduct();
+      }
+      handleReset()
+    };
+  };
+
+  const handlerCreateProduct = async () => {
+    try {
+      const category = categories.find((category) => category.id === selectedCategory.id);
+      const newProduct = {
+        name,
+        description,
+        price: parseFloat(price.replace(/,/g, '')),
+        brand,
+        images,
+        color,
+        size,
+        weight,
+        guaranteePeriod,
+        category,
+        inventoryId: selectedInventory?.inventory_id,
+        modifiedDate: new Date().toISOString()
+      };
+      const responseProduct = await createProduct(newProduct);
+      if (validateSpecification()) {
         if (responseProduct.status === 201) {
-          specifications.map(async (spec) => {
+          specifications.forEach(async (spec) => {
             const responseSpecification = await createSpecification({
-              product: responseProduct.data, 
-              name: spec.name, 
-              value: spec.value});
+              product: responseProduct.data,
+              name: spec.name,
+              value: spec.value
+            });
             if (responseSpecification.status === 201) {
               console.log("Thêm thông số kỹ thuật thành công");
             }
-          });
+          })
         };
-      } catch (error) {
-        console.error("Lỗi khi thêm sản phẩm:", error.response?.data || error.message);
       }
-      handleReset()
+    } catch (error) {
+      console.error("Lỗi khi thêm sản phẩm:", error.response?.data || error.message);
+    };
+  };
+
+  const handlerUpdateProduct = async () => {
+    try {
+      const category = categories.find((category) => category.id === selectedCategory.id);
+      const updatedProduct = {
+        name,
+        description,
+        price: parseFloat(price.replace(/,/g, '')),
+        brand,
+        images,
+        color,
+        size,
+        weight,
+        guaranteePeriod,
+        category,
+        inventoryId: selectedInventory?.inventory_id,
+        modifiedDate: new Date().toISOString()
+      };
+      const responseProduct = await updateProduct(updateProductId, updatedProduct);
+      if (validateSpecification()) {
+        if (responseProduct.status === 200) {
+          specifications.forEach(async (spec) => {
+            const responseSpecification = await createSpecification({
+              product: responseProduct.data,
+              name: spec.name,
+              value: spec.value
+            });
+            if (responseSpecification.status === 201) {
+              console.log("Thêm thông số kỹ thuật thành công");
+            }
+          })
+        };
+      }
+    } catch (error) {
+      console.error("Lỗi khi thêm sản phẩm:", error.response?.data || error.message);
     };
   };
 
@@ -305,7 +394,12 @@ export default function AddProductModal({ setShowProductModal, length, productId
     setGuaranteePeriod("");
     setSelectedCategory({ id: "", name: "" });
     setSpecifications([{ name: "", value: "" }]);
-    setShowProductModal(false)
+    console.log("Reset");
+    setUpdateProductId("");
+    setSelectedInventory(null);
+    setInventorys([]);
+    setCategories([]);
+    setShowProductModal({ show: false, productId: "" });
   };
 
   const handleCategoryChange = (e) => {
@@ -357,7 +451,7 @@ export default function AddProductModal({ setShowProductModal, length, productId
           <h3 className="text-2xl font-bold leading-6 text-gray-900">Thông tin sản phẩm</h3>
           <button
             type="button"
-            onClick={() => setShowProductModal(false)}
+            onClick={() => setShowProductModal({ show: false, productId: "" })}
             className="text-gray-500 hover:text-gray-700"
           >
             <FaTimes size={24} />
@@ -447,7 +541,7 @@ export default function AddProductModal({ setShowProductModal, length, productId
 
                 </div>
                 <div className="w-full">
-                  <label className="block text-sm font-medium text-gray-700">Kích thước (D x R)</label>
+                  <label className="block text-sm font-medium text-gray-700">Kích thước (D x R X C)</label>
 
                   <input
                     type="text"
@@ -526,8 +620,9 @@ export default function AddProductModal({ setShowProductModal, length, productId
                     ))}
                   </select>
                 </div>
-
+                
                 <div className="w-full">
+
                   <label className="block text-sm font-medium text-gray-700">Hình ảnh</label>
                   <div {...getRootProps()} className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-indigo-500 transition-colors">
                     <div className="space-y-1 text-center">
