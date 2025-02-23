@@ -6,6 +6,8 @@ import { Pagination } from '@mui/material'
 
 import AddProductModal from "../Modal/AddProductModal";
 import { findAllProduct, getProductsManagementPage } from "../../routers/ApiRoutes";
+import { current } from "@reduxjs/toolkit";
+import AddCategoryModal from "../Modal/AddCategoryModal";
 
 const useQuery = () => {
     return new URLSearchParams(useLocation().search);
@@ -15,6 +17,7 @@ export default function Products() {
     const quantityInStock = 100;
     const imageTemp = "https://images.unsplash.com/photo-1526406915894-7bcd65f60845?ixlib=rb-1.2.1";
     const [showProductModal, setShowProductModal] = useState({ show: false, productId: "" });
+    const [showCategoryModal, setShowCategoryModal] = useState({ show: false });
     const [products, setProducts] = useState(null);
     const [results, setResults] = useState(null);
     const navigate = useNavigate();
@@ -33,7 +36,7 @@ export default function Products() {
                 margin: '5px'
             }
         },
-        '.MuiPaginationItem-root': { 
+        '.MuiPaginationItem-root': {
             fontSize: 'large',
             fontWeight: 'bold',
             borderRadius: '4px',
@@ -61,7 +64,7 @@ export default function Products() {
             '@media (max-width: 600px)': {
                 fontSize: 'medium',
                 margin: '0px'
-            }
+            },
         },
         '.MuiPaginationItem-page.Mui-selected': {
             color: '#667eea',
@@ -69,7 +72,7 @@ export default function Products() {
             border: '2px solid #667eea',
             '&:hover': {
                 backgroundColor: '#667eea',
-                color: 'white'
+                color: 'black'
             }
         },
         '.MuiPaginationItem-ellipsis': {
@@ -88,13 +91,12 @@ export default function Products() {
         const queryParams = new URLSearchParams(location.search);
         const currentPage = parseInt(queryParams.get('page') || '1', 10);
         setPage(currentPage);
-        console.log(currentPage);
         fetchProducts({ page: currentPage });
     }, [location.search]);
 
     const totalPage = useMemo(() => {
         const size = (products?.data != null) ? products?.size : 5;
-        const totalRecord = (products?.data != null) ? products?.totalRecord : 5;
+        const totalRecord = (products?.data != null) ? products?.totalRecords : 5;
         return Math.ceil(totalRecord / size);
     }, [products?.data]);
 
@@ -113,7 +115,6 @@ export default function Products() {
             console.error('Error fetching products:', error);
         }
     };
-
 
     const ActionButton = ({ icon: Icon, onClick, color }) => (
         <button
@@ -134,14 +135,24 @@ export default function Products() {
             <div>
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-semibold">Danh sách sản phẩm</h2>
-                    <button
-                        onClick={() => setShowProductModal({ show: true, productId: "" })}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                        Thêm sản phẩm
-                    </button>
+                    <div className="flex space-x-4">
+                        <button
+                            onClick={() => setShowProductModal({ show: true, productId: "" })}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            Thêm sản phẩm
+                        </button>
+                        <button
+                            onClick={() => setShowCategoryModal({ show: true })}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            Thêm loại sản phẩm
+                        </button>
+                    </div>
                 </div>
-                {showProductModal.show && <AddProductModal setShowProductModal={setShowProductModal} product_id={showProductModal.productId} /> }
+                {showProductModal.show && <AddProductModal setShowProductModal={setShowProductModal} product_id={showProductModal.productId} />}
+                {showCategoryModal.show && <AddCategoryModal setShowCategoryModal={setShowCategoryModal} />}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {products?.data.map((product) => (
                         <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -176,6 +187,6 @@ export default function Products() {
             </div>
         </div>
     );
-}
+};
 
 

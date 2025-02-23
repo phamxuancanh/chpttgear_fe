@@ -142,6 +142,14 @@ export const createProduct = async (payload) => {
         throw error;
     }
 };
+export const createCategory = async (payload) => {
+    try {
+        return await requestWithJwt.post('/products/categories/createCategory', payload);
+    } catch (error) {
+        console.error('Error creating category:', error);
+        throw error;
+    };
+};
 export const createSpecification = async (payload) => {
     try {
         return await requestWithJwt.post(`/products/specifications/createSpecification`, payload);
@@ -168,8 +176,6 @@ export const findSpecificationsByProductId = async (productId) => {
     }
 };
 export const updateProduct = async (productId, payload) => {
-    console.log(productId);
-    console.log(payload);
     try {
         return await requestWithJwt.put(`/products/products/updateProduct/${productId}`, payload);
     } catch (error) {
@@ -200,7 +206,6 @@ export const uploadImagesToCloudinary = async (payload) => {
 export const getProductsManagementPage = async ({ params } = {}) => {
     return await requestWithJwt.get('/products/products/managementPage', { params });
 };
-
 export const updatePriceByProductId = async (productId, payload) => {
     try {
         const response = await requestWithJwt.put(`/products/${productId}/price`, payload);
