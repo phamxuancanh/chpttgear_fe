@@ -280,6 +280,48 @@ export const getQuantityInStock = async (product_id) => {
 // cartService
 
 // orderService
+export const getAllOrders = async () => {
+    return await requestWithJwt.get(`/orders/`);
+};
+
+export const getOrderById = async (orderId) => {
+    return await requestWithJwt.get(`/orders/${orderId}`);
+};
+
+export const getOrdersByUserId = async (userId) => {
+    return await requestWithJwt.get(`/orders/orders/${userId}`);
+};
+
+export const createOrder = async (payload) => {
+    return await requestWithJwt.post(`/orders/`, payload);
+};
+
+
+export const updateOrder = async (orderId, payload) => {
+    return await requestWithJwt.put(`/orders/${orderId}`, payload);
+};
+
+export const deleteOrder = async (orderId) => {
+    return await requestWithJwt.delete(`/orders/${orderId}`);
+};
+
+
+export const getOrderItemById = async (orderItemId) => {
+    return await requestWithJwt.get(`/orders/order-items${orderItemId}`);
+};
+
+export const createOrderItem = async (payload) => {
+    return await requestWithJwt.post(`/orders/order-items/`, payload);
+};
+
+export const updateOrderItem = async (orderItemId, payload) => {
+    return await requestWithJwt.put(`/orders/order-items/${orderItemId}`, payload);
+};
+
+export const deleteOrderItem = async (orderItemId) => {
+    return await requestWithJwt.delete(`/orders/order-items/${orderItemId}`);
+};
+
 
 // paymentService
 
