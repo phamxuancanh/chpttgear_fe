@@ -12,21 +12,27 @@ import { removeAllLocalStorage } from "../utils/functions";
 import { toast } from "react-toastify";
 import ROUTES from "../constants/Page";
 import Chats from "../components/Dashboard/Chats";
+import Loading from "../utils/Loading";
 
 export default function Dashboard() {
     const [activeTab, setActiveTab] = useState("analysis");
+    const [loading, setLoading] = useState(false)
     const navigate = useNavigate();
 
     const logout = async () => {
         try {
+            setLoading(true)
             const response = await signOut();
             if (response) {
                 removeAllLocalStorage();
                 navigate(ROUTES.LOGIN_PAGE.path);
                 toast.success("Đăng xuất thành công!");
             }
+            setLoading(false)
         } catch (error) {
             console.error(error);
+        } finally {
+            setLoading(false)
         }
     };
 
@@ -49,38 +55,40 @@ export default function Dashboard() {
     );
 
     return (
-        <div className="flex min-h-screen bg-gray-50">
-            <div className="w-64 bg-white p-4 shadow-lg">
-                <div className="mb-8">
-                    <img src={LOGO} alt="Logo" width={200} height={200} />
+        <div>
+            {loading ? <Loading /> : <div className="flex min-h-screen bg-gray-50">
+                <div className="w-64 bg-white p-4 shadow-lg">
+                    <div className="mb-8">
+                        <img src={LOGO} alt="Logo" width={200} height={200} />
+                    </div>
+                    <Link
+
+                        to="/"
+                        className="flex items-center w-full p-3 mb-2 rounded-lg transition-colors bg-gray-200 shadow-md font-semibold"
+                    >
+                        Quay lại trang chủ
+                    </Link>
+
+                    <nav>
+                        <NavItem icon={FiHome} text="Thống kê" tabName="analysis" />
+                        <NavItem icon={FiUsers} text="Quản lý nhân viên" tabName="employees" />
+                        <NavItem icon={FiBox} text="Quản lý sản phẩm" tabName="products" />
+                        <NavItem icon={FiShoppingCart} text="Quản lý đơn hàng" tabName="orders" />
+                        <NavItem icon={FiPackage} text="Quản lý kho" tabName="inventories" />
+                        <NavItem icon={FiMessageCircle} text="Quản lý tin nhắn" tabName="chats" />
+                        <NavItem icon={FiLogOut} text="Đăng xuất" tabName="logout" />
+                    </nav>
                 </div>
-                <Link
 
-                    to="/"
-                    className="flex items-center w-full p-3 mb-2 rounded-lg transition-colors bg-gray-200 shadow-md font-semibold"
-                >
-                    Quay lại trang chủ
-                </Link>
-
-                <nav>
-                    <NavItem icon={FiHome} text="Thống kê" tabName="analysis" />
-                    <NavItem icon={FiUsers} text="Quản lý nhân viên" tabName="employees" />
-                    <NavItem icon={FiBox} text="Quản lý sản phẩm" tabName="products" />
-                    <NavItem icon={FiShoppingCart} text="Quản lý đơn hàng" tabName="orders" />
-                    <NavItem icon={FiPackage} text="Quản lý kho" tabName="inventories" />
-                    <NavItem icon={FiMessageCircle} text="Quản lý tin nhắn" tabName="chats" />
-                    <NavItem icon={FiLogOut} text="Đăng xuất" tabName="logout" />
-                </nav>
-            </div>
-
-            <div className="flex-1 p-8">
-                {activeTab === "employees" && <Employee />}
-                {activeTab === "products" && <Products />}
-                {activeTab === "orders" && <Order />}
-                {activeTab === "analysis" && <Analysis />}
-                {activeTab === "inventories" && <Inventory />}
-                {activeTab === "chats" && <Chats />}
-            </div>
+                <div className="flex-1 p-8">
+                    {activeTab === "employees" && <Employee />}
+                    {activeTab === "products" && <Products />}
+                    {activeTab === "orders" && <Order />}
+                    {activeTab === "analysis" && <Analysis />}
+                    {activeTab === "inventories" && <Inventory />}
+                    {activeTab === "chats" && <Chats />}
+                </div>
+            </div>}
         </div>
     );
 }

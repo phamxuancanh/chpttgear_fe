@@ -4,8 +4,9 @@ import ProductCard from "../components/ProductCard";
 import { DateConverter } from './../utils/DateConverter';
 import { BiSolidCommentEdit } from "react-icons/bi";
 import { useParams } from "react-router-dom";
-import { findProductById, getQuantityInStock, getStockInByProductId, getStockOutByProductId } from "../routers/ApiRoutes";
-
+import { findProductById, findSpecificationsByProductId, getQuantityInStock, getStockInByProductId, getStockOutByProductId } from "../routers/ApiRoutes";
+import { FaDongSign } from "react-icons/fa6";
+import Loading from "../utils/Loading";
 
 export default function ProductDetail() {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -18,7 +19,9 @@ export default function ProductDetail() {
     const [stockIns, setStockIns] = useState([]);
     const [stockOuts, setStockOuts] = useState([]);
     const reviewsRef = useRef(null);
-
+    const [images, setImages] = useState([])
+    const [loading, setLoading] = useState(false)
+    const [specs, setspecs] = useState([])
     const scrollToReviews = () => {
         console.log("a")
         if (reviewsRef.current) {
@@ -51,16 +54,26 @@ export default function ProductDetail() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [productRes, quantityInStockRes] = await Promise.all([
+                setLoading(true)
+                const [productRes, quantityInStockRes, specRes] = await Promise.all([
                     findProductById(id),
-                    getQuantityInStock(id)
+                    getQuantityInStock(id),
+                    findSpecificationsByProductId(id)
                 ]);
 
-                if (productRes?.data) setProduct(productRes.data);
+                if (productRes?.data) {
+                    setProduct(productRes.data);
+                    console.log(productRes.data.image.split(','))
+                    setImages(productRes.data.image.split(','))
+                    setspecs(specRes.data)
+                }
+
                 if (quantityInStockRes) setQuantityInStock(quantityInStockRes.quantityInStock);
-                
+                setLoading(false)
             } catch (error) {
                 console.error("Error fetching product data:", error);
+            } finally {
+                setLoading(false)
             }
         };
 
@@ -127,11 +140,7 @@ export default function ProductDetail() {
         { product_id: 4090, user: "Charlie Brown", score: 2, comment: "Worth every penny!", date: "2024-02-08" }
     ];
 
-    const images = [
-        "https://images.unsplash.com/photo-1587202372634-32705e3bf49c",
-        "https://images.unsplash.com/photo-1591488320449-011701bb6704",
-        "https://images.unsplash.com/photo-1592664474505-51c549ad15c5"
-    ]
+
 
     const handleImageNavigation = (direction) => {
         if (direction === "next") {
@@ -192,17 +201,17 @@ export default function ProductDetail() {
 
 
     return (
-        <div className="min-h-screen bg-gray-50 -mt-20">
 
-            <main className="container mx-auto px-4 pt-24 pb-12">
+        <div className="min-h-screen bg-gray-50 -mt-20">
+            {loading ? <Loading /> : <main className="container mx-auto px-4 pt-24 pb-12">
                 {/* Product Information */}
                 <div className="grid md:grid-cols-2 gap-8 mb-12">
                     {/* Image Carousel */}
-                    <div className="relative">
+                    <div className="relative flex justify-center items-center  rounded-lg p-2">
                         <img
                             src={images[currentImageIndex]}
                             alt={`Product view ${currentImageIndex + 1}`}
-                            className="w-full h-[400px] object-cover rounded-lg"
+                            className="w-[30vh] h-[30vh] object-contain rounded-lg"
                         />
                         <button
                             onClick={() => handleImageNavigation("prev")}
@@ -218,6 +227,7 @@ export default function ProductDetail() {
                         </button>
                     </div>
 
+
                     {/* Product Details */}
                     <div>
                         <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
@@ -231,7 +241,13 @@ export default function ProductDetail() {
                                 Xem đánh giá
                             </p>
                         </div>
-                        <p className="text-3xl font-bold text-blue-600 mb-4">${product.price}</p>
+                        <div className="text-3xl font-bold text-blue-600 mb-4 flex justify-start">
+                            {/* <p className="">{product.price.toLocaleString('en-US')}</p> */}
+                            <p className="">{parseFloat(product.price).toLocaleString('en-US')}</p>
+
+                            < FaDongSign />
+                        </div>
+
                         <p className="text-gray-600 mb-6 ">{product.description}</p>
                         <p className={`text-gray-600 mb-6 text-lg`}>Tình trạng: <span className={`font-semibold text-base ${quantityInStock > 0 ? "text-green-500" : "text-red-500"}`}>{quantityInStock > 0 ? "Còn hàng" : "Hết hàng"}</span></p>
 
@@ -274,14 +290,14 @@ export default function ProductDetail() {
                     <h2 className="text-2xl font-bold mb-4">Technical Specifications</h2>
                     <div className="overflow-x-auto">
                         <table className="table-auto w-full border-collapse border border-gray-300">
-                            {/* <tbody>
-                                {product.specs.map((spec, index) => (
+                            <tbody>
+                                {specs.map((spec, index) => (
                                     <tr key={index} className="even:bg-gray-100">
-                                        <td className="border border-gray-300 px-4 py-2 font-semibold">{spec.label}</td>
+                                        <td className="border border-gray-300 px-4 py-2 font-semibold">{spec.name_vi}</td>
                                         <td className="border border-gray-300 px-4 py-2">{spec.value}</td>
                                     </tr>
                                 ))}
-                            </tbody> */}
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -360,9 +376,7 @@ export default function ProductDetail() {
                         </button>
                     </div>
                 </div>
-            </main>
-
-
+            </main>}
         </div>
     );
 };

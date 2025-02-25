@@ -22,12 +22,15 @@ export default function Inventory() {
     const [showDetails, setShowDetails] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
 
+
     useEffect(() => {
         const fetchData = async () => {
             try {
+
                 const res = await getAllInventory();
                 console.log(res.data)
                 setInventorys(res.data)
+
             } catch (error) {
                 console.error("Error fetching inventory:", error);
             }

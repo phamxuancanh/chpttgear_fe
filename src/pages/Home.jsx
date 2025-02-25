@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { FiSearch, FiShoppingCart } from "react-icons/fi";
 import ProductCard from "../components/ProductCard";
 import { useEffect } from "react";
-import { findAllCategory, getSuggestions } from "../routers/ApiRoutes";
+import { findAllCategory, getAllProduct, getSuggestions } from "../routers/ApiRoutes";
 import { Pagination } from '@mui/material'
 import { styled } from '@mui/system'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -76,6 +76,8 @@ export default function Home() {
     const [categories, setCategories] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [suggestions, setSuggestions] = useState([]);
+    const [products, setProducts] = useState([])
+
     const fetchSuggestions = debounce(async (value) => {
         try {
             const response = await getSuggestions(value);
@@ -94,6 +96,18 @@ export default function Home() {
             setCategories(data);
         };
         fetchCategories();
+
+        const fetchData = async () => {
+            try {
+                const res1 = await getAllProduct();
+
+                setProducts(res1.data)
+
+            } catch (error) {
+                console.error("Error fetching inventory:", error);
+            }
+        };
+        fetchData();
     }, []);
 
     const handleCategoryChange = (categoryName) => {
@@ -128,87 +142,6 @@ export default function Home() {
             handleSearchClick();
         }
     };
-    const recommendedProducts = [
-        {
-            id: 1,
-            name: "AMD Ryzen 9 5950X",
-            price: "$699",
-            // image: "https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?ixlib=rb-4.0.3",
-        },
-        {
-            id: 2,
-            name: "NVIDIA RTX 4080",
-            price: "$1199",
-            // image: "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3",
-        },
-        {
-            id: 3,
-            name: "ASUS ROG Maximus",
-            price: "$599",
-            // image: "https://images.unsplash.com/photo-1592664474505-51c764ec6666?ixlib=rb-4.0.3",
-        },
-        {
-            id: 4,
-            name: "Corsair Vengeance 32GB",
-            price: "$159",
-            // image: "https://images.unsplash.com/photo-1562976540-1502c2145186?ixlib=rb-4.0.3",
-        },
-    ];
-
-    const hotProducts = [
-        {
-            id: 5,
-            name: "Samsung 2TB NVMe SSD",
-            price: "$229",
-            // image: "https://images.unsplash.com/photo-1628557044797-f21654f9008b?ixlib=rb-4.0.3",
-        },
-        {
-            id: 6,
-            name: "Intel Core i9-13900K",
-            price: "$589",
-            // image: "https://images.unsplash.com/photo-1555680202-c86f0e12f086?ixlib=rb-4.0.3",
-        },
-        {
-            id: 7,
-            name: "MSI Gaming X Trio",
-            price: "$799",
-            // image: "https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?ixlib=rb-4.0.3",
-        },
-        {
-            id: 8,
-            name: "G.Skill Trident Z5",
-            price: "$189",
-            // image: "https://images.unsplash.com/photo-1591488320449-011701bb6704?ixlib=rb-4.0.3",
-        },
-    ];
-
-    const bestSellers = [
-        {
-            id: 9,
-            name: "WD Black SN850X 1TB",
-            price: "$149",
-            // image: "https://images.unsplash.com/photo-1597872200928-9c0974483413?ixlib=rb-4.0.3",
-        },
-        {
-            id: 10,
-            name: "AMD Ryzen 7 7800X3D",
-            price: "$449",
-            // image: "https://images.unsplash.com/photo-1592664474504-8afb0e869925?ixlib=rb-4.0.3",
-        },
-        {
-            id: 11,
-            name: "ASUS TUF Gaming B650",
-            price: "$219",
-            // image: "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?ixlib=rb-4.0.3",
-        },
-        {
-            id: 12,
-            name: "Crucial RAM 64GB",
-            price: "$259",
-            // image: "https://images.unsplash.com/photo-1591799264319-96c15fdb541c?ixlib=rb-4.0.3",
-        },
-    ];
-
 
 
     return (
@@ -237,7 +170,7 @@ export default function Home() {
                 <section className="mb-12">
                     <h2 className="text-2xl font-bold text-foreground mb-6">Recommended Products</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {recommendedProducts.map((product) => (
+                        {products.slice(0, 4).map((product) => (
                             <ProductCard key={product.id} product={product} />
                         ))}
                     </div>
@@ -245,7 +178,7 @@ export default function Home() {
                 <section className="mb-12">
                     <h2 className="text-2xl font-bold text-foreground mb-6">Hot Products</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {hotProducts.map((product) => (
+                        {products.slice(0, 4).map((product) => (
                             <ProductCard key={product.id} product={product} />
                         ))}
                     </div>
@@ -253,12 +186,12 @@ export default function Home() {
                 <section className="mb-12">
                     <h2 className="text-2xl font-bold text-foreground mb-6">Best Sellers</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {bestSellers.map((product) => (
+                        {products.slice(0, 4).map((product) => (
                             <ProductCard key={product.id} product={product} />
                         ))}
                     </div>
                 </section>
-                <div className="flex justify-center">
+                {/* <div className="flex justify-center">
                     <CustomPagination
                         count={10}
                         page={1}
@@ -266,7 +199,7 @@ export default function Home() {
                         boundaryCount={1}
                         siblingCount={1}
                     />
-                </div>
+                </div> */}
             </main>
 
 

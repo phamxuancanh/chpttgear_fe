@@ -13,6 +13,7 @@ import { debounce } from 'lodash'
 import { FiSearch } from "react-icons/fi";
 
 import { logout, setToken } from '../redux/authSlice';
+import Loading from "../utils/Loading";
 export default function Header() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -28,7 +29,8 @@ export default function Header() {
     const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
     const [searchTerm, setSearchTerm] = useState('');
     const [suggestions, setSuggestions] = useState([]);
-    const searchRef = useRef(null); 
+    const searchRef = useRef(null);
+    const [loading, setLoading] = useState(false)
     const fetchSuggestions = debounce(async (value) => {
         try {
             const response = await getSuggestions(value);
@@ -167,6 +169,7 @@ export default function Header() {
         setIsDropdownOpenUser(!isDropdownOpenUser)
     };
     const handleLogout = async () => {
+        setLoading(true)
         dispatch(logout())
         try {
             const response = await signOut()
@@ -176,9 +179,12 @@ export default function Header() {
                 navigate(ROUTES.LOGIN_PAGE.path)
                 toast.success('Đăng xuất thành công!')
             }
+            setLoading(false)
         }
         catch (error) {
             console.error(error);
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -208,7 +214,7 @@ export default function Header() {
     }, []);
     return (
         <div>
-            <nav className="bg-black text-white shadow-lg py-2 sticky z-10 flex items-center justify-center">
+            {loading ? <Loading /> : <nav className="bg-black text-white shadow-lg py-2 sticky z-10 flex items-center justify-center">
                 <div className="w-11/12">
                     <div className="flex items-center justify-between h-16 ">
                         <Link to="/">
@@ -255,7 +261,7 @@ export default function Header() {
                                 )}
                             </div>
                             <div className="container mx-auto px-4 py-4 flex items-center justify-between text-black w-6/12">
-                            <div className="flex-1 w-10/12 flex items-center" ref={searchRef}>
+                                <div className="flex-1 w-10/12 flex items-center" ref={searchRef}>
 
                                     <div className="relative flex-grow">
                                         <input
@@ -636,7 +642,7 @@ export default function Header() {
                         </div>
                     </div>
                 )}
-            </nav>
+            </nav>}
         </div>
     );
 }
