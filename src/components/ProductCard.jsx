@@ -27,6 +27,8 @@ export default function ProductCard({ product }) {
                 </div>
                 <p className="text-accent text-xl font-bold mb-4">{product?.category?.name}</p>
                 <p className="text-gray-500">{product.color}</p>
+                <p className="text-gray-500">{product.id}</p>
+
                 <button className="w-full   py-2 px-4 rounded-md hover:bg-gray-400 transition-colors duration-300 flex items-center justify-center gap-2">
                     <FiShoppingCart />
                     Add to Cart
