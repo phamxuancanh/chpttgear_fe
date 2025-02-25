@@ -126,7 +126,7 @@ export default function SearchResult() {
         Headphones: [
             { key: "model", value: "Mẫu", options: [] },
             { key: "warranty", value: "Bảo hành", options: [] },
-            { key: "type", value: "Kiểu", options: ["Over-ear", "On-ear", "In-ear"] },
+            { key: "type", value: "Kiểu", options: ["Over-ear", "Out-ear", "In-ear"] },
             { key: "connection", value: "Kết nối", options: ["Wired", "Wireless", "Bluetooth"] },
             { key: "battery_life", value: "Thời lượng pin", options: [] },
             { key: "noise_cancellation", value: "Khử tiếng ồn chủ động", options: ["Có", "Không"] },
@@ -173,7 +173,7 @@ export default function SearchResult() {
 
     const navigate = useNavigate();
     const query = useQuery();
-    const [priceRange, setPriceRange] = useState([0, 10000]);
+    const [priceRange, setPriceRange] = useState([0, 100000000]);
     const [showPriceSlider, setShowPriceSlider] = useState(false);
 
     const initialPage = parseInt(query.get('page') || '1', 10);
@@ -187,25 +187,105 @@ export default function SearchResult() {
         setSelectedCategory({ id: "all", name: "" });
         setSelectedColor("");
         setProductData({});
-        setPriceRange([0, 10000]);
+        setPriceRange([0, 100000000]);
     }, [name]);
     const fetchResults = async (params) => {
-
-        const response = await searchProducts({ params });
-        setResults(response.data);
-        console.log(response.data);
-    }
-    useEffect(() => {
+        try {
+          const response = await searchProducts({ params });
+          setResults(response.data);
+          console.log(response.data);
+        } catch (error) {
+          console.error("Error fetching results:", error);
+        }
+      };
+      
+      useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
-        const currentPage = parseInt(queryParams.get('page') || '1', 10);
-        const category = (queryParams.get('category')) || undefined;
-        const color = (queryParams.get('color')) || undefined;
-        const price_gte = (queryParams.get('price_gte')) || undefined;
-        const price_lte = (queryParams.get('price_lte')) || undefined;
-        setPage(currentPage);
-        console.log(currentPage);
-        fetchResults({ page: currentPage, search: name || undefined, category: category || undefined, color: color || undefined, price_gte: price_gte || undefined, price_lte: price_lte || undefined });
-    }, [location.search]);
+      
+        // Chuyển toàn bộ query param thành object
+        // ví dụ: ?name=a&category=Headphones&spec_type=In-ear
+        // sẽ thành { name: "a", category: "Headphones", spec_type: "In-ear" }
+        const allParams = {};
+        for (const [key, value] of queryParams.entries()) {
+          allParams[key] = value;
+        }
+      
+        // Nếu cần parse một số param thành số, ví dụ "page", "price_gte", "price_lte"
+        // ta có thể làm như sau:
+        if (allParams.page) {
+          allParams.page = parseInt(allParams.page, 10);
+          if (isNaN(allParams.page)) {
+            allParams.page = 1;
+          }
+        } else {
+          allParams.page = 1; // giá trị mặc định
+        }
+      
+        if (allParams.price_gte) {
+          const num = parseFloat(allParams.price_gte);
+          allParams.price_gte = isNaN(num) ? undefined : num;
+        }
+        if (allParams.price_lte) {
+          const num = parseFloat(allParams.price_lte);
+          allParams.price_lte = isNaN(num) ? undefined : num;
+        }
+      
+        // Tương tự nếu bạn muốn parse "name" thành search, có thể gán thêm
+        // allParams.search = allParams.name || undefined;
+      
+        console.log("All params:", allParams);
+      
+        // Gọi API với tất cả các param
+        fetchResults(allParams);
+      }, [location.search]);
+    // const fetchResults = async (params) => {
+    //     try {
+    //       const response = await searchProducts({ params });
+    //       setResults(response.data);
+    //       console.log(response.data);
+    //     } catch (error) {
+    //       console.error("Error fetching results:", error);
+    //     }
+    //   };
+      
+    //   useEffect(() => {
+    //     const queryParams = new URLSearchParams(location.search);
+        
+    //     // Lấy các tham số cơ bản
+    //     const currentPage = parseInt(queryParams.get('page') || '1', 10);
+    //     const category = queryParams.get('category') || undefined;
+    //     const color = queryParams.get('color') || undefined;
+    //     const price_gte = queryParams.get('price_gte') || undefined;
+    //     const price_lte = queryParams.get('price_lte') || undefined;
+    //     // Thêm dòng này để lấy name từ URL
+    //     const nameParam = queryParams.get('name') || undefined;
+      
+    //     // Lấy các spec có tiền tố "spec_"
+    //     // (giả sử specifications01 = ["type", "warranty", ...])
+    //     const productData = {};
+    //     for (const key of specifications01) {
+    //       const value = queryParams.get(`spec_${key}`);
+    //       if (value) {
+    //         productData[key] = value;
+    //       }
+    //     }
+      
+    //     setProductData(productData);
+    //     setPage(currentPage);
+    //     console.log("Current page:", currentPage);
+    //     console.log(productData)
+    //     // Gọi API
+    //     fetchResults({
+    //       page: currentPage,
+    //       search: nameParam,          // truyền nameParam thay vì name
+    //       category: category,
+    //       color: color,
+    //       price_gte: price_gte,
+    //       price_lte: price_lte,
+    //       ...productData
+    //     });
+    //   }, [location.search]);
+    
     const totalPage = useMemo(() => {
         const size = (results?.data != null) ? results?.size : 5;
         const totalRecord = (results?.data != null) ? results?.totalRecords : 5;
@@ -218,29 +298,34 @@ export default function SearchResult() {
     };
     const handleFilterClick = () => {
         setLoading(true);
-        const queryParams = new URLSearchParams(location.search);
-        // Cập nhật/Thêm các param mới
-        queryParams.set("page", 1);
-        if (name) {
+        try {
+          const queryParams = new URLSearchParams(location.search);
+          // Cập nhật/Thêm các param thông thường
+          queryParams.set("page", 1);
+          if (name) {
             queryParams.set("search", name);
-        }
-        if (selectedCategory.name) {
+          }
+          if (selectedCategory && selectedCategory.name) {
             queryParams.set("category", selectedCategory.name);
-        }
-        if (selectedColor) {
+          }
+          if (selectedColor) {
             queryParams.set("color", selectedColor);
-        }
-        queryParams.set("price_gte", priceRange[0]);
-        queryParams.set("price_lte", priceRange[1]);
-        // Thêm các param từ productData nếu có
-        for (const key in productData) {
+          }
+          queryParams.set("price_gte", priceRange[0]);
+          queryParams.set("price_lte", priceRange[1]);
+      
+          for (const key in productData) {
             if (productData[key]) {
-                queryParams.set(key, productData[key]);
+              queryParams.set(`spec_${key}`, productData[key]);
             }
+          }
+          navigate(`?${queryParams.toString()}`);
+        } finally {
+          setLoading(false);
         }
-        navigate(`?${queryParams.toString()}`);
-        setLoading(false);
-    };
+      };
+      
+    
     const handleSpecChange = (key, value) => {
         setProductData(prevData => ({
             ...prevData,
@@ -298,20 +383,20 @@ export default function SearchResult() {
 
                         {/* Màu sắc */}
                         <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1">Màu sắc</label>
-    <select
-        value={selectedColor}
-        onChange={(e) => setSelectedColor(e.target.value)}
-        className="w-full p-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500"
-    >
-        <option value="all">Tất cả màu sắc</option>
-        {colors.map((color) => (
-            <option key={color.key} value={color.key}>
-                {color.value}
-            </option>
-        ))}
-    </select>
-</div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Màu sắc</label>
+                            <select
+                                value={selectedColor}
+                                onChange={(e) => setSelectedColor(e.target.value)}
+                                className="w-full p-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500"
+                            >
+                                <option value="all">Tất cả màu sắc</option>
+                                {colors.map((color) => (
+                                    <option key={color.key} value={color.key}>
+                                        {color.value}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
 
                         {/* Khoảng giá */}
                         <div className="col-span-2 relative">
@@ -330,7 +415,7 @@ export default function SearchResult() {
                                         onChange={(e, newValue) => setPriceRange(newValue)}
                                         valueLabelDisplay="auto"
                                         min={0}
-                                        max={10000}
+                                        max={100000000}
                                     />
                                 </div>
                             )}
