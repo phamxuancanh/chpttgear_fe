@@ -1,6 +1,7 @@
 import React from "react";
 import { FiShoppingCart } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import { FaDongSign } from "react-icons/fa6";
 export default function ProductCard({ product }) {
     return (
         <div className="bg-card rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105">
@@ -21,7 +22,9 @@ export default function ProductCard({ product }) {
                     <h3 className="text-lg font-semibold text-foreground mb-2 cursor-pointer">{product.name}</h3>
                 </Link>
 
-                <p className="text-accent text-xl font-bold mb-4">{product.price}</p>
+                <div className="flex justify-start">
+                    <p className="text-accent text-xl font-bold mb-4 mr-2">{product.price.toLocaleString('en-US')} </p>< FaDongSign />
+                </div>
                 <p className="text-accent text-xl font-bold mb-4">{product?.category?.name}</p>
                 <p className="text-gray-500">{product.color}</p>
                 <button className="w-full   py-2 px-4 rounded-md hover:bg-gray-400 transition-colors duration-300 flex items-center justify-center gap-2">

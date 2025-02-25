@@ -3,6 +3,7 @@ import { FiSearch, FiSliders, FiStar, FiShoppingCart, FiChevronLeft, FiChevronRi
 import ProductCard from './../components/ProductCard';
 import { Link } from "react-router-dom";
 import { getAllProduct } from "../routers/ApiRoutes";
+import { FaDongSign } from "react-icons/fa6";
 
 export default function Product() {
 
@@ -12,13 +13,16 @@ export default function Product() {
     const [currentPage, setCurrentPage] = useState(1);
     const [filteredProducts, setFilteredProducts] = useState([]);
     const [products, setProducts] = useState([])
+    const [maxPrice, setMaxPrice] = useState(0)
     const productsPerPage = 6;
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const res1 = await getAllProduct();
+
                 setProducts(res1.data)
+                setMaxPrice(Math.max(...res1.data.map(product => product.price)))
                 setSearchQuery("")
                 setPriceRange(1000)
                 setSelectedCategories([])
@@ -128,16 +132,20 @@ export default function Product() {
                                 <input
                                     type="range"
                                     min="0"
-                                    max="2000"
-                                    value={priceRange}
-                                    onChange={(e) => setPriceRange(e.target.value)}
+                                    max={maxPrice}
+                                    value={priceRange} // Giữ nguyên số, không format
+                                    onChange={(e) => setPriceRange(Number(e.target.value))} // Chuyển thành số
                                     className="w-full accent-primary"
                                 />
                                 <div className="flex justify-between text-sm text-muted-foreground">
-                                    <span>$0</span>
-                                    <span>${priceRange}</span>
+                                    <span>0 đ</span>
+                                    <div className="flex justify-start">
+                                        <span>{priceRange.toLocaleString('en-US')}</span>
+                                        < FaDongSign className="font-thin" />
+                                    </div>{/* Chỉ format khi hiển thị */}
                                 </div>
                             </div>
+
                         </div>
                     </div>
 
