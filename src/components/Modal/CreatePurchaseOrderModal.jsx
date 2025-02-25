@@ -5,6 +5,7 @@ import { FaTimes } from "react-icons/fa";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { createStockIn, getAllProduct, increaseQuantity } from "../../routers/ApiRoutes";
+import Loading from "../../utils/Loading";
 
 export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory }) {
     const [searchTerm, setSearchTerm] = useState("");
@@ -14,15 +15,22 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
     const [quantities, setQuantities] = useState({});
     const [prices, setPrices] = useState({});
     const [products, setProducts] = useState([]);
+    const [loading1, setLoading1] = useState(false);
+    const [loading2, setLoading2] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
+                setLoading1(true)
                 const res1 = await getAllProduct();
                 console.log(res1.data)
                 setProducts(res1.data)
+                setLoading1(false)
+
             } catch (error) {
                 console.error("Error fetching inventory:", error);
+            } finally {
+                setLoading1(false)
             }
         };
         fetchData();
@@ -84,6 +92,7 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
     };
 
     const handleCreateOrder = async () => {
+        setLoading2(true)
         if (selectedProducts.length === 0) {
             alert("Please select at least one product");
             return;
@@ -102,7 +111,6 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
                     return;
                 }
 
-                const inventory_id = "2f4593b7-654b-430c-a55c-19b37dbeb45d";
 
                 // const stockInData = 
                 // Gọi API stock-in
@@ -110,18 +118,20 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
                     product_id: product_id,
                     quantity: quantity,
                     price: price,
-                    inventory_id: inventory_id
+                    inventory_id: inventory?.inventory_id
                 });
                 console.log('Stock-in successful:', stockInRes.data);
 
                 // Gọi API increase quantity
-                const increaseQuantityRes = await increaseQuantity(inventory_id, quantity)
+                const increaseQuantityRes = await increaseQuantity(inventory?.inventory_id, quantity)
                 console.log('Stock quantity increased successfully:', increaseQuantityRes.data);
-
+                setLoading2(false)
             } catch (error) {
                 console.error("Error while creating order:", error);
                 toast.error("Có lỗi xảy ra khi tạo đơn nhập hàng");
                 return; // Dừng hàm nếu có lỗi xảy ra trong vòng lặp
+            } finally {
+                setLoading2(false)
             }
         }
 
@@ -131,6 +141,7 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
 
     return (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+            {loading1 && <Loading />}
             <div className="bg-white rounded-lg p-8 max-w-4xl w-full">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold">Create Purchase Order</h2>
@@ -211,7 +222,7 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
                                                 aria-label={`Select ${product.name}`}
                                             />
                                             <img
-                                                src={product.image}
+                                                src={product.image.split(',')[0]}
                                                 alt={product.name}
                                                 className="w-16 h-16 object-cover mx-4 rounded"
                                                 onError={(e) => e.target.src = "https://images.unsplash.com/photo-1560393464-5c69a73c5770"}
@@ -256,7 +267,7 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
                         className="mt-6 w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                         aria-label="Create order"
                     >
-                        Create Order ({selectedProducts.length} items)
+                        {loading2 ? ` Creating Order (${selectedProducts.length} items) ...` : ` Create Order (${selectedProducts.length} items)`}
                     </button>
                 </div>
             </div>

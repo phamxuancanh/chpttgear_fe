@@ -12,6 +12,7 @@ export default function Order() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const userFromRedux = useSelector((state => state.auth.user));
 
+
     useEffect(() => {
         fetchOrder();
     }, []);
@@ -20,6 +21,7 @@ export default function Order() {
         try {
             const res = await getOrdersByUserId(userFromRedux.id);
             const data = res.data
+            console.log(data)
             setOrders(data);
         } catch (error) {
             console.log(error);
