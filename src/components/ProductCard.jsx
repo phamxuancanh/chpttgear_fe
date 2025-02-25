@@ -6,15 +6,17 @@ export default function ProductCard({ product }) {
     return (
         <div className="bg-card rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105">
             <Link to={`/product/${product.id}`}>
-                <img
-                    src="/aa.jpg"
-                    alt={product.name}
-                    loading="lazy" // Lazy load the image
-                    className="w-full h-48 object-cover"
-                    onError={(e) => {
-                        e.target.src = "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3";
-                    }}
-                />
+                <div className="flex justify-center items-center">
+                    <img
+                        src={product.image.split(',')[0]}
+                        alt={product.image.split(',')[0]}
+                        loading="lazy" // Lazy load the image
+                        className="w-[30vh] h-[30vh] object-cover rounded-lg"
+                        onError={(e) => {
+                            e.target.src = "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3";
+                        }}
+                    />
+                </div>
             </Link>
 
             <div className="p-4">

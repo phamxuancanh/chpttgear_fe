@@ -14,6 +14,7 @@ export default function AddInventoryModal({ setShowCreateInventory }) {
     const [listWard, setListWard] = useState([])
     const [formData, setFormData] = useState()
     const [name, setName] = useState(null)
+    const [loading, setLoading] = useState(false)
 
     useEffect(() => {
         const provinces = provinceData.map((province) => ({
@@ -93,11 +94,7 @@ export default function AddInventoryModal({ setShowCreateInventory }) {
     };
 
     const handleCreateInventory = async (e) => {
-        console.log(name)
-        console.log(formData)
-        console.log(selectedProvince)
-        console.log(selectedDistrict)
-        console.log(selectedWard)
+        setLoading(true)
         e.preventDefault();
 
         try {
@@ -130,11 +127,15 @@ export default function AddInventoryModal({ setShowCreateInventory }) {
                 })
             console.log('Stock-in successful:', res.data);
             toast.success("Tạo kho mới thành công")
+            setLoading(false)
             setShowCreateInventory(false)
+
         } catch (error) {
             console.error("Error while creating inventory:", error);
             toast.error("Có lỗi xảy ra khi tạo kho");
             return;
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -235,7 +236,7 @@ export default function AddInventoryModal({ setShowCreateInventory }) {
                     >Hủy</button>
                     <button className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md text-white font-semibold"
                         onClick={(e) => handleCreateInventory(e)}
-                    >Tạo kho</button>
+                    >{loading ? 'Đang tạo kho ...' : 'Tạo kho'}</button>
                 </div>
             </div>
         </div>

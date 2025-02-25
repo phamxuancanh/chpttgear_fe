@@ -9,6 +9,7 @@ import { findAllProduct, getProductsManagementPage } from "../../routers/ApiRout
 import { current } from "@reduxjs/toolkit";
 import AddCategoryModal from "../Modal/AddCategoryModal";
 import { FaDongSign } from "react-icons/fa6";
+import Loading from "../../utils/Loading";
 
 const useQuery = () => {
     return new URLSearchParams(useLocation().search);
@@ -26,6 +27,7 @@ export default function Products() {
     const location = useLocation();
     const initialPage = parseInt(query.get('page') || '1', 10);
     const [page, setPage] = useState(initialPage);
+    const [loading, setLoading] = useState([])
 
     const CustomPagination = styled(Pagination)({
         '.MuiPagination-ul': {
@@ -109,11 +111,15 @@ export default function Products() {
 
     const fetchProducts = async (params) => {
         try {
+            setLoading(true)
             const response = await getProductsManagementPage({ params });
             setProducts(response.data);
             console.log(response.data);
+            setLoading(false)
         } catch (error) {
             console.error('Error fetching products:', error);
+        } finally {
+            setLoading(false)
         }
     };
 
@@ -133,7 +139,8 @@ export default function Products() {
 
     return (
         <div className="flex-1 p-8">
-            <div>
+            {loading ? <Loading /> : <div>
+
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-semibold">Danh sách sản phẩm</h2>
                     <div className="flex space-x-4">
@@ -200,7 +207,8 @@ export default function Products() {
                         siblingCount={1}
                     />
                 </div>
-            </div>
+            </div>}
+
         </div>
     );
 };

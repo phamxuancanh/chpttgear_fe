@@ -1,7 +1,7 @@
 import { requestWithJwt, requestWithoutJwt } from './request'
 import { toast } from 'react-toastify';
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, GithubAuthProvider, FacebookAuthProvider, signInWithPopup } from 'firebase/auth'
+import { getAuth, GoogleAuthProvider, GithubAuthProvider, FacebookAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth'
 import { AxiosResponse } from 'axios'
 const firebaseConfig = {
     apiKey: "AIzaSyAN42yRxXQdumIT187N_rXW-60zCcjg3e8",
@@ -76,6 +76,7 @@ export const googleSignIn = async () => {
 
     try {
         const result = await signInWithPopup(auth, provider);
+        console.log(result)
         const token = await result.user.getIdToken();
         console.log('Token:', token);
         const response = await fetch('http://localhost:6868/api/v1/users/google', {
@@ -183,7 +184,7 @@ export const updateProduct = async (productId, payload) => {
         throw error;
     }
 };
-export const updateSpecification= async (specificationId, payload) => {
+export const updateSpecification = async (specificationId, payload) => {
     try {
         return await requestWithJwt.put(`/specifications/${specificationId}`, payload);
     } catch (error) {

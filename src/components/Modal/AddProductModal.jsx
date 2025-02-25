@@ -28,7 +28,7 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
 
   const [brandSelected, setBrandSelected] = useState("");
   const [selectedCategory, setSelectedCategory] = useState({ id: "", name: "" });
-  const [specifications, setSpecifications] = useState([{ name: "", value: "" }]);
+  const [specifications, setSpecifications] = useState([{ name: "", name_vi: "", value: "" }]);
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSpec, setSelectedSpec] = useState("");
   const [inventorys, setInventorys] = useState([])
@@ -257,13 +257,25 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
 
   const handleSpecificationChange = (index, field, value) => {
     setSpecifications((prev) =>
-      prev.map((spec, i) =>
-        i === index ? { ...spec, [field]: value } : spec
-      )
+      prev.map((spec, i) => {
+        if (i === index) {
+          if (field === "name") {
+            // Lấy giá trị name_vi dựa trên key (name) từ productSpecs
+            const selectedSpec = productSpecs.find((spec) => spec.key === value);
+            return {
+              ...spec,
+              name: value, // Gán key vào name
+              name_vi: selectedSpec ? selectedSpec.value : "", // Lấy name_vi từ productSpecs
+            };
+          }
+          return { ...spec, [field]: value }; // Cập nhật các trường khác (value)
+        }
+        return spec;
+      })
     );
   };
   const addSpecification = () => {
-    setSpecifications((prev) => [...prev, { name: "", value: "" }]);
+    setSpecifications((prev) => [...prev, { name: "", name_vi: "", value: "" }]);
   };
   const removeSpecification = (index) => {
     setSpecifications((prev) => prev.filter((_, i) => i !== index));
@@ -375,6 +387,7 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
             const responseSpecification = await createSpecification({
               product: responseProduct.data,
               name: spec.name,
+              name_vi: spec.name_vi,
               value: spec.value
             });
             if (responseSpecification.status === 201) {
@@ -439,7 +452,7 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
     setGuaranteePeriod("");
     setBrandSelected({ key: "", value: "" });
     setSelectedCategory({ id: "", name: "" });
-    setSpecifications([{ name: "", value: "" }]);
+    setSpecifications([{ name: "", name_vi: "", value: "" }]);
     console.log("Reset");
     setUpdateProductId("");
     setInventorys([]);
