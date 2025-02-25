@@ -4,13 +4,13 @@ import { Link } from "react-router-dom";
 import { FaDongSign } from "react-icons/fa6";
 export default function ProductCard({ product }) {
     return (
-        <div className="bg-card rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105">
+        <div className="bg-card rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105 flex flex-col">
             <Link to={`/product/${product.id}`}>
                 <div className="flex justify-center items-center">
                     <img
                         src={product.image.split(',')[0]}
                         alt={product.image.split(',')[0]}
-                        loading="lazy" // Lazy load the image
+                        loading="lazy"
                         className="w-[30vh] h-[30vh] object-cover rounded-lg"
                         onError={(e) => {
                             e.target.src = "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3";
@@ -19,23 +19,33 @@ export default function ProductCard({ product }) {
                 </div>
             </Link>
 
-            <div className="p-4">
+            {/* Nội dung sản phẩm */}
+            <div className="p-4 flex flex-col items-start">
                 <Link to={`/product/${product.id}`}>
                     <h3 className="text-lg font-semibold text-foreground mb-2 cursor-pointer">{product.name}</h3>
                 </Link>
 
-                <div className="flex justify-start">
-                    <p className="text-accent text-xl font-bold mb-4 mr-2">{product.price.toLocaleString('en-US')} </p>< FaDongSign />
+                {/* Giá sản phẩm */}
+                <div className="flex items-center mb-2">
+                    <p className="text-accent text-xl font-bold mr-1">{product.price.toLocaleString('en-US')}</p>
+                    <FaDongSign />
                 </div>
-                <p className="text-accent text-xl font-bold mb-4">{product?.category?.name}</p>
-                <p className="text-gray-500">{product.color}</p>
-                <p className="text-gray-500">{product.id}</p>
 
-                <button className="w-full   py-2 px-4 rounded-md hover:bg-gray-400 transition-colors duration-300 flex items-center justify-center gap-2">
+                {/* Danh mục sản phẩm */}
+                <p className="text-accent text-sm font-medium mb-2">{product?.category?.name}</p>
+
+                {/* Màu sắc sản phẩm */}
+                <div className={`w-[3vh] h-[3vh] bg-${product.color}${product.color === 'black' || product.color === 'white' ? '' : '-400'} rounded-lg shadow-xl`}></div>
+            </div>
+
+            {/* Nút Add to Cart - luôn nằm dưới */}
+            <div className="p-4 mt-auto">
+                <button className="w-full py-2 px-4 rounded-md hover:bg-gray-400 transition-colors duration-300 flex items-center justify-center gap-2">
                     <FiShoppingCart />
                     Add to Cart
                 </button>
             </div>
         </div>
+
     );
 }

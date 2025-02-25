@@ -8,6 +8,7 @@ import { styled } from '@mui/system'
 import { useLocation, useNavigate } from 'react-router-dom'
 import ROUTES from '../constants/Page';
 import { debounce } from 'lodash'
+import Loading from "../utils/Loading";
 
 export default function Home() {
     const navigate = useNavigate()
@@ -77,6 +78,7 @@ export default function Home() {
     const [searchTerm, setSearchTerm] = useState('');
     const [suggestions, setSuggestions] = useState([]);
     const [products, setProducts] = useState([])
+    const [loading, setLoading] = useState(false)
 
     const fetchSuggestions = debounce(async (value) => {
         try {
@@ -95,7 +97,7 @@ export default function Home() {
             const data = response.data;
             setCategories(data);
         };
-        fetchCategories();
+
 
         const fetchData = async () => {
             try {
@@ -107,7 +109,10 @@ export default function Home() {
                 console.error("Error fetching inventory:", error);
             }
         };
+        setLoading(true)
+        fetchCategories();
         fetchData();
+        setLoading(false)
     }, []);
 
     const handleCategoryChange = (categoryName) => {
@@ -146,7 +151,7 @@ export default function Home() {
 
     return (
         <div className="min-h-screen bg-background">
-            <main className="container mx-auto px-4 py-8">
+            {loading ? <Loading /> : <main className="container mx-auto px-4 py-8">
                 <section className="mb-12">
                     <h2 className="text-2xl font-bold text-foreground mb-6">Categories</h2>
                     <div className="flex flex-wrap gap-4">
@@ -200,7 +205,7 @@ export default function Home() {
                         siblingCount={1}
                     />
                 </div> */}
-            </main>
+            </main>}
 
 
         </div>

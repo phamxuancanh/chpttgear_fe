@@ -39,7 +39,7 @@ export default function Header() {
         } catch (error) {
             console.error('Error fetching suggestions:', error);
         }
-    }, 300);
+    }, 1000);
     console.log(suggestions);
 
     const handleSearchClick = async () => {
