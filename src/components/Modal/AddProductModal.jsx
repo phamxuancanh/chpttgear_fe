@@ -1,11 +1,9 @@
-import { use, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FiTrash2, FiPlus, FiUpload } from "react-icons/fi";
-import { MdWarehouse } from "react-icons/md";
-import { FiChevronDown } from "react-icons/fi";
 import { createContext } from "react";
-import { ToastContainer, toast, Bounce } from "react-toastify";
+import { toast } from "react-toastify";
 import {
-  getAllInventory, findAllCategory, findSpecificationsByProductId, createProduct, createSpecification,
+  findAllCategory, findSpecificationsByProductId, createProduct, createSpecification,
   findProductById, uploadImagesToCloudinary, updateProduct
 } from "../../routers/ApiRoutes";
 import { useDropzone } from "react-dropzone";
@@ -23,7 +21,6 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
   const [brand, setBrand] = useState("");
   const [color, setColor] = useState("");
   const [size, setSize] = useState("");
-  const [inventoryId, setInventoryId] = useState("");
   const [weight, setWeight] = useState(0);
   const [guaranteePeriod, setGuaranteePeriod] = useState(0);
   const [images, setImages] = useState([]);
@@ -32,68 +29,95 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
   const [brandSelected, setBrandSelected] = useState("");
   const [selectedCategory, setSelectedCategory] = useState({ id: "", name: "" });
   const [specifications, setSpecifications] = useState([{ name: "", value: "" }]);
-  const [selectedInventory, setSelectedInventory] = useState(null);
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSpec, setSelectedSpec] = useState("");
   const [inventorys, setInventorys] = useState([])
-  const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false)
   const [isAllowUpdate, setIsAllowUpdate] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isImageExist, setIsImageExist] = useState(false);
 
 
   const [categories, setCategories] = useState([]);
 
 
-  const productSpecs = {
-    Headphones: [
-      { key: "model", value: "Mẫu" },
-      { key: "warranty", value: "Bảo hành" },
-      { key: "type", value: "Kiểu" },
-      { key: "connection", value: "Kết nối" },
-      { key: "battery_life", value: "Thời lượng pin" },
-      { key: "noise_cancellation", value: "Khử tiếng ồn chủ động" },
-      { key: "microphone", value: "Microphone" },
-      { key: "frequency_response", value: "Dải tần số" },
-    ],
-    Keyboards: [
-      { key: "model", value: "Mẫu" },
-      { key: "warranty", value: "Bảo hành" },
-      { key: "switch_type", value: "Loại switch" },
-      { key: "connection", value: "Kết nối" },
-      { key: "backlight", value: "Đèn nền" },
-      { key: "key_rollover", value: "Số lượng phím nhận diện cùng lúc" },
-    ],
-    Mice: [
-      { key: "model", value: "Mẫu" },
-      { key: "warranty", value: "Bảo hành" },
-      { key: "sensor_type", value: "Loại cảm biến" },
-      { key: "dpi", value: "Độ phân giải DPI" },
-      { key: "connection", value: "Kết nối" },
-      { key: "buttons", value: "Số nút" },
-      { key: "battery_life", value: "Thời lượng pin" },
-    ],
-    RAM: [
-      { key: "model", value: "Mẫu" },
-      { key: "warranty", value: "Bảo hành" },
-      { key: "capacity", value: "Dung lượng" },
-      { key: "speed", value: "Tốc độ bus" },
-      { key: "latency", value: "Độ trễ CAS" },
-      { key: "voltage", value: "Điện áp" },
-      { key: "type", value: "Loại RAM" },
-    ],
-    CPUs: [
-      { key: "model", value: "Mẫu" },
-      { key: "warranty", value: "Bảo hành" },
-      { key: "cores", value: "Số nhân" },
-      { key: "threads", value: "Số luồng" },
-      { key: "base_clock", value: "Xung nhịp cơ bản" },
-      { key: "boost_clock", value: "Xung nhịp tối đa" },
-      { key: "socket", value: "Socket tương thích" },
-      { key: "tdp", value: "Công suất tiêu thụ (TDP)" }
-    ]
-  };
+  const productSpecs = [
+    { key: "model", value: "Mẫu" },
+    { key: "warranty", value: "Bảo hành" },
+    { key: "type", value: "Kiểu" },
+    { key: "connection", value: "Kết nối" },
+    { key: "battery_life", value: "Thời lượng pin" },
+    { key: "noise_cancellation", value: "Khử tiếng ồn chủ động" },
+    { key: "microphone", value: "Microphone" },
+    { key: "frequency_response", value: "Dải tần số" },
+
+    // Bàn phím
+    { key: "switch_type", value: "Loại switch" },
+    { key: "backlight", value: "Đèn nền" },
+    { key: "key_rollover", value: "Số lượng phím nhận diện cùng lúc" },
+    { key: "layout", value: "Bố cục phím" },
+    { key: "polling_rate", value: "Tần số quét" },
+
+    // Chuột
+    { key: "sensor_type", value: "Loại cảm biến" },
+    { key: "dpi", value: "Độ phân giải DPI" },
+    { key: "buttons", value: "Số nút" },
+    { key: "response_time", value: "Thời gian phản hồi" },
+    { key: "grip_style", value: "Kiểu cầm" },
+
+    // RAM
+    { key: "capacity", value: "Dung lượng" },
+    { key: "speed", value: "Tốc độ bus" },
+    { key: "latency", value: "Độ trễ CAS" },
+    { key: "voltage", value: "Điện áp" },
+    { key: "type", value: "Loại RAM" },
+    { key: "cooling", value: "Hệ thống tản nhiệt" },
+
+    // CPU
+    { key: "cores", value: "Số nhân" },
+    { key: "threads", value: "Số luồng" },
+    { key: "base_clock", value: "Xung nhịp cơ bản" },
+    { key: "boost_clock", value: "Xung nhịp tối đa" },
+    { key: "socket", value: "Socket tương thích" },
+    { key: "tdp", value: "Công suất tiêu thụ (TDP)" },
+    { key: "integrated_graphics", value: "Đồ họa tích hợp" },
+
+    // GPU
+    { key: "gpu_model", value: "Mẫu GPU" },
+    { key: "vram", value: "Dung lượng VRAM" },
+    { key: "memory_type", value: "Loại bộ nhớ" },
+    { key: "memory_bus", value: "Bus bộ nhớ" },
+    { key: "core_clock", value: "Xung nhịp nhân" },
+    { key: "boost_clock_gpu", value: "Xung nhịp tối đa" },
+    { key: "power_consumption", value: "Công suất tiêu thụ" },
+
+    // Ổ cứng (SSD/HDD)
+    { key: "storage_capacity", value: "Dung lượng lưu trữ" },
+    { key: "interface", value: "Chuẩn giao tiếp" },
+    { key: "read_speed", value: "Tốc độ đọc" },
+    { key: "write_speed", value: "Tốc độ ghi" },
+    { key: "form_factor", value: "Kích thước" },
+
+    // Nguồn (PSU)
+    { key: "wattage", value: "Công suất" },
+    { key: "efficiency_rating", value: "Chứng nhận hiệu suất" },
+    { key: "modular", value: "Thiết kế dây nguồn" },
+    { key: "fan_size", value: "Kích thước quạt" },
+
+    // Bo mạch chủ (Motherboard)
+    { key: "chipset", value: "Chipset" },
+    { key: "form_factor_mb", value: "Kích thước bo mạch" },
+    { key: "ram_slots", value: "Số khe RAM" },
+    { key: "pci_slots", value: "Số khe PCIe" },
+    { key: "m2_slots", value: "Số khe M.2" },
+    { key: "sata_ports", value: "Số cổng SATA" },
+
+    // Tản nhiệt
+    { key: "cooling_type", value: "Loại tản nhiệt" },
+    { key: "radiator_size", value: "Kích thước két nước" },
+    { key: "fan_speed", value: "Tốc độ quạt" },
+    { key: "noise_level", value: "Độ ồn" }
+  ];
+
 
   const colors = [
     { key: "black", value: "Đen" },
@@ -110,7 +134,6 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
   ];
 
   const brands = [
-    { key: 'custom', value: 'Custom' },
     { key: 'intel', value: 'Intel' },
     { key: 'corsair', value: 'Corsair' },
     { key: 'dell', value: 'Dell' },
@@ -125,24 +148,10 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
 
   useEffect(() => {
     fetchCategories();
-    fetchInvention();
     fetchUpdateProduct();
     fetchSpecificationsByProductId();
   }, [updateProductId]);
 
-  const fetchInvention = async () => {
-    try {
-      const res = await getAllInventory();
-      setInventorys(res.data)
-      if (product_id) {
-        const product = await findProductById(product_id);
-        setInventoryId(product.data.inventoryId);
-        setSelectedInventory(res.data.find((inventory) => inventory.inventory_id === product.data.inventoryId));
-      }
-    } catch (error) {
-      console.error("Error fetching inventory:", error);
-    }
-  };
   const fetchCategories = async () => {
     try {
       const response = await findAllCategory();
@@ -163,24 +172,18 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
       let displayPrice = String(response.data.price).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
       setPrice(displayPrice);
       setBrand(response.data.brand);
-      brands.forEach((brand) => {
-        if (brand.value === response.data.brand) {
-          setBrandSelected(brand);
-        }
-      });
-      colors.forEach((color) => {
-        if (color.key === response.data.color) {
-          setSelectedColor(color.key);
-        }
-      });
+      setBrandSelected(response.data.brand);
+      setSelectedColor(response.data.color);
       setColor(response.data.color);
       setSize(response.data.size);
       setWeight(response.data.weight);
       setGuaranteePeriod(response.data.guaranteePeriod);
       setSelectedCategory({ id: response.data.category.id, name: response.data.category.name });
-      setInventoryId(response.data.inventoryId);
-      setImages(prev => [...prev, response.data.image.split(",")]);
-      setImagesUpdate(prev => [...prev, response.data.image.split(",")]);
+      const images = response.data.image.includes(",")
+        ? response.data.image.split(",")
+        : [response.data.image];
+      console.log(images)
+      setImages(images);
       setIsAllowUpdate(true);
     } catch (error) {
       console.error('Error fetching product:', error);
@@ -198,29 +201,35 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
     }
   }
   const onDrop = useCallback(acceptedFiles => {
-    setImages(prev => [...prev, ...acceptedFiles.map(file => Object.assign(file, {
-      preview: URL.createObjectURL(file)
-    }))]);
-  }, []);
+    if (updateProductId) {
+      // Nếu đang cập nhật, thêm ảnh vào imagesUpdate
+      setImagesUpdate(prev => [...prev, ...acceptedFiles]);
+    } else {
+      // Nếu đang thêm mới, thêm ảnh vào images
+      setImages(prev => [...prev, ...acceptedFiles]);
+    }
+  }, [updateProductId]);
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: { "image/*": [] },
     maxSize: 5242880
   });
 
-  const uploadImages = async () => {
-    if (!images || images.length === 0) return;
-  
-    console.log("images:", images);
-  
+  const uploadImages = async (imageArray) => {
+    if (!imageArray || imageArray.length === 0) return "";
+
+    console.log("Uploading images:", imageArray);
+
     const uploadedImages = await Promise.all(
-      images.map(async (image) => {
+      imageArray.map(async (image) => {
+        // Nếu ảnh là file mới, thực hiện upload
         if (typeof image === "object") {
           const data = new FormData();
           data.append("file", image);
           data.append("upload_preset", "chptt_gear");
           data.append("cloud_name", "chaamz03");
-  
+
           try {
             const response = await uploadImagesToCloudinary(data);
             const res = await response.json();
@@ -231,16 +240,21 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
             return null;
           }
         }
-        return null;
+        // Nếu ảnh là URL có sẵn (cũ), giữ nguyên
+        return image;
       })
     );
-  
-    // Lọc bỏ ảnh null và cập nhật state một lần
+
+    // Lọc bỏ ảnh null và tạo chuỗi ngăn cách bằng dấu ","
     const validImages = uploadedImages.filter((url) => url !== null);
-    setImagesUpdate((prev) => [...prev, ...validImages]);
-  
-    console.log("Images update:", validImages);
+    const imagesString = validImages.join(",");
+
+    console.log("Final Images String:", imagesString);
+
+    return imagesString;
   };
+
+
   const handleSpecificationChange = (index, field, value) => {
     setSpecifications((prev) =>
       prev.map((spec, i) =>
@@ -263,7 +277,7 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
       alert("Tên sản phẩm không được để trống");
       return false;
     };
-    if (!brandSelected.key) {
+    if (!brandSelected && !updateProductId) {
       alert("Nhà sản xuất không được để trống");
       return false;
     };
@@ -302,17 +316,6 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
         return false;
       }
     }
-    if (!price.trim()) {
-      alert("Giá sản phẩm không được để trống");
-      return false;
-    } else {
-      let purchasePrice = 10;
-      let priceNumber = price.trim().replace(/,/g, '');
-      if (priceNumber <= (purchasePrice + purchasePrice * 0.1)) {
-        alert("Giá sản phẩm phải lớn hơn giá nhập");
-        return false;
-      }
-    }
     if (!selectedCategory.id) {
       alert("Loại sản phẩm không được để trống");
       return false;
@@ -321,6 +324,7 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
   };
   /** Kiểm tra giá trị nhập specification */
   const validateSpecification = () => {
+    console.log(specifications.length)
     if (specifications.length <= 1) {
       return false;
     }
@@ -332,38 +336,42 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("submit")
-    uploadImages();
     if (validateProduct()) {
+
       if (updateProductId) {
-        handlerUpdateProduct();
+        const imgString = await uploadImages(imagesUpdate);
+        handlerUpdateProduct(imgString);
       } else {
-        handlerCreateProduct();
+        const imgString = await uploadImages(images);
+        handlerCreateProduct(imgString);
       }
       handleReset();
     };
   };
 
-  const handlerCreateProduct = async () => {
+  const handlerCreateProduct = async (imgString) => {
     try {
       const category = categories.find((category) => category.id === selectedCategory.id);
       const newProduct = {
         name,
         description,
         price: parseFloat(price.replace(/,/g, '')),
-        brand: brandSelected.value,
-        image: imagesUpdate.join(","),
+        brand: brandSelected,
+        image: imgString,
         color,
         size,
         weight,
         guaranteePeriod,
         category,
-        // inventoryId: selectedInventory?.inventory_id,
         modifiedDate: new Date().toISOString()
       };
       const responseProduct = await createProduct(newProduct);
+      console.log(responseProduct.status)
+      console.log(validateSpecification())
       if (validateSpecification()) {
         if (responseProduct.status === 201) {
           specifications.forEach(async (spec) => {
+            console.log(spec)
             const responseSpecification = await createSpecification({
               product: responseProduct.data,
               name: spec.name,
@@ -375,20 +383,21 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
           });
         };
       }
+      toast.success("Thêm sản phẩm thành công")
     } catch (error) {
       console.error("Lỗi khi thêm sản phẩm:", error.response?.data || error.message);
     };
   };
 
-  const handlerUpdateProduct = async () => {
+  const handlerUpdateProduct = async (imgString) => {
     try {
       const category = categories.find((category) => category.id === selectedCategory.id);
       const updatedProduct = {
         name,
         description,
         price: parseFloat(price.replace(/,/g, '')),
-        brand: brandSelected.value,
-        image: imagesUpdate.join(","),
+        brand: brandSelected,
+        image: images + "," + imgString,
         color,
         size,
         weight,
@@ -397,10 +406,6 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
         // inventoryId: selectedInventory?.inventory_id,
         modifiedDate: new Date().toISOString()
       };
-      console.log("Product update:", updatedProduct);
-      console.log("Images update type:", typeof imagesUpdate);
-        console.log("Images update:", imagesUpdate);
-        console.log("Images update join:", imagesUpdate.join());
       const responseProduct = await updateProduct(updateProductId, updatedProduct);
       if (validateSpecification()) {
         if (responseProduct.status === 200) {
@@ -416,8 +421,9 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
           })
         };
       }
+      toast.success("Cập nhật sản phẩm thành công")
     } catch (error) {
-      console.error("Lỗi khi thêm sản phẩm:", error.response?.data || error.message);
+      console.error("Lỗi khi cập nhật sản phẩm:", error.response?.data || error.message);
     };
   };
 
@@ -436,7 +442,6 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
     setSpecifications([{ name: "", value: "" }]);
     console.log("Reset");
     setUpdateProductId("");
-    setSelectedInventory(null);
     setInventorys([]);
     setCategories([]);
     setShowProductModal({ show: false, productId: "" });
@@ -510,45 +515,7 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
           <div className="space-y-8 divide-y divide-gray-200 w-full">
             <div className="space-y-6">
               <div className="w-full ">
-                <div className="mb-8">
-                  <label className="block text-sm font-medium mb-2">Kho</label>
-                  <div className="relative">
-                    <button
-                      onClick={() => setIsOpen(!isOpen)}
-                      className="w-full p-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white flex justify-between items-center"
-                    >
-                      <span className="flex items-center">
-                        {selectedInventory ? (
-                          <>
-                            <MdWarehouse className="mr-2 text-blue-600" />
-                            Tên kho: {selectedInventory.name} - Địa chỉ: {selectedInventory.address}
-                          </>
-                        ) : (
-                          "Chọn kho"
-                        )}
-                      </span>
-                      <FiChevronDown className={`transition-transform duration-200 ${isOpen ? "transform rotate-180" : ""}`} />
-                    </button>
-                    {isOpen && (
-                      <div className="absolute w-full mt-1 max-h-48 overflow-y-auto bg-white border rounded-lg shadow-lg z-10">
-                        {inventorys.map((inventory) => (
-                          <button
-                            key={inventory.inventory_id}
-                            className={`w-full text-left px-4 py-2 hover:bg-blue-50 flex items-center ${selectedInventory?.inventory_id === inventory.inventory_id ? "bg-blue-100" : ""
-                              }`}
-                            onClick={() => {
-                              setSelectedInventory(inventory);
-                              setIsOpen(false);
-                            }}
-                          >
-                            <MdWarehouse className="mr-2 text-blue-600" />
-                            Tên kho: {inventory.name} - Địa chỉ: {inventory.address}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
+
                 <div className="w-full">
                   <label className="block text-sm font-medium text-gray-700">Tên sản phẩm</label>
                   <input
@@ -568,7 +535,7 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
                     id="productBrand"
                     disabled={isAllowUpdate}
                     name="productBrand"
-                    value={brandSelected.value}
+                    value={brandSelected}
                     onChange={handleBrandChange}
                     className="mt-1 block w-full p-3 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                     aria-label="Chọn thương hiệu sản xuất"
@@ -643,7 +610,7 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
                       disabled={isAllowUpdate}
                       type="text"
                       value={price}
-                      onChange={handlePriceChange}
+                      onChange={(e) => handlePriceChange(e)}
                       className="mt-1 block w-full pl-16 p-3 border rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                     />
                   </div>
@@ -699,23 +666,48 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
                     </div>
                   </div>
                   <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-                    {images.map((file, index) => (
-                      <div key={index} className="relative">
-                        <img
-                          src={file.preview}
-                          alt={`preview ${index + 1}`}
-                          className="h-24 w-24 object-cover rounded-md"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeImage(index)}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                        >
-                          <FiTrash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
+                    {images.map((file, index) => {
+                      let imageUrl = typeof file === "object" ? URL.createObjectURL(file) : file;
+
+                      return (
+                        <div key={`new-${index}`} className="relative">
+                          <img
+                            src={imageUrl}
+                            alt={`old preview ${index + 1}`}
+                            className="h-24 w-24 object-cover rounded-md"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index, false)}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                          >
+                            <FiTrash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                    {imagesUpdate.map((file, index) => {
+                      let imageUrl1 = typeof file === "object" ? URL.createObjectURL(file) : file;
+
+                      return (
+                        <div key={`new-${index}`} className="relative">
+                          <img
+                            src={imageUrl1}
+                            alt={`old preview ${index + 1}`}
+                            className="h-24 w-24 object-cover rounded-md"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index, false)}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                          >
+                            <FiTrash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
+
                 </div>
 
                 <div className="w-full">
@@ -733,7 +725,7 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
                   <div className="mt-4 space-y-4">
                     {specifications.map((spec, index) => (
                       <div key={index} className="flex gap-4">
-                        {selectedCategory && productSpecs[selectedCategory.name] && (
+                        {selectedCategory && productSpecs.length > 0 && (
                           <>
                             <select
                               className="flex-1 p-3 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
@@ -742,11 +734,9 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
 
                             >
                               <option value="" disabled>Chọn loại thông số</option>
-                              {productSpecs[selectedCategory.name].map((spec1, index) => (
-                                <option key={index} value={spec1.key}
-
-                                >
-                                  {spec1.value}
+                              {productSpecs.map((spec, index) => (
+                                <option key={index} value={spec.key}>
+                                  {spec.value}
                                 </option>
                               ))}
                             </select>

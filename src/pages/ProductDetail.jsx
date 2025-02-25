@@ -5,7 +5,7 @@ import { DateConverter } from './../utils/DateConverter';
 import { BiSolidCommentEdit } from "react-icons/bi";
 import { useParams } from "react-router-dom";
 import { findProductById, getQuantityInStock, getStockInByProductId, getStockOutByProductId } from "../routers/ApiRoutes";
-
+import { FaDongSign } from "react-icons/fa6";
 
 export default function ProductDetail() {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -58,7 +58,7 @@ export default function ProductDetail() {
 
                 if (productRes?.data) setProduct(productRes.data);
                 if (quantityInStockRes) setQuantityInStock(quantityInStockRes.quantityInStock);
-                
+
             } catch (error) {
                 console.error("Error fetching product data:", error);
             }
@@ -231,7 +231,11 @@ export default function ProductDetail() {
                                 Xem đánh giá
                             </p>
                         </div>
-                        <p className="text-3xl font-bold text-blue-600 mb-4">${product.price}</p>
+                        <div className="text-3xl font-bold text-blue-600 mb-4 flex justify-start">
+                            <p className="">{product.price.toLocaleString('en-US')}</p>
+                            <FaDongSign />
+                        </div>
+
                         <p className="text-gray-600 mb-6 ">{product.description}</p>
                         <p className={`text-gray-600 mb-6 text-lg`}>Tình trạng: <span className={`font-semibold text-base ${quantityInStock > 0 ? "text-green-500" : "text-red-500"}`}>{quantityInStock > 0 ? "Còn hàng" : "Hết hàng"}</span></p>
 

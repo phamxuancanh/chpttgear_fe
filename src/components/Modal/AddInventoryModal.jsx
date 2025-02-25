@@ -129,6 +129,7 @@ export default function AddInventoryModal({ setShowCreateInventory }) {
 
                 })
             console.log('Stock-in successful:', res.data);
+            toast.success("Tạo kho mới thành công")
             setShowCreateInventory(false)
         } catch (error) {
             console.error("Error while creating inventory:", error);

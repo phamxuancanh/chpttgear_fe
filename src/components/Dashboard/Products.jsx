@@ -8,6 +8,7 @@ import AddProductModal from "../Modal/AddProductModal";
 import { findAllProduct, getProductsManagementPage } from "../../routers/ApiRoutes";
 import { current } from "@reduxjs/toolkit";
 import AddCategoryModal from "../Modal/AddCategoryModal";
+import { FaDongSign } from "react-icons/fa6";
 
 const useQuery = () => {
     return new URLSearchParams(useLocation().search);
@@ -154,26 +155,41 @@ export default function Products() {
                 {showCategoryModal.show && <AddCategoryModal setShowCategoryModal={setShowCategoryModal} />}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {products?.data.map((product) => (
-                        <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-                            <img
-                                src={product.image ? product.image : imageTemp}
-                                alt={product.name}
-                                className="w-full h-48 object-cover"
-                            />
-                            <div className="p-4">
-                                <h3 className="text-lg font-semibold">{product.name}</h3>
-                                <p className="text-gray-600">{product.category.name}</p>
-                                <div className="flex justify-between items-center mt-4">
-                                    <span className="text-blue-600 font-bold">{product.price}</span>
-                                    <span className="text-gray-500">Số lượng tồn: {quantityInStock}</span>
-                                </div>
-                                <div className="mt-4 flex justify-end">
-                                    <ActionButton icon={FiEdit} color="bg-blue-500" onClick={() => handleActionButton(product.id)} />
+                    {products?.data
+                        ?.slice() // Tạo bản sao để tránh thay đổi mảng gốc
+                        .sort((a, b) => {
+                            const dateA = a.modifiedDate ? Date.parse(a.modifiedDate) : 0;
+                            const dateB = b.modifiedDate ? Date.parse(b.modifiedDate) : 0;
+                            return dateB - dateA; // Sắp xếp giảm dần (mới nhất trước)
+                        })
+                        .map((product) => (
+                            <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                                <img
+                                    src={product.image ? product.image.split(",")[0] : imageTemp}
+                                    alt={product.name}
+                                    className="w-full h-48 object-cover"
+                                />
+                                <div className="p-4">
+                                    <h3 className="text-lg font-semibold">{product.name}</h3>
+                                    <div className="flex justify-between items-center mt-4">
+                                        <div className="flex justify-start text-blue-600 font-bold">
+                                            <span className=" mr-1">
+                                                {product.price.toLocaleString('en-US')}
+                                            </span>
+                                            <FaDongSign />
+                                        </div>
+                                        <span className="text-gray-500">Số lượng tồn: {quantityInStock}</span>
+                                    </div>
+                                    <div className="mt-4 flex justify-end">
+                                        <ActionButton
+                                            icon={FiEdit}
+                                            color="bg-blue-500"
+                                            onClick={() => handleActionButton(product.id)}
+                                        />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
                 </div>
                 <div className="flex justify-center">
                     <CustomPagination
