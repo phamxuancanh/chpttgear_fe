@@ -4,7 +4,7 @@ import { TbTruckDelivery } from "react-icons/tb";
 import { Link, useNavigate } from "react-router-dom";
 import provinceData from "../assets/address/province.json";
 import { useSelector } from "react-redux";
-import { createOrder, createOrderItem } from "../routers/ApiRoutes";
+import { calculateShippingFee, createOrder, createOrderItem } from "../routers/ApiRoutes";
 import Loading from "../utils/Loading";
 
 export default function Payment() {
@@ -25,7 +25,7 @@ export default function Payment() {
   const [provinces, setProvinces] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [wards, setWards] = useState([]);
-  const shippingFee = 5.00; // Giả sử phí ship cố định là $5
+  const [shippingFee, setShippingFee] = useState(5.0);
   const userFromRedux = useSelector((state) => state.auth.user);
 
 
@@ -71,9 +71,23 @@ export default function Payment() {
     setSelectedWard('');
   };
 
-  const handleWardChange = (e) => {
+  const handleWardChange = async (e) => {
     const wardCode = Number(e.target.value);
     setSelectedWard(wardCode);
+
+    if (!selectedProvince || !selectedDistrict || !wardCode) return;
+
+    // Gửi yêu cầu tính phí từ cả 2 kho
+    const feeFromGoVap = await calculateShippingFee(3440, "13010", selectedDistrict, wardCode); // Gò Vấp
+    const feeFromNamTuLiem = await calculateShippingFee(1461, "21316", selectedDistrict, wardCode); // Nam Từ Liêm
+
+    console.log(feeFromGoVap);
+    console.log(feeFromNamTuLiem);
+
+    const bestOption = feeFromGoVap < feeFromNamTuLiem ? feeFromGoVap : feeFromNamTuLiem;
+    console.log(bestOption)
+    setShippingFee(bestOption);
+
   };
 
   useEffect(() => {
