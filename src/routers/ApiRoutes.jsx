@@ -380,6 +380,32 @@ export const deleteOrderItem = async (orderItemId) => {
     return await requestWithJwt.delete(`/orders/order-items/${orderItemId}`);
 };
 
+export const calculateShippingFee = async (fromDistrictId, fromWardCode, toDistrictId, toWardCode) => {
+    const response = await fetch("https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Token": "aa43f060-d157-11ef-b2e4-6ec7c647cc27",
+            "ShopId": "195800"
+        },
+        body: JSON.stringify({
+            service_id: 53321,
+            from_district_id: fromDistrictId,
+            from_ward_code: fromWardCode,
+            to_district_id: toDistrictId,
+            to_ward_code: toWardCode,
+            height: 50,
+            length: 20,
+            weight: 1000,
+            width: 20,
+            insurance_value: 10000
+        })
+    });
+
+    const data = await response.json();
+    return data?.data?.total || 0;
+};
+
 
 // paymentService
 
