@@ -75,12 +75,12 @@ export default function Chats() {
 
     return (
         <div className={`h-screen flex max-h-[92vh]`}>
-            <div className="w-1/4 border-r border-gray-100  overflow-y-auto shadow-lg mr-3">
+            <div className="w-1/4 border-r border-gray-100  overflow-y-auto shadow-lg mr-3 rounded-md">
                 <div className="p-4 border-b border-gray-200 ">
                     <div className="relative">
                         <input
                             type="text"
-                            placeholder="Search conversations..."
+                            placeholder="Tìm kiếm cuộc trò chuyện"
                             className="w-full px-4 py-2 rounded-lg bg-gray-100  focus:outline-none"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -120,7 +120,7 @@ export default function Chats() {
             </div>
 
             {/* Main Chat Area */}
-            <div className="flex-1 flex flex-col shadow-lg mr-3">
+            <div className="flex-1 flex flex-col shadow-lg mr-3 rounded-md">
                 <div className="p-4 border-b border-gray-200  flex items-center justify-between">
                     <div className="flex items-center">
                         <img
@@ -196,7 +196,7 @@ export default function Chats() {
             </div>
 
             {/* User Details Sidebar */}
-            <div className="w-1/4 border-l border-gray-200  p-4 shadow-lg">
+            <div className="w-1/4 border-l border-gray-200  p-4 shadow-lg rounded-md">
                 <div className="text-center">
                     <img
                         src={selectedConversation?.avatar || conversations[0].avatar}

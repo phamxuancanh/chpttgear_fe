@@ -44,7 +44,7 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
             );
             setProducts(filtered);
         } catch (err) {
-            setError("Failed to search products");
+            setError("Có lỗi khi tìm kiếm sản phẩm");
         } finally {
             setLoading(false);
         }
@@ -94,7 +94,7 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
     const handleCreateOrder = async () => {
         setLoading2(true)
         if (selectedProducts.length === 0) {
-            alert("Please select at least one product");
+            alert("Hãy chọn ít nhất một sản phẩm");
             return;
         }
 
@@ -103,11 +103,11 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
                 const quantity = quantities[product_id] || 0; // Sử dụng giá trị mặc định là 0 nếu chưa nhập
                 const price = prices[product_id] || 0;
                 if (quantity <= 0) {
-                    toast.error(`Please enter a quantity for product with ID ${product_id}`);
+                    toast.error(`Hãy nhập số lượng sản phẩm `);
                     return;
                 }
                 if (price <= 0) {
-                    toast.error(`Please enter a price for product with ID ${product_id}`);
+                    toast.error(`Hãy nhập giá cho sản phẩm`);
                     return;
                 }
 
@@ -144,7 +144,7 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
             {loading1 && <Loading />}
             <div className="bg-white rounded-lg p-8 max-w-4xl w-full">
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold">Create Purchase Order</h2>
+                    <h2 className="text-2xl font-bold">Tạo đơn nhập hàng</h2>
                     <button onClick={() => setShowCreateOrder(false)} className="text-gray-500 hover:text-gray-700">
                         <FaTimes />
                     </button>
@@ -156,9 +156,9 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
                             type="text"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder="Search products..."
+                            placeholder="Tìm kiếm sản phẩm..."
                             className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            aria-label="Search products"
+                            aria-label="Tìm kiếm sản phẩm"
                         />
                         {searchTerm && (
                             <button
@@ -187,7 +187,7 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
                                     aria-label="Select all products"
                                 />
                                 <span className="text-sm text-gray-600">
-                                    {selectedProducts.length} selected
+                                    {selectedProducts.length} lựa chọn
                                 </span>
                                 {selectedProducts.length > 0 && (
                                     <button
@@ -195,18 +195,18 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
                                         className="text-sm text-red-600 hover:text-red-700"
                                         aria-label="Clear selection"
                                     >
-                                        Clear
+                                        Xóa
                                     </button>
                                 )}
                             </div>
                         </div>
                         <div className="max-h-[40vh] overflow-y-auto">
                             {loading ? (
-                                <div className="p-8 text-center text-gray-500">Loading...</div>
+                                <div className="p-8 text-center text-gray-500">Đang tải...</div>
                             ) : error ? (
                                 <div className="p-8 text-center text-red-500">{error}</div>
                             ) : products.length === 0 ? (
-                                <div className="p-8 text-center text-gray-500">No products found</div>
+                                <div className="p-8 text-center text-gray-500">Không tìm thấy sản phẩm</div>
                             ) : (
                                 <div>
                                     {products.map((product) => (
@@ -267,7 +267,7 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
                         className="mt-6 w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                         aria-label="Create order"
                     >
-                        {loading2 ? ` Creating Order (${selectedProducts.length} items) ...` : ` Create Order (${selectedProducts.length} items)`}
+                        {loading2 ? ` Đang tạo đơn hàng (${selectedProducts.length} sản phẩm) ...` : ` Tạo đơn hàng (${selectedProducts.length} sản phẩm)`}
                     </button>
                 </div>
             </div>

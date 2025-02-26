@@ -672,10 +672,10 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
                       <div className="flex text-sm text-gray-600">
                         <input {...getInputProps()} />
                         <p className="pl-1">
-                          {isDragActive ? "Drop the files here..." : "Drag 'n' drop images here, or click to select files"}
+                          {isDragActive ? "Drop the files here..." : "Kéo và thả hình ảnh vào đây hoặc nhấp để chọn tệp"}
                         </p>
                       </div>
-                      <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
+                      <p className="text-xs text-gray-500">Hỗ trợ định dạng PNG, JPG, dung lượng tối đa 5MB</p>
                     </div>
                   </div>
                   <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">

@@ -2,7 +2,7 @@ import { requestWithJwt, requestWithoutJwt } from './request'
 import { toast } from 'react-toastify';
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, GithubAuthProvider, FacebookAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth'
-import { AxiosResponse } from 'axios'
+import axios, { AxiosResponse } from 'axios'
 const firebaseConfig = {
     apiKey: "AIzaSyAN42yRxXQdumIT187N_rXW-60zCcjg3e8",
     authDomain: "authenqc.firebaseapp.com",
@@ -380,31 +380,41 @@ export const deleteOrderItem = async (orderItemId) => {
     return await requestWithJwt.delete(`/orders/order-items/${orderItemId}`);
 };
 
-export const calculateShippingFee = async (fromDistrictId, fromWardCode, toDistrictId, toWardCode) => {
-    const response = await fetch("https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Token": "aa43f060-d157-11ef-b2e4-6ec7c647cc27",
-            "ShopId": "195800"
-        },
-        body: JSON.stringify({
-            service_id: 53321,
-            from_district_id: fromDistrictId,
-            from_ward_code: fromWardCode,
-            to_district_id: toDistrictId,
-            to_ward_code: toWardCode,
-            height: 50,
-            length: 20,
-            weight: 1000,
-            width: 20,
-            insurance_value: 10000
-        })
-    });
+// import axios from "axios";
 
-    const data = await response.json();
-    return data?.data?.total || 0;
+export const calculateShippingFee = async () => {
+    try {
+        const response = await axios.post(
+            "https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee",
+            {
+                service_id: 53321,
+                insurance_value: 500000,
+                coupon: null,
+                from_district_id: 1542,
+                to_district_id: 1444,
+                to_ward_code: 20314,
+                height: 15,
+                length: 15,
+                weight: 1000,
+                width: 15
+            },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Token": "aa43f060-d157-11ef-b2e4-6ec7c647cc27",
+                    "ShopId": "195800"
+                }
+            }
+        );
+
+        return response.data?.data?.total || 0;
+    } catch (error) {
+        console.error("Error calculating shipping fee:", error);
+        return 0;
+    }
 };
+
+
 
 
 // paymentService

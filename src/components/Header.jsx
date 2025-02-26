@@ -4,7 +4,7 @@ import { FaPlus, FaMinus } from "react-icons/fa";
 import { IoMdArrowDropdown } from "react-icons/io";
 import LOGO from "../assets/logo.png"
 import { Link, useNavigate } from "react-router-dom";
-import { getSuggestions, signOut } from "../routers/ApiRoutes";
+import { calculateShippingFee, getSuggestions, signOut } from "../routers/ApiRoutes";
 import ROUTES from '../constants/Page';
 import { toast } from "react-toastify";
 import { useDispatch } from 'react-redux';
@@ -39,7 +39,7 @@ export default function Header() {
         } catch (error) {
             console.error('Error fetching suggestions:', error);
         }
-    }, 300);
+    }, 1000);
     console.log(suggestions);
 
     const handleSearchClick = async () => {
@@ -195,7 +195,7 @@ export default function Header() {
         }
     }, [dispatch])
 
-    const handleLinkClick = () => {
+    const handleLinkClick = async () => {
         setShowProductDropdown(false);
         setShowBellDropdown(false);
         setShowCartDropdown(false);

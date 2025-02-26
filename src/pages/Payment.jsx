@@ -75,7 +75,7 @@ export default function Payment() {
     const wardCode = Number(e.target.value);
     setSelectedWard(wardCode);
 
-    if (!selectedProvince || !selectedDistrict || !wardCode) return;
+    if (!selectedProvince || !selectedDistrict || !wardCode) console.log("ngu");
 
     // Gửi yêu cầu tính phí từ cả 2 kho
     const feeFromGoVap = await calculateShippingFee(3440, "13010", selectedDistrict, wardCode); // Gò Vấp
