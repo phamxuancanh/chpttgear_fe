@@ -337,6 +337,33 @@ export const getQuantityInStock = async (product_id) => {
 
 // cartService
 
+export const findCartByUserId = async (userId) => {
+    return await requestWithJwt.get(`/carts/findByUserId/${userId}`);
+};
+export const findCartItemsByCartId = async (cartId) => { 
+    return await requestWithJwt.get(`/carts/cart_items/findByCartId/${cartId}`);
+};
+export const updateQuantityCartItem = async (cartItemId, payload) => {
+    try {
+        console.log("1234", cartItemId, payload);
+        return await requestWithJwt.put(`/carts/cart_items/updateQuantityByCartItemId/${cartItemId}`, 
+            payload.toString(), // Chuyển số thành chuỗi
+            { headers: { "Content-Type": "text/plain" } } 
+        );
+    } catch (error) {
+        console.error('Error updating quantity:', error);
+        throw error;
+    }
+};
+export const deleteCartItem = async (cartItemId) => {
+    try {
+        return await requestWithJwt.delete(`/carts/cart_items/deleteByCartItemId/${cartItemId}`);
+    } catch (error) {
+        console.error('Error deleting cart item:', error);
+        throw error;
+    }
+};
+
 // orderService
 export const getAllOrders = async () => {
     return await requestWithJwt.get(`/orders/`);

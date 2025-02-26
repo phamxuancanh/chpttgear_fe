@@ -3832,6 +3832,7 @@ chokidar@^3.4.2, chokidar@^3.5.3, chokidar@^3.6.0:
     dotenv "^16.4.7"
     env-cmd "^10.1.0"
     firebase "^10.13.1"
+    framer-motion "^12.4.7"
     jwt-decode "^4.0.0"
     react "^19.0.0"
     react-avatar-editor "^13.0.2"
