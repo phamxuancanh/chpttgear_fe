@@ -69,10 +69,10 @@ export default function Register() {
             } catch (error) {
                 console.error("Registration error:", error);
                 toast.error("Registration failed!");
-                if(error.message.includes("Username")) {
+                if (error.message.includes("Username")) {
                     setErrors({ username: "Username already exists" });
                 }
-                if(error.message.includes("Email")) {
+                if (error.message.includes("Email")) {
                     setErrors({ email: "Email already exists" });
                 }
             } finally {
@@ -99,7 +99,7 @@ export default function Register() {
                 <div className="w-full md:w-1/2 p-8 sm:p-12">
                     <div className="w-full max-w-md mx-auto">
                         <h2 className="text-3xl font-bold text-gray-900 text-center mb-8">
-                            Create Account
+                            Tạo tài khoản
                         </h2>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
@@ -108,7 +108,7 @@ export default function Register() {
                                     htmlFor="username"
                                     className="block text-sm font-medium text-gray-700"
                                 >
-                                    Username
+                                    Tên đăng nhập
                                 </label>
                                 <div className="mt-1">
                                     <input
@@ -154,7 +154,7 @@ export default function Register() {
                                     htmlFor="password"
                                     className="block text-sm font-medium text-gray-700"
                                 >
-                                    Password
+                                    Mật khẩu
                                 </label>
                                 <div className="mt-1 relative">
                                     <input
@@ -188,7 +188,7 @@ export default function Register() {
                                     htmlFor="confirmPassword"
                                     className="block text-sm font-medium text-gray-700"
                                 >
-                                    Confirm Password
+                                    Xác nhận mật khẩu
                                 </label>
                                 <div className="mt-1 relative">
                                     <input
@@ -225,7 +225,7 @@ export default function Register() {
                                 {isLoading ? (
                                     <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                 ) : (
-                                    "Sign Up"
+                                    "Đăng kí"
                                 )}
                             </button>
 
@@ -240,13 +240,13 @@ export default function Register() {
 
                             <div className="text-center">
                                 <p className="text-sm text-gray-600">
-                                    Already have an account?{" "}
+                                    Bạn đã có tài khoản?{" "}
                                     <Link to="/login">
                                         <button
                                             type="button"
                                             className="font-medium text-indigo-600 hover:text-indigo-500"
                                         >
-                                            Sign in
+                                            Đăng nhập
                                         </button>
                                     </Link>
                                 </p>

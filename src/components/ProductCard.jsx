@@ -2,6 +2,7 @@ import React from "react";
 import { FiShoppingCart } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { FaDongSign } from "react-icons/fa6";
+
 export default function ProductCard({ product }) {
     return (
         <div className="bg-card rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105 flex flex-col">
@@ -35,14 +36,21 @@ export default function ProductCard({ product }) {
                 <p className="text-accent text-sm font-medium mb-2">{product?.category?.name}</p>
 
                 {/* Màu sắc sản phẩm */}
-                <div className={`w-[3vh] h-[3vh] bg-${product.color}${product.color === 'black' || product.color === 'white' ? '' : '-400'} rounded-lg shadow-xl`}></div>
+                <div
+                    className={`w-[3vh] h-[3vh] rounded-lg shadow-xl ${["black", "white"].includes(product.color)
+                        ? `bg-${product.color}`
+                        : `bg-${product.color}-400`
+                        }`}
+                ></div>
+                {/* <p className="bg-red-400">{`bg-${product.color}${["black", "white"].includes(product.color) ? "" : "-400"}`}</p> */}
+
             </div>
 
-            {/* Nút Add to Cart - luôn nằm dưới */}
+            {/* Nút Thêm vào giỏ hàng - luôn nằm dưới */}
             <div className="p-4 mt-auto">
                 <button className="w-full py-2 px-4 rounded-md hover:bg-gray-400 transition-colors duration-300 flex items-center justify-center gap-2">
                     <FiShoppingCart />
-                    Add to Cart
+                    Thêm vào giỏ hàng
                 </button>
             </div>
         </div>

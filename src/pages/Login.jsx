@@ -147,7 +147,7 @@ export default function Login() {
                 <div className="w-full md:w-1/2 p-8 sm:p-12">
                     <div className="w-full max-w-md mx-auto">
                         <h2 className="text-3xl font-bold text-gray-900 text-center mb-8">
-                            Welcome Back
+                            Chào mừng trở lại
                         </h2>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
@@ -156,7 +156,7 @@ export default function Login() {
                                     htmlFor="username"
                                     className="block text-sm font-medium text-gray-700"
                                 >
-                                    Username
+                                    Tên đăng nhập /  Email
                                 </label>
                                 <div className="mt-1">
                                     <input
@@ -179,7 +179,7 @@ export default function Login() {
                                     htmlFor="password"
                                     className="block text-sm font-medium text-gray-700"
                                 >
-                                    Password
+                                    Mật khẩu
                                 </label>
                                 <div className="mt-1 relative">
                                     <input
@@ -213,7 +213,7 @@ export default function Login() {
                                     type="button"
                                     className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
                                 >
-                                    Forgot your password?
+                                    Quên mật khẩu?
                                 </button>
                             </Link>
 
@@ -225,7 +225,7 @@ export default function Login() {
                                 {isLoading ? (
                                     <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                 ) : (
-                                    "Sign In"
+                                    "Đăng nhập"
                                 )}
                             </button>
 
@@ -243,7 +243,7 @@ export default function Login() {
                                     <div className="w-full border-t border-gray-300"></div>
                                 </div>
                                 <div className="relative flex justify-center text-sm">
-                                    <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                                    <span className="px-2 bg-white text-gray-500">Hoặc tiếp tục với</span>
                                 </div>
                             </div>
 
@@ -253,7 +253,7 @@ export default function Login() {
                                 className="w-full flex items-center justify-center gap-2 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                             >
                                 <FcGoogle className="w-5 h-5" />
-                                Sign in with Google
+                                Đăng nhập với Google
                             </button>
 
                             <Link to="/">
