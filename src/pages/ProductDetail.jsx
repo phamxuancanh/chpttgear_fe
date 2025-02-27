@@ -5,8 +5,10 @@ import { DateConverter } from './../utils/DateConverter';
 import { BiSolidCommentEdit } from "react-icons/bi";
 import { useParams } from "react-router-dom";
 import { findProductById, findSpecificationsByProductId, getQuantityInStock, getStockInByProductId, getStockOutByProductId } from "../routers/ApiRoutes";
-import { FaDongSign } from "react-icons/fa6";
+import { FaDongSign, FaCashRegister } from "react-icons/fa6";
 import Loading from "../utils/Loading";
+import { FiShoppingCart } from "react-icons/fi";
+
 
 export default function ProductDetail() {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -203,7 +205,7 @@ export default function ProductDetail() {
     return (
 
         <div className="min-h-screen bg-gray-50 -mt-20">
-            {loading ? <Loading /> : <main className="container mx-auto px-4 pt-24 pb-12">
+            {loading ? <Loading /> : <main className="container mx-auto px-4 pt-24 pb-12 w-10/12">
                 {/* Product Information */}
                 <div className="grid md:grid-cols-2 gap-8 mb-12">
                     {/* Image Carousel */}
@@ -251,7 +253,7 @@ export default function ProductDetail() {
                         <p className="text-gray-600 mb-6 ">{product.description}</p>
                         <p className={`text-gray-600 mb-6 text-lg`}>Tình trạng: <span className={`font-semibold text-base ${quantityInStock > 0 ? "text-green-500" : "text-red-500"}`}>{quantityInStock > 0 ? "Còn hàng" : "Hết hàng"}</span></p>
 
-                        {/* Add to Cart Section */}
+                        {/* Thêm vào giỏ hàng Section */}
                         <div className="flex items-center space-x-4 mb-6">
                             <div className="flex items-center border rounded-md">
                                 <button
@@ -276,18 +278,20 @@ export default function ProductDetail() {
                                     +
                                 </button>
                             </div>
-                            <button className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">
-                                Add to Cart
+                            <button className=" gap-2 flex items-center justify-center bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                                <FiShoppingCart />
+                                Thêm vào giỏ hàng
                             </button>
-                            <button className="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition-colors">
-                                Buy Now
+                            <button className="gap-2 flex items-center justify-center bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition-colors">
+                                <FaCashRegister />
+                                Mua ngay
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <div className="mb-12">
-                    <h2 className="text-2xl font-bold mb-4">Technical Specifications</h2>
+                    <h2 className="text-2xl font-bold mb-4">Thông số kỹ thuật</h2>
                     <div className="overflow-x-auto">
                         <table className="table-auto w-full border-collapse border border-gray-300">
                             <tbody>
@@ -304,7 +308,7 @@ export default function ProductDetail() {
 
                 {/* Similar Products Section */}
                 <div className="mb-12">
-                    <h2 className="text-2xl font-bold mb-6">Similar Products</h2>
+                    <h2 className="text-2xl font-bold mb-6">Sản phẩm tương tự</h2>
                     <div className="grid md:grid-cols-5 gap-6">
                         {similarProducts.map((similarProduct) => (
                             <ProductCard key={similarProduct.id} product={similarProduct} />
