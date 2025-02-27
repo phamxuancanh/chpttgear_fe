@@ -93,7 +93,7 @@ export default function Login() {
                 const { accessToken, currentUser } = result;
                 let userRole = currentUser?.key;
                 let data;
-
+    
                 if (userRole) {
                     try {
                         const decrypted = CryptoJS.AES.decrypt(
@@ -103,31 +103,36 @@ export default function Login() {
                         data = decrypted.toString(CryptoJS.enc.Utf8);
                     } catch (error) {
                         console.error('Decryption error:', error);
-                        // Xử lý lỗi giải mã nếu cần
                     }
                 }
-
+    
                 const payload = {
                     token: accessToken,
                     user: currentUser
                 };
-
-                console.log(payload); // Đảm bảo log payload chứ không phải currentUser
-
-                dispatch(login(payload)); // Dispatch action với payload đúng format
-
+    
+                console.log("Trước khi dispatch:", payload);
+                
+                // Chờ Redux cập nhật trước khi tiếp tục
+                await dispatch(login(payload));
+    
+                console.log("Sau khi dispatch:", payload);
+    
+                // Điều hướng sau khi Redux đã cập nhật
                 if (data === 'R1' || data === 'R2') {
                     navigate(ROUTES.DASHBOARD.path);
                 } else {
                     navigate(ROUTES.HOME_PAGE.path);
                 }
+    
                 toast.success('Đăng nhập thành công');
             }
         } catch (error) {
             console.error(error);
-            toast.error('Đăng nhập thất bại'); // Thêm thông báo lỗi khi Google sign in thất bại
+            toast.error('Đăng nhập thất bại');
         }
     };
+    
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-800 py-12 px-4 sm:px-6 lg:px-8">
