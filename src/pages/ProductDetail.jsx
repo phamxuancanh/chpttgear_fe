@@ -31,6 +31,7 @@ export default function ProductDetail() {
         }
     };
 
+
     // useEffect(() => {
     //     const fetchData = async () => {
     //         try {
@@ -62,7 +63,7 @@ export default function ProductDetail() {
                     getQuantityInStock(id),
                     findSpecificationsByProductId(id)
                 ]);
-
+                console.log(productRes.data)
                 if (productRes?.data) {
                     setProduct(productRes.data);
                     console.log(productRes.data.image.split(','))
@@ -211,7 +212,7 @@ export default function ProductDetail() {
                     {/* Image Carousel */}
                     <div className="relative flex justify-center items-center  rounded-lg p-2">
                         <img
-                            src={images[currentImageIndex]}
+                            src={images[currentImageIndex] || "https://images.unsplash.com/photo-1595044426077-d36d9236d54a"}
                             alt={`Product view ${currentImageIndex + 1}`}
                             className="w-[30vh] h-[30vh] object-contain rounded-lg"
                         />
