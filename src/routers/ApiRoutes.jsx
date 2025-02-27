@@ -104,8 +104,6 @@ export const googleSignIn = async () => {
             return null;
         }
     } catch (error) {
-        // console.error('Lỗi khi đăng nhập với Google:', error);
-
         if (error.code === 'auth/account-exists-with-different-credential') {
             toast.error('Email này đã được đăng ký bằng phương thức khác. Vui lòng thử đăng nhập bằng phương thức đó.');
         } else {
@@ -115,7 +113,6 @@ export const googleSignIn = async () => {
         return null;
     }
 };
-
 
 // productService
 export const findAllCategory = async () => {
@@ -186,7 +183,7 @@ export const updateProduct = async (productId, payload) => {
 };
 export const updateSpecification = async (specificationId, payload) => {
     try {
-        return await requestWithJwt.put(`/specifications/${specificationId}`, payload);
+        return await requestWithJwt.put(`/products/specifications/${specificationId}`, payload);
     } catch (error) {
         console.error('Error updating specification:', error);
         throw error;
