@@ -381,14 +381,8 @@ export const deleteOrderItem = async (orderItemId) => {
 };
 
 export const calculateShippingFee = async (fromDistrictId, fromWardCode, toDistrictId, toWardCode) => {
-    const response = await fetch("https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Token": "aa43f060-d157-11ef-b2e4-6ec7c647cc27",
-            "ShopId": "195800"
-        },
-        body: JSON.stringify({
+    try {
+        const response = await requestWithJwt.post(`/orders/calculate-fee`, {
             service_id: 53321,
             from_district_id: fromDistrictId,
             from_ward_code: fromWardCode,
@@ -399,12 +393,15 @@ export const calculateShippingFee = async (fromDistrictId, fromWardCode, toDistr
             weight: 1000,
             width: 20,
             insurance_value: 10000
-        })
-    });
+        });
 
-    const data = await response.json();
-    return data?.data?.total || 0;
+        return response.data?.data?.total || 0;
+    } catch (error) {
+        console.error("Lỗi khi gọi API GHN:", error);
+        throw error.response?.data || { message: "Lỗi khi gọi API GHN" };
+    }
 };
+
 
 
 // paymentService

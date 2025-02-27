@@ -78,8 +78,8 @@ export default function Payment() {
     if (!selectedProvince || !selectedDistrict || !wardCode) return;
 
     // Gửi yêu cầu tính phí từ cả 2 kho
-    const feeFromGoVap = await calculateShippingFee(3440, "13010", selectedDistrict, wardCode); // Gò Vấp
-    const feeFromNamTuLiem = await calculateShippingFee(1461, "21316", selectedDistrict, wardCode); // Nam Từ Liêm
+    const feeFromGoVap = await calculateShippingFee(3440, "13010", selectedDistrict, String(wardCode)); // Gò Vấp
+    const feeFromNamTuLiem = await calculateShippingFee(1461, "21316", selectedDistrict, String(wardCode)); // Nam Từ Liêm
 
     console.log(feeFromGoVap);
     console.log(feeFromNamTuLiem);
