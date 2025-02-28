@@ -186,34 +186,58 @@ export default function Home() {
                     <section className="mb-12">
                         <img src={BANNER4} alt="" />
                         <ProductCarousel products={products} />
+                        <div className="flex justify-center items-end ">
+                            <button className="px-4 py-2 rounded-xl text-base font-semibold mt-3 shadow-lg  hover:bg-black hover:text-white">Xem thêm VGA</button>
+                        </div>
                     </section>
                     <section className="mb-12">
                         <img src={BANNER5} alt="" />
                         <ProductCarousel products={products} />
+                        <div className="flex justify-center items-end ">
+                            <button className="px-4 py-2 rounded-xl text-base font-semibold mt-3 shadow-lg  hover:bg-black hover:text-white">Xem thêm CPU</button>
+                        </div>
                     </section>
                     <section className="mb-12">
                         <img src={BANNER6} alt="" className="mb-10" />
                         <ProductCarousel products={products} />
+                        <div className="flex justify-center items-end ">
+                            <button className="px-4 py-2 rounded-xl text-base font-semibold mt-3 shadow-lg  hover:bg-black hover:text-white">Xem thêm MAINBOARD</button>
+                        </div>
                     </section>
                     <section className="mb-12">
                         <img src={BANNER7} alt="" className="mb-10" />
                         <ProductCarousel products={products} />
+                        <div className="flex justify-center items-end ">
+                            <button className="px-4 py-2 rounded-xl text-base font-semibold mt-3 shadow-lg  hover:bg-black hover:text-white">Xem thêm RAM</button>
+                        </div>
                     </section>
                     <section className="mb-12">
                         <img src={BANNER8} alt="" className="mb-10" />
                         <ProductCarousel products={products} />
+                        <div className="flex justify-center items-end ">
+                            <button className="px-4 py-2 rounded-xl text-base font-semibold mt-3 shadow-lg  hover:bg-black hover:text-white">Xem thêm HDD</button>
+                        </div>
                     </section>
                     <section className="mb-12">
                         <img src={BANNER9} alt="" className="mb-10" />
                         <ProductCarousel products={products} />
+                        <div className="flex justify-center items-end ">
+                            <button className="px-4 py-2 rounded-xl text-base font-semibold mt-3 shadow-lg  hover:bg-black hover:text-white">Xem thêm SSD</button>
+                        </div>
                     </section>
                     <section className="mb-12">
                         <img src={BANNER10} alt="" className="mb-10" />
                         <ProductCarousel products={products} />
+                        <div className="flex justify-center items-end ">
+                            <button className="px-4 py-2 rounded-xl text-base font-semibold mt-3 shadow-lg  hover:bg-black hover:text-white">Xem thêm CASE</button>
+                        </div>
                     </section>
                     <section className="mb-12">
                         <img src={BANNER11} alt="" className="mb-10" />
                         <ProductCarousel products={products} />
+                        <div className="flex justify-center items-end ">
+                            <button className="px-4 py-2 rounded-xl text-base font-semibold mt-3 shadow-lg  hover:bg-black hover:text-white">Xem thêm PSU</button>
+                        </div>
                     </section>
                 </div>}
 

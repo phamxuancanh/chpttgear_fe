@@ -338,7 +338,7 @@ export default function Header() {
                                         className="absolute  z-50 right-0 mt-2 w-[48vh] rounded-md shadow-lg bg-white text-black"
                                     >
                                         <div className="p-4">
-                                            <h3 className="text-lg font-semibold mb-3">Shopping Cart</h3>
+                                            <h3 className="text-base font-semibold mb-3 text-gray-400">Sản phẩm mới thêm</h3>
                                             {cartItems.map((item) => (
                                                 <div
                                                     key={item.id}
@@ -382,13 +382,13 @@ export default function Header() {
                                                     </div>
                                                 </div>
                                             ))}
-                                            <div className="w-full flex justify-center items-center ">
+                                            <div className="w-full flex justify-between items-center ">
+                                                <p className="mt-3 text-gray-500 font-semibold text-sm">Có 45 mặt hàng trong giỏ</p>
                                                 <Link to="/cart" onClick={handleLinkClick}>
                                                     <button className=" bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 mt-3">
                                                         Xem giỏ hàng
                                                     </button>
                                                 </Link>
-
                                             </div>
                                         </div>
                                     </div>
@@ -643,6 +643,6 @@ export default function Header() {
                     </div>
                 )}
             </nav>}
-        </div>
+        </div >
     );
 }
