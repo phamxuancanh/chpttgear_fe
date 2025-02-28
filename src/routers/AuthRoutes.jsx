@@ -58,6 +58,7 @@ const AuthRoute = ({ children, allowedRoles }) => {
     if (userRole !== 'R1' && userRole !== 'R2' && location.pathname === ROUTES.DASHBOARD.path) {
       return <Navigate to={ROUTES.HOME_PAGE.path} />;
     }
+
     if (allowedRoles) {
       return <Navigate to={ROUTES.NOT_FOUND.path} />
     }

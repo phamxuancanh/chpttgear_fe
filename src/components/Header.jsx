@@ -187,6 +187,7 @@ export default function Header() {
         function handleClickOutside(event) {
             if (searchRef.current && !searchRef.current.contains(event.target)) {
                 setSuggestions([]);
+                setShowProductDropdown(false)
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
@@ -196,35 +197,32 @@ export default function Header() {
     }, []);
     return (
         <div>
-            {loading ? <Loading /> : <nav className="bg-black text-white shadow-lg py-2 sticky z-10 flex items-center justify-center z-20">
+            {loading ? <Loading /> : <nav className="bg-black text-white shadow-lg py-2 sticky flex items-center justify-center z-20">
                 <div className="w-11/12">
-                    <div className="flex items-center justify-between h-16 ">
-                        <Link to="/">
-                            <img src={LOGO} width={150} height={150} />
-                        </Link>
-                        <div className="hidden md:flex items-center space-x-8 w-3/5">
-                        <Link
-        to="/"
-        onClick={handleLinkClick}
-        className="relative font-semibold text-white px-5 py-2 rounded-lg 
-                   bg-gradient-to-r from-blue-500 to-indigo-500 
-                   hover:from-indigo-500 hover:to-blue-500 transition-all 
-                   duration-300 shadow-lg hover:shadow-xl"
-    >
-        Trang chủ
-    </Link>
-                            <div className="relative">
+                    <div className="w-full flex items-center justify-between h-16  ">
+                        <div className="w-1/12 ">
+                            <Link to="/">
+                                <img src={LOGO} width={150} height={150} />
+                            </Link>
+                        </div>
+                        <div className="hidden md:flex w-8/12 items-center space-x-5  justify-between px-8">
+                            <Link
+                                to="/"
+                                onClick={handleLinkClick}
+                                className="relative  font-semibold text-white px-4 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-indigo-500 hover:to-blue-500 transition-all duration-300 shadow-lg hover:shadow-xl text-base w-2/12 flex justify-center items-center"
+                            >
+                                <p className="text-base">Trang chủ</p>
+                            </Link>
+                            <div className="relative w-3/12 ">
                                 <button
-                                    className="relative group flex items-center gap-2 font-semibold text-white px-5 py-2 rounded-lg 
-             bg-gradient-to-r from-red-500 to-pink-500 hover:from-pink-500 hover:to-red-500 
-             transition-all duration-300 shadow-lg hover:shadow-xl"
+                                    className="relative group flex items-center gap-2 font-semibold text-white px-4 py-3 rounded-lg bg-gradient-to-r from-red-500 to-pink-500 hover:from-pink-500 hover:to-red-500 transition-all duration-300 shadow-lg hover:shadow-xl text-base  "
                                     onClick={() => setDropdownProduct(!showProductDropdown)}
                                 >
-                                    <IoMenu className="text-xl group-hover:rotate-90 transition-transform duration-300" />
+                                    <IoMenu className={`text-xl  transition-transform duration-300 ${showProductDropdown ? "rotate-90" : ""}`} />
                                     <span>Danh mục</span>
                                 </button>
                             </div>
-                            <div className="container mx-auto px-4 py-4 flex items-center justify-between text-black w-6/12">
+                            <div className="container w-7/12 mx-auto px-4 py-4 flex items-center justify-between text-black ">
                                 <div className="flex-1 w-10/12 flex items-center" ref={searchRef}>
 
                                     <div className="relative flex-grow">
@@ -254,24 +252,21 @@ export default function Header() {
                                     </div>
                                     <button
                                         onClick={handleSearchClick}
-                                        className="ml-1 px-4 py-2 w-[13vh] bg-green-200 text-base font-semibold  text-black rounded-md hover:bg-primary-dark transition-colors"
+                                        className="ml-1 px-4 py-2 w-[15vh] bg-green-200 text-base font-semibold  text-black rounded-md hover:bg-primary-dark transition-colors"
                                     >
                                         Tìm kiếm
                                     </button>
                                 </div>
                             </div>
                             <a
-        href="#"
-        className="relative font-semibold text-white px-5 py-2 rounded-lg 
-                   bg-gradient-to-r from-green-500 to-teal-500 
-                   hover:from-teal-500 hover:to-green-500 transition-all 
-                   duration-300 shadow-lg hover:shadow-xl"
-    >
-        Tin tức
-    </a>
+                                href="#"
+                                className="relative font-semibold w-[17vh] flex justify-center items-center text-white px-4 py-3 rounded-lg bg-gradient-to-r from-green-500 to-teal-500 hover:from-teal-500 hover:to-green-500 transition-all duration-300 shadow-lg hover:shadow-xl"
+                            >
+                                Tin tức
+                            </a>
                         </div>
 
-                        <div className="hidden md:flex items-center space-x-6">
+                        <div className="w-3/12 hidden md:flex items-center justify-between px-10 space-x-6 ">
                             <div className="relative">
                                 <button
                                     className="hover:text-blue-400 transition duration-300"
