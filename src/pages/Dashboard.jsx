@@ -71,7 +71,7 @@ export default function Dashboard() {
 
                     <nav>
                         <NavItem icon={FiHome} text="Thống kê" tabName="analysis" />
-                        <NavItem icon={FiUsers} text="Quản lý nhân viên" tabName="employees" />
+                        {/* <NavItem icon={FiUsers} text="Quản lý nhân viên" tabName="employees" /> */}
                         <NavItem icon={FiBox} text="Quản lý sản phẩm" tabName="products" />
                         <NavItem icon={FiShoppingCart} text="Quản lý đơn hàng" tabName="orders" />
                         <NavItem icon={FiPackage} text="Quản lý kho" tabName="inventories" />
@@ -81,7 +81,7 @@ export default function Dashboard() {
                 </div>
 
                 <div className="flex-1 p-8">
-                    {activeTab === "employees" && <Employee />}
+                    {/* {activeTab === "employees" && <Employee />} */}
                     {activeTab === "products" && <Products />}
                     {activeTab === "orders" && <Order />}
                     {activeTab === "analysis" && <Analysis />}

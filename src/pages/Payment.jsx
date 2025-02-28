@@ -18,9 +18,9 @@ export default function Payment() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
-  const [selectedProvince, setSelectedProvince] = useState("");
-  const [selectedDistrict, setSelectedDistrict] = useState("");
-  const [selectedWard, setSelectedWard] = useState("");
+  const [selectedProvince, setSelectedProvince] = useState({ id: "", name: "" });
+  const [selectedDistrict, setSelectedDistrict] = useState({ id: "", name: "" });
+  const [selectedWard, setSelectedWard] = useState({ id: "", name: "" });
 
   const [provinces, setProvinces] = useState([]);
   const [districts, setDistricts] = useState([]);
@@ -45,49 +45,48 @@ export default function Payment() {
   // }, [selectedDistrict, districts]);
 
   const handleProvinceChange = (e) => {
-    const provinceCode = Number(e.target.value);
-    setSelectedProvince(provinceCode);
-
-    const province = provinces.find(p => p.ProvinceID === provinceCode);
+    const provinceID = Number(e.target.value);
+    const province = provinces.find(p => p.ProvinceID === provinceID);
 
     if (province) {
+      setSelectedProvince({ id: province.ProvinceID, name: province.ProvinceName });
       setDistricts(province.Districts);
     } else {
+      setSelectedProvince({ id: "", name: "" });
       setDistricts([]);
     }
 
-    setSelectedDistrict('');
+    setSelectedDistrict({ id: "", name: "" });
     setWards([]);
-    setSelectedWard('');
+    setSelectedWard({ id: "", name: "" });
   };
+
 
   const handleDistrictChange = (e) => {
-    const districtCode = Number(e.target.value);
-    setSelectedDistrict(districtCode);
+    const districtID = Number(e.target.value);
+    const district = districts.find(d => d.DistrictID === districtID);
 
-    // Lọc phường/xã theo quận/huyện
-    const district = districts.find(d => d.DistrictID === districtCode);
-    setWards(district ? district.Wards : []);
-    setSelectedWard('');
+    if (district) {
+      setSelectedDistrict({ id: district.DistrictID, name: district.DistrictName });
+      setWards(district.Wards);
+    } else {
+      setSelectedDistrict({ id: "", name: "" });
+      setWards([]);
+    }
+
+    setSelectedWard({ id: "", name: "" });
   };
 
-  const handleWardChange = async (e) => {
-    const wardCode = Number(e.target.value);
-    setSelectedWard(wardCode);
 
-    if (!selectedProvince || !selectedDistrict || !wardCode) return;
+  const handleWardChange = (e) => {
+    const wardID = e.target.value;
+    const ward = wards.find(w => w.WardCode === wardID);
 
-    // Gửi yêu cầu tính phí từ cả 2 kho
-    const feeFromGoVap = await calculateShippingFee(3440, "13010", selectedDistrict, String(wardCode)); // Gò Vấp
-    const feeFromNamTuLiem = await calculateShippingFee(1461, "21316", selectedDistrict, String(wardCode)); // Nam Từ Liêm
-
-    console.log(feeFromGoVap);
-    console.log(feeFromNamTuLiem);
-
-    const bestOption = feeFromGoVap < feeFromNamTuLiem ? feeFromGoVap : feeFromNamTuLiem;
-    console.log(bestOption)
-    setShippingFee(bestOption);
-
+    if (ward) {
+      setSelectedWard({ id: ward.WardCode, name: ward.WardName });
+    } else {
+      setSelectedWard({ id: "", name: "" });
+    }
   };
 
   useEffect(() => {
@@ -132,6 +131,7 @@ export default function Payment() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+
     if (!validateForm()) {
       alert("Vui lòng kiểm tra lại thông tin đơn hàng!");
       setLoading(false);
@@ -146,23 +146,33 @@ export default function Payment() {
       payment_method: formData.paymentMethod,
       total_amount: cartItems.reduce((total, item) => total + item.price * item.quantity, 0) + shippingFee,
       shipping_amount: shippingFee,
-      provinceCode: String(selectedProvince),
-      districtCode: String(selectedDistrict),
-      wardCode: String(selectedWard),
-      houseNumber: String(formData.streetAddress),
-      email: userFromRedux.email
+      provinceCode: String(selectedProvince.id),
+      districtCode: String(selectedDistrict.id),
+      wardCode: String(selectedWard.id),
+      houseNumber: `${formData.streetAddress}, ${selectedWard.name}, ${selectedDistrict.name}, ${selectedProvince.name}`,
+      email: userFromRedux.email,
     };
 
-    console.log(payload)
+    console.log(payload);
 
     try {
       const resOrder = await createOrder(payload);
 
       if (resOrder.status === 201) {
-        const orderId = resOrder.data.order_id;
-        console.log(orderId)
+        let orderData = resOrder.data;
+        let orderId;
+        let approvalUrl;
 
-        const promises = cartItems.map(item =>
+        if (formData.paymentMethod === "PAYPAL") {
+          orderId = orderData.order.order_id;
+          approvalUrl = orderData.approvalUrl;
+        } else {
+          orderId = orderData.order_id;
+        }
+
+        console.log("Order ID:", orderId);
+
+        const orderItemPromises = cartItems.map(item =>
           createOrderItem({
             order_id: orderId,
             product_id: item.id,
@@ -171,9 +181,20 @@ export default function Payment() {
             profit: item.profit,
           })
         );
-        console.log(promises)
-        await Promise.all(promises);
-        console.log("Đơn hàng và sản phẩm đã được tạo thành công!");
+
+        console.log("Tạo sản phẩm trong đơn hàng:", orderItemPromises);
+        await Promise.all(orderItemPromises);
+        console.log("Order items đã được tạo thành công!");
+
+        if (formData.paymentMethod === "PAYPAL") {
+          if (approvalUrl) {
+            window.location.href = approvalUrl;
+            return;
+          } else {
+            throw new Error("Không tìm thấy approvalUrl từ PayPal");
+          }
+        }
+
         alert("Đơn hàng đã được tạo thành công!");
         navigate("/orders");
       }
@@ -184,6 +205,8 @@ export default function Payment() {
       setLoading(false);
     }
   };
+
+
 
   const cartItems = [
     {
@@ -277,7 +300,7 @@ export default function Payment() {
               <select
                 id="province"
                 name="province"
-                value={selectedProvince}
+                value={selectedProvince.id}
                 onChange={handleProvinceChange}
                 className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 
         ${errors.province ? "border-red-500" : "border-gray-300"}`}
@@ -298,11 +321,11 @@ export default function Payment() {
               <select
                 id="district"
                 name="district"
-                value={selectedDistrict}
+                value={selectedDistrict.id}
                 onChange={handleDistrictChange}
                 className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 
         ${errors.district ? "border-red-500" : "border-gray-300"}`}
-                disabled={!selectedProvince}
+                disabled={!selectedProvince.id}
               >
                 <option value="">Chọn Quận/Huyện</option>
                 {districts.map((district) => (
@@ -320,11 +343,11 @@ export default function Payment() {
               <select
                 id="ward"
                 name="ward"
-                value={selectedWard}
+                value={selectedWard.id}
                 onChange={handleWardChange}
                 className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 
         ${errors.ward ? "border-red-500" : "border-gray-300"}`}
-                disabled={!selectedDistrict}
+                disabled={!selectedDistrict.id}
               >
                 <option value="">Chọn Phường/Xã</option>
                 {wards.map((ward) => (

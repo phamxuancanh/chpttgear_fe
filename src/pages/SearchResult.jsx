@@ -114,19 +114,23 @@ export default function SearchResult() {
         }
     }, [selectedCategory]);
     const colors = [
-        { key: "red", value: "Đỏ" },
-        { key: "blue", value: "Xanh" },
         { key: "black", value: "Đen" },
         { key: "white", value: "Trắng" },
+        { key: "red", value: "Đỏ" },
+        { key: "blue", value: "Xanh" },
         { key: "green", value: "Xanh lá" },
         { key: "yellow", value: "Vàng" },
         { key: "purple", value: "Tím" },
-    ];
+        { key: "gray", value: "Xám" },
+        { key: "brown", value: "Nâu" },
+        { key: "pink", value: "Hồng" },
+        { key: "orange", value: "Cam" }
+      ];
     const specDefinitions = {
         Headphones: [
             { key: "model", value: "Mẫu", options: [] },
             { key: "warranty", value: "Bảo hành", options: [] },
-            { key: "type", value: "Kiểu", options: ["Over-ear", "Out-ear", "In-ear"] },
+            { key: "type", value: "Kiểu", options: ["Over-ear", "In-ear"] },
             { key: "connection", value: "Kết nối", options: ["Wired", "Wireless", "Bluetooth"] },
             { key: "battery_life", value: "Thời lượng pin", options: [] },
             { key: "noise_cancellation", value: "Khử tiếng ồn chủ động", options: ["Có", "Không"] },
@@ -238,54 +242,6 @@ export default function SearchResult() {
         // Gọi API với tất cả các param
         fetchResults(allParams);
       }, [location.search]);
-    // const fetchResults = async (params) => {
-    //     try {
-    //       const response = await searchProducts({ params });
-    //       setResults(response.data);
-    //       console.log(response.data);
-    //     } catch (error) {
-    //       console.error("Error fetching results:", error);
-    //     }
-    //   };
-      
-    //   useEffect(() => {
-    //     const queryParams = new URLSearchParams(location.search);
-        
-    //     // Lấy các tham số cơ bản
-    //     const currentPage = parseInt(queryParams.get('page') || '1', 10);
-    //     const category = queryParams.get('category') || undefined;
-    //     const color = queryParams.get('color') || undefined;
-    //     const price_gte = queryParams.get('price_gte') || undefined;
-    //     const price_lte = queryParams.get('price_lte') || undefined;
-    //     // Thêm dòng này để lấy name từ URL
-    //     const nameParam = queryParams.get('name') || undefined;
-      
-    //     // Lấy các spec có tiền tố "spec_"
-    //     // (giả sử specifications01 = ["type", "warranty", ...])
-    //     const productData = {};
-    //     for (const key of specifications01) {
-    //       const value = queryParams.get(`spec_${key}`);
-    //       if (value) {
-    //         productData[key] = value;
-    //       }
-    //     }
-      
-    //     setProductData(productData);
-    //     setPage(currentPage);
-    //     console.log("Current page:", currentPage);
-    //     console.log(productData)
-    //     // Gọi API
-    //     fetchResults({
-    //       page: currentPage,
-    //       search: nameParam,          // truyền nameParam thay vì name
-    //       category: category,
-    //       color: color,
-    //       price_gte: price_gte,
-    //       price_lte: price_lte,
-    //       ...productData
-    //     });
-    //   }, [location.search]);
-    
     const totalPage = useMemo(() => {
         const size = (results?.data != null) ? results?.size : 5;
         const totalRecord = (results?.data != null) ? results?.totalRecords : 5;

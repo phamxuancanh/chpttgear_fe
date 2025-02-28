@@ -150,12 +150,12 @@ export default function Products() {
                         >
                             Thêm sản phẩm
                         </button>
-                        <button
+                        {/* <button
                             onClick={() => setShowCategoryModal({ show: true })}
                             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                         >
                             Thêm loại sản phẩm
-                        </button>
+                        </button> */}
                     </div>
                 </div>
                 {showProductModal.show && <AddProductModal setShowProductModal={setShowProductModal} product_id={showProductModal.productId} />}

@@ -2,7 +2,7 @@ import { requestWithJwt, requestWithoutJwt } from './request'
 import { toast } from 'react-toastify';
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, GithubAuthProvider, FacebookAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth'
-import { AxiosResponse } from 'axios'
+import axios, { AxiosResponse } from 'axios'
 const firebaseConfig = {
     apiKey: "AIzaSyAN42yRxXQdumIT187N_rXW-60zCcjg3e8",
     authDomain: "authenqc.firebaseapp.com",
@@ -104,8 +104,6 @@ export const googleSignIn = async () => {
             return null;
         }
     } catch (error) {
-        // console.error('Lỗi khi đăng nhập với Google:', error);
-
         if (error.code === 'auth/account-exists-with-different-credential') {
             toast.error('Email này đã được đăng ký bằng phương thức khác. Vui lòng thử đăng nhập bằng phương thức đó.');
         } else {
@@ -115,7 +113,6 @@ export const googleSignIn = async () => {
         return null;
     }
 };
-
 
 // productService
 export const findAllCategory = async () => {
@@ -186,7 +183,7 @@ export const updateProduct = async (productId, payload) => {
 };
 export const updateSpecification = async (specificationId, payload) => {
     try {
-        return await requestWithJwt.put(`/specifications/${specificationId}`, payload);
+        return await requestWithJwt.put(`/products/specifications/${specificationId}`, payload);
     } catch (error) {
         console.error('Error updating specification:', error);
         throw error;
@@ -337,6 +334,33 @@ export const getQuantityInStock = async (product_id) => {
 
 // cartService
 
+export const findCartByUserId = async (userId) => {
+    return await requestWithJwt.get(`/carts/findByUserId/${userId}`);
+};
+export const findCartItemsByCartId = async (cartId) => {
+    return await requestWithJwt.get(`/carts/cart_items/findByCartId/${cartId}`);
+};
+export const updateQuantityCartItem = async (cartItemId, payload) => {
+    try {
+        console.log("1234", cartItemId, payload);
+        return await requestWithJwt.put(`/carts/cart_items/updateQuantityByCartItemId/${cartItemId}`,
+            payload.toString(), // Chuyển số thành chuỗi
+            { headers: { "Content-Type": "text/plain" } }
+        );
+    } catch (error) {
+        console.error('Error updating quantity:', error);
+        throw error;
+    }
+};
+export const deleteCartItem = async (cartItemId) => {
+    try {
+        return await requestWithJwt.delete(`/carts/cart_items/deleteByCartItemId/${cartItemId}`);
+    } catch (error) {
+        console.error('Error deleting cart item:', error);
+        throw error;
+    }
+};
+
 // orderService
 export const getAllOrders = async () => {
     return await requestWithJwt.get(`/orders/`);
@@ -346,9 +370,10 @@ export const getOrderById = async (orderId) => {
     return await requestWithJwt.get(`/orders/${orderId}`);
 };
 
-export const getOrdersByUserId = async (userId) => {
-    return await requestWithJwt.get(`/orders/orders/${userId}`);
+export const getOrdersByUserId = async (userId, page = 1, limit = 5) => {
+    return await requestWithJwt.get(`/orders/orders/${userId}?page=${page}&limit=${limit}`);
 };
+
 
 export const createOrder = async (payload) => {
     return await requestWithJwt.post(`/orders/`, payload);
@@ -402,8 +427,17 @@ export const calculateShippingFee = async (fromDistrictId, fromWardCode, toDistr
     }
 };
 
+export const getPaypalSuccess = async (orderId, token, payerID) => {
+    return await requestWithJwt.get(
+        `/orders/paypal/success?orderId=${orderId}&token=${token}&PayerID=${payerID}`
+    );
+};
 
-
+export const getPaypalCancel = async (orderId) => {
+    return await requestWithJwt.get(
+        `/orders/paypal/cancel?orderId=${orderId}`
+    );
+};
 // paymentService
 
 // shippingService

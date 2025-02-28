@@ -4,7 +4,7 @@ import { createContext } from "react";
 import { toast } from "react-toastify";
 import {
   findAllCategory, findSpecificationsByProductId, createProduct, createSpecification,
-  findProductById, uploadImagesToCloudinary, updateProduct
+  findProductById, uploadImagesToCloudinary, updateProduct, updateSpecification
 } from "../../routers/ApiRoutes";
 import { useDropzone } from "react-dropzone";
 import { ClockLoader } from "react-spinners";
@@ -38,85 +38,93 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
 
 
   const [categories, setCategories] = useState([]);
+  const [specsFields, setSpecsFields] = useState([]);
+  const [productData, setProductData] = useState({});
 
-
-  const productSpecs = [
-    { key: "model", value: "Mẫu" },
-    { key: "warranty", value: "Bảo hành" },
-    { key: "type", value: "Kiểu" },
-    { key: "connection", value: "Kết nối" },
-    { key: "battery_life", value: "Thời lượng pin" },
-    { key: "noise_cancellation", value: "Khử tiếng ồn chủ động" },
-    { key: "microphone", value: "Microphone" },
-    { key: "frequency_response", value: "Dải tần số" },
-
-    // Bàn phím
-    { key: "switch_type", value: "Loại switch" },
-    { key: "backlight", value: "Đèn nền" },
-    { key: "key_rollover", value: "Số lượng phím nhận diện cùng lúc" },
-    { key: "layout", value: "Bố cục phím" },
-    { key: "polling_rate", value: "Tần số quét" },
-
-    // Chuột
-    { key: "sensor_type", value: "Loại cảm biến" },
-    { key: "dpi", value: "Độ phân giải DPI" },
-    { key: "buttons", value: "Số nút" },
-    { key: "response_time", value: "Thời gian phản hồi" },
-    { key: "grip_style", value: "Kiểu cầm" },
-
-    // RAM
-    { key: "capacity", value: "Dung lượng" },
-    { key: "speed", value: "Tốc độ bus" },
-    { key: "latency", value: "Độ trễ CAS" },
-    { key: "voltage", value: "Điện áp" },
-    { key: "type", value: "Loại RAM" },
-    { key: "cooling", value: "Hệ thống tản nhiệt" },
-
-    // CPU
-    { key: "cores", value: "Số nhân" },
-    { key: "threads", value: "Số luồng" },
-    { key: "base_clock", value: "Xung nhịp cơ bản" },
-    { key: "boost_clock", value: "Xung nhịp tối đa" },
-    { key: "socket", value: "Socket tương thích" },
-    { key: "tdp", value: "Công suất tiêu thụ (TDP)" },
-    { key: "integrated_graphics", value: "Đồ họa tích hợp" },
-
-    // GPU
-    { key: "gpu_model", value: "Mẫu GPU" },
-    { key: "vram", value: "Dung lượng VRAM" },
-    { key: "memory_type", value: "Loại bộ nhớ" },
-    { key: "memory_bus", value: "Bus bộ nhớ" },
-    { key: "core_clock", value: "Xung nhịp nhân" },
-    { key: "boost_clock_gpu", value: "Xung nhịp tối đa" },
-    { key: "power_consumption", value: "Công suất tiêu thụ" },
-
-    // Ổ cứng (SSD/HDD)
-    { key: "storage_capacity", value: "Dung lượng lưu trữ" },
-    { key: "interface", value: "Chuẩn giao tiếp" },
-    { key: "read_speed", value: "Tốc độ đọc" },
-    { key: "write_speed", value: "Tốc độ ghi" },
-    { key: "form_factor", value: "Kích thước" },
-
-    // Nguồn (PSU)
-    { key: "wattage", value: "Công suất" },
-    { key: "efficiency_rating", value: "Chứng nhận hiệu suất" },
-    { key: "modular", value: "Thiết kế dây nguồn" },
-    { key: "fan_size", value: "Kích thước quạt" },
-
-    // Bo mạch chủ (Motherboard)
-    { key: "chipset", value: "Chipset" },
-    { key: "form_factor_mb", value: "Kích thước bo mạch" },
-    { key: "ram_slots", value: "Số khe RAM" },
-    { key: "pci_slots", value: "Số khe PCIe" },
-    { key: "m2_slots", value: "Số khe M.2" },
-    { key: "sata_ports", value: "Số cổng SATA" },
-
-    // Tản nhiệt
-    { key: "cooling_type", value: "Loại tản nhiệt" },
-    { key: "radiator_size", value: "Kích thước két nước" },
-    { key: "fan_speed", value: "Tốc độ quạt" },
-    { key: "noise_level", value: "Độ ồn" }
-  ];
+  useEffect(() => {
+    if (selectedCategory.name) {
+      setSpecsFields(specDefinitions[selectedCategory.name] || []);
+    } else {
+      setSpecsFields([]);
+    }
+  }, [selectedCategory]);
+  const specDefinitions = {
+    Headphones: [
+      { key: "model", value: "Mẫu", options: [] },
+      { key: "warranty", value: "Bảo hành", options: ["6 tháng", "12 tháng", "24 tháng"] },
+      { key: "type", value: "Kiểu", options: ["Over-ear", "On-ear", "In-ear", "True Wireless"] },
+      { key: "connection", value: "Kết nối", options: ["Wired", "Wireless", "Bluetooth", "USB-C"] },
+      { key: "battery_life", value: "Thời lượng pin", options: ["4 giờ", "8 giờ", "12 giờ", "24 giờ", "40 giờ"] },
+      { key: "noise_cancellation", value: "Khử tiếng ồn chủ động", options: ["Có", "Không"] },
+      { key: "microphone", value: "Microphone", options: ["Có", "Không", "Đa hướng"] },
+      { key: "frequency_response", value: "Dải tần số", options: ["20Hz - 20kHz", "15Hz - 25kHz", "5Hz - 40kHz"] },
+    ],
+    Keyboards: [
+      { key: "model", value: "Mẫu", options: [] },
+      { key: "warranty", value: "Bảo hành", options: ["12 tháng", "24 tháng", "36 tháng"] },
+      { key: "switch_type", value: "Loại switch", options: ["Mechanical", "Membrane", "Optical", "Hybrid"] },
+      { key: "connection", value: "Kết nối", options: ["Wired", "Wireless", "Bluetooth", "USB-C"] },
+      { key: "backlight", value: "Đèn nền", options: ["Có", "Không", "RGB", "Single-color"] },
+      { key: "key_rollover", value: "Số lượng phím nhận diện cùng lúc", options: ["6-key", "N-key"] },
+    ],
+    Mice: [
+      { key: "model", value: "Mẫu", options: [] },
+      { key: "warranty", value: "Bảo hành", options: ["12 tháng", "24 tháng"] },
+      { key: "sensor_type", value: "Loại cảm biến", options: ["Optical", "Laser", "Infrared"] },
+      { key: "dpi", value: "Độ phân giải DPI", options: ["800", "1600", "3200", "6400", "12000", "16000"] },
+      { key: "connection", value: "Kết nối", options: ["Wired", "Wireless", "Bluetooth", "USB-C"] },
+      { key: "buttons", value: "Số nút", options: ["3", "5", "7", "10", "12+"] },
+      { key: "battery_life", value: "Thời lượng pin", options: ["20 giờ", "50 giờ", "100 giờ"] },
+    ],
+    RAM: [
+      { key: "model", value: "Mẫu", options: [] },
+      { key: "warranty", value: "Bảo hành", options: ["36 tháng", "60 tháng", "Trọn đời"] },
+      { key: "capacity", value: "Dung lượng", options: ["4GB", "8GB", "16GB", "32GB", "64GB", "128GB"] },
+      { key: "speed", value: "Tốc độ bus", options: ["2133MHz", "2666MHz", "3200MHz", "3600MHz", "4000MHz+"] },
+      { key: "latency", value: "Độ trễ CAS", options: ["CL14", "CL16", "CL18", "CL20"] },
+      { key: "voltage", value: "Điện áp", options: ["1.2V", "1.35V", "1.5V"] },
+      { key: "type", value: "Loại RAM", options: ["DDR3", "DDR4", "DDR5", "LPDDR5"] },
+    ],
+    Storage: [
+      { key: "model", value: "Mẫu", options: [] },
+      { key: "warranty", value: "Bảo hành", options: ["12 tháng", "24 tháng", "36 tháng", "60 tháng"] },
+      { key: "type", value: "Loại ổ", options: ["SSD", "HDD", "NVMe", "Hybrid"] },
+      { key: "capacity", value: "Dung lượng", options: ["256GB", "512GB", "1TB", "2TB", "4TB", "8TB"] },
+      { key: "interface", value: "Giao tiếp", options: ["SATA", "NVMe", "PCIe", "USB 3.2"] },
+      { key: "speed", value: "Tốc độ đọc/ghi", options: ["500MB/s", "1000MB/s", "2000MB/s", "5000MB/s"] },
+    ],
+    PowerSupply: [
+      { key: "model", value: "Mẫu", options: [] },
+      { key: "warranty", value: "Bảo hành", options: ["36 tháng", "60 tháng"] },
+      { key: "wattage", value: "Công suất", options: ["400W", "500W", "600W", "750W", "850W", "1000W", "1200W+"] },
+      { key: "efficiency", value: "Chứng nhận hiệu suất", options: ["80 Plus", "80 Plus Bronze", "80 Plus Gold", "80 Plus Platinum", "80 Plus Titanium"] },
+      { key: "modular", value: "Dây cáp rời", options: ["Có", "Không", "Semi-Modular"] },
+    ],
+    Motherboards: [
+      { key: "model", value: "Mẫu", options: [] },
+      { key: "warranty", value: "Bảo hành", options: ["12 tháng", "24 tháng", "36 tháng"] },
+      { key: "socket", value: "Socket", options: ["LGA1200", "LGA1700", "AM4", "AM5"] },
+      { key: "chipset", value: "Chipset", options: ["B460", "B560", "Z490", "Z590", "X570", "B550"] },
+      { key: "form_factor", value: "Kích thước", options: ["ATX", "Micro-ATX", "Mini-ITX"] },
+      { key: "ram_slots", value: "Số khe RAM", options: ["2", "4", "8"] },
+      { key: "max_memory", value: "Dung lượng RAM tối đa", options: ["32GB", "64GB", "128GB"] },
+      { key: "storage_interfaces", value: "Giao tiếp lưu trữ", options: ["SATA", "NVMe", "PCIe 4.0"] },
+      { key: "expansion_slots", value: "Khe mở rộng", options: ["PCIe x16", "PCIe x8", "PCIe x4"] },
+      { key: "usb_ports", value: "Cổng USB", options: ["USB 2.0", "USB 3.0", "USB 3.1", "USB-C"] },
+      { key: "network", value: "Kết nối mạng", options: ["Ethernet", "Wi-Fi 6", "Bluetooth"] },
+    ],
+    CoolingSystems: [
+      { key: "model", value: "Mẫu", options: [] },
+      { key: "warranty", value: "Bảo hành", options: ["12 tháng", "24 tháng"] },
+      { key: "type", value: "Loại", options: ["Tản nhiệt khí", "Tản nhiệt nước"] },
+      { key: "fan_size", value: "Kích thước quạt", options: ["80mm", "92mm", "120mm", "140mm", "240mm", "280mm", "360mm"] },
+      { key: "rpm", value: "Tốc độ quay (RPM)", options: ["1000 RPM", "1500 RPM", "2000 RPM", "2500 RPM"] },
+      { key: "noise_level", value: "Độ ồn", options: ["15dB", "20dB", "25dB", "30dB"] },
+      { key: "radiator_size", value: "Kích thước bộ tản nhiệt", options: ["120mm", "240mm", "360mm"] },
+      { key: "compatibility", value: "Tương thích socket", options: ["LGA1200", "LGA1700", "AM4", "AM5"] },
+      { key: "led_lighting", value: "Đèn LED", options: ["RGB", "Không"] },
+    ]
+  };
 
 
   const colors = [
@@ -193,19 +201,26 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
     try {
       if (updateProductId) {
         const response = await findSpecificationsByProductId(updateProductId);
-        console.log("Thông số kỹ thuật của product update:", response.data);
+        console.log("Thông số kỹ thuật của sản phẩm update:", response.data);
+
         setSpecifications(response.data);
+
+        // Cập nhật productData để đổ vào select
+        const updatedProductData = response.data.reduce((acc, spec) => {
+          acc[spec.name] = spec.value;
+          return acc;
+        }, {});
+
+        setProductData((prev) => ({ ...prev, ...updatedProductData }));
       }
     } catch (error) {
-      console.error('Error fetching specifications:', error);
+      console.error("Lỗi khi tải thông số kỹ thuật:", error);
     }
-  }
+  };
   const onDrop = useCallback(acceptedFiles => {
     if (updateProductId) {
-      // Nếu đang cập nhật, thêm ảnh vào imagesUpdate
       setImagesUpdate(prev => [...prev, ...acceptedFiles]);
     } else {
-      // Nếu đang thêm mới, thêm ảnh vào images
       setImages(prev => [...prev, ...acceptedFiles]);
     }
   }, [updateProductId]);
@@ -223,7 +238,6 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
 
     const uploadedImages = await Promise.all(
       imageArray.map(async (image) => {
-        // Nếu ảnh là file mới, thực hiện upload
         if (typeof image === "object") {
           const data = new FormData();
           data.append("file", image);
@@ -232,20 +246,20 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
 
           try {
             const response = await uploadImagesToCloudinary(data);
+            if (!response.ok) throw new Error("Upload thất bại");
             const res = await response.json();
+            if (!res.url) throw new Error("Không lấy được URL ảnh");
             console.log("Uploaded URL:", res.url);
             return res.url;
           } catch (error) {
-            console.error("Upload failed:", error);
+            console.error("Upload failed:", error.message);
             return null;
           }
         }
-        // Nếu ảnh là URL có sẵn (cũ), giữ nguyên
         return image;
       })
     );
 
-    // Lọc bỏ ảnh null và tạo chuỗi ngăn cách bằng dấu ","
     const validImages = uploadedImages.filter((url) => url !== null);
     const imagesString = validImages.join(",");
 
@@ -255,31 +269,6 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
   };
 
 
-  const handleSpecificationChange = (index, field, value) => {
-    setSpecifications((prev) =>
-      prev.map((spec, i) => {
-        if (i === index) {
-          if (field === "name") {
-            // Lấy giá trị name_vi dựa trên key (name) từ productSpecs
-            const selectedSpec = productSpecs.find((spec) => spec.key === value);
-            return {
-              ...spec,
-              name: value, // Gán key vào name
-              name_vi: selectedSpec ? selectedSpec.value : "", // Lấy name_vi từ productSpecs
-            };
-          }
-          return { ...spec, [field]: value }; // Cập nhật các trường khác (value)
-        }
-        return spec;
-      })
-    );
-  };
-  const addSpecification = () => {
-    setSpecifications((prev) => [...prev, { name: "", name_vi: "", value: "" }]);
-  };
-  const removeSpecification = (index) => {
-    setSpecifications((prev) => prev.filter((_, i) => i !== index));
-  };
   const removeImage = (index) => {
     setImages(prev => prev.filter((_, i) => i !== index));
   };
@@ -334,36 +323,53 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
     }
     return true;
   };
-  /** Kiểm tra giá trị nhập specification */
-  const validateSpecification = () => {
-    console.log(specifications.length)
-    if (specifications.length <= 1) {
-      return false;
-    }
-    if (specifications.length > 0) {
-      console.log(specifications);
-    }
-    return true;
+  const validateSpecification = (specs) => {
+    console.log(specs, "valid leng");
+    if (specs.length === 0) return false;
+    return specs.some(spec => spec.value.trim() !== "");
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("submit")
-    if (validateProduct()) {
+    console.log("Submit form");
+
+    if (!validateProduct()) return;
+
+    try {
+      const imgString = updateProductId
+        ? await uploadImages(imagesUpdate)
+        : await uploadImages(images);
+
+      if (!imgString && !updateProductId) {
+        toast.error("Phải tải lên ít nhất 1 ảnh sản phẩm");
+        return;
+      }
 
       if (updateProductId) {
-        const imgString = await uploadImages(imagesUpdate);
-        handlerUpdateProduct(imgString);
+        await handlerUpdateProduct(imgString);
       } else {
-        const imgString = await uploadImages(images);
-        handlerCreateProduct(imgString);
+        await handlerCreateProduct(imgString);
       }
+
       handleReset();
-    };
+    } catch (error) {
+      console.error("Lỗi khi submit sản phẩm:", error.message);
+    }
   };
 
   const handlerCreateProduct = async (imgString) => {
     try {
       const category = categories.find((category) => category.id === selectedCategory.id);
+      const updatedSpecifications = specsFields
+        .map((spec) => ({
+          name: spec.key,
+          name_vi: spec.value,
+          value: productData[spec.key] || "",
+        }))
+        .filter((spec) => spec.value.trim() !== "");
+
+      console.log("Thông số kỹ thuật hợp lệ:", updatedSpecifications);
+
       const newProduct = {
         name,
         description,
@@ -375,70 +381,111 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
         weight,
         guaranteePeriod,
         category,
-        modifiedDate: new Date().toISOString()
+        modifiedDate: new Date().toISOString(),
+        specifications: updatedSpecifications,
       };
+
       const responseProduct = await createProduct(newProduct);
-      console.log(responseProduct.status)
-      console.log(validateSpecification())
-      if (validateSpecification()) {
-        if (responseProduct.status === 201) {
-          specifications.forEach(async (spec) => {
-            console.log(spec)
-            const responseSpecification = await createSpecification({
-              product: responseProduct.data,
-              name: spec.name,
-              name_vi: spec.name_vi,
-              value: spec.value
-            });
-            if (responseSpecification.status === 201) {
-              console.log("Thêm thông số kỹ thuật thành công");
-            }
+      console.log(responseProduct.status);
+
+      if (updatedSpecifications.length > 0 && responseProduct.status === 201) {
+        updatedSpecifications.forEach(async (spec) => {
+          const responseSpecification = await createSpecification({
+            product: responseProduct.data,
+            name: spec.name,
+            name_vi: spec.name_vi,
+            value: spec.value,
           });
-        };
+
+          if (responseSpecification.status === 201) {
+            console.log("Thêm thông số kỹ thuật thành công");
+          }
+        });
       }
-      toast.success("Thêm sản phẩm thành công")
+
+      toast.success("Thêm sản phẩm thành công");
     } catch (error) {
       console.error("Lỗi khi thêm sản phẩm:", error.response?.data || error.message);
-    };
+    }
   };
+
 
   const handlerUpdateProduct = async (imgString) => {
     try {
-      const category = categories.find((category) => category.id === selectedCategory.id);
+      const category = categories.find((category) => category.id === selectedCategory?.id);
+      
+      // Đảm bảo xử lý hình ảnh đúng định dạng
+      const updatedImage = imgString
+        ? [...(Array.isArray(images) ? images : images?.split(",") || []), imgString]
+        : images;
+  
+      console.log("Hình ảnh cập nhật:", updatedImage);
+  
+      // Cập nhật specifications
+      const updatedSpecifications = specsFields.map((spec) => {
+        const existingSpec = specifications.find((s) => s.name === spec.key);
+        return {
+          id: existingSpec?.id || null,
+          name: spec.key,
+          name_vi: spec.value,
+          value: productData[spec.key] || "",
+        };
+      }).filter((spec) => spec.value.trim() !== "");
+  
       const updatedProduct = {
         name,
         description,
-        price: parseFloat(price.replace(/,/g, '')),
+        price: parseFloat(price.replace(/,/g, "")),
         brand: brandSelected,
-        image: images + "," + imgString,
+        image: updatedImage.join(","),  // Chuyển mảng thành chuỗi trước khi gửi
         color,
         size,
         weight,
         guaranteePeriod,
         category,
-        // inventoryId: selectedInventory?.inventory_id,
-        modifiedDate: new Date().toISOString()
+        modifiedDate: new Date().toISOString(),
       };
+  
       const responseProduct = await updateProduct(updateProductId, updatedProduct);
-      if (validateSpecification()) {
-        if (responseProduct.status === 200) {
-          specifications.forEach(async (spec) => {
-            const responseSpecification = await createSpecification({
-              product: responseProduct.data,
-              name: spec.name,
-              value: spec.value
-            });
-            if (responseSpecification.status === 201) {
-              console.log("Thêm thông số kỹ thuật thành công");
+  
+      if (responseProduct.status === 200 && updatedSpecifications.length > 0) {
+        for (const spec of updatedSpecifications) {
+          try {
+            if (spec.id) {
+              const responseSpecification = await updateSpecification(spec.id, {
+                product: responseProduct.data,
+                name: spec.name,
+                name_vi: spec.name_vi,
+                value: spec.value,
+              });
+  
+              if (responseSpecification.status === 200) {
+                console.log(`Cập nhật thông số kỹ thuật thành công: ${spec.name}`);
+              }
+            } else {
+              const responseSpecification = await createSpecification({
+                product: responseProduct.data,
+                name: spec.name,
+                name_vi: spec.name_vi,
+                value: spec.value,
+              });
+  
+              if (responseSpecification.status === 201) {
+                console.log(`Tạo mới thông số kỹ thuật thành công: ${spec.name}`);
+              }
             }
-          })
-        };
+          } catch (error) {
+            console.error(`Lỗi khi xử lý thông số kỹ thuật (${spec.name}):`, error.response?.data || error.message);
+          }
+        }
       }
-      toast.success("Cập nhật sản phẩm thành công")
+  
+      toast.success("Cập nhật sản phẩm thành công");
     } catch (error) {
       console.error("Lỗi khi cập nhật sản phẩm:", error.response?.data || error.message);
-    };
+    }
   };
+  
 
   const handleReset = () => {
     setName("");
@@ -467,7 +514,7 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
     const selectedName = e.target.options[selectedIndex].text;
 
     setSelectedCategory({ id: selectedId, name: selectedName });
-    setSelectedSpec(""); // Reset thông số khi đổi loại sản phẩm
+    setSelectedSpec("");
     console.log("Loại sản phẩm:", selectedName);
   };
 
@@ -483,15 +530,19 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
   };
 
   const handlePriceChange = (e) => {
-    let value = e.target.value.replace(/[^0-9]/g, ''); // Xóa tất cả ký tự không phải số
+    let value = e.target.value.replace(/[^0-9]/g, '');
     if (value) {
       // Thêm dấu phẩy vào sau mỗi 3 chữ số
       value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     }
     setPrice(value);
   };
-
-
+  const handleSpecChange = (key, value) => {
+    setProductData(prevData => ({
+      ...prevData,
+      [key]: value,
+    }));
+  };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-30">
@@ -662,119 +713,95 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
                     ))}
                   </select>
                 </div>
-
                 <div className="w-full">
-
                   <label className="block text-sm font-medium text-gray-700">Hình ảnh</label>
-                  <div {...getRootProps()} className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-indigo-500 transition-colors">
-                    <div className="space-y-1 text-center">
-                      <FiUpload className="mx-auto h-12 w-12 text-gray-400" />
-                      <div className="flex text-sm text-gray-600">
-                        <input {...getInputProps()} />
-                        <p className="pl-1">
-                          {isDragActive ? "Drop the files here..." : "Drag 'n' drop images here, or click to select files"}
-                        </p>
-                      </div>
-                      <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
-                    </div>
+                  {/* Upload area */}
+                  <div
+                    {...getRootProps()}
+                    className="mt-2 flex flex-col items-center justify-center border-2 border-dashed rounded-md p-6 bg-gray-50 hover:bg-gray-100 transition-colors"
+                  >
+                    <FiUpload className="h-12 w-12 text-gray-400" />
+                    <input {...getInputProps()} className="hidden" />
+                    <p className="mt-2 text-sm text-gray-600">
+                      {isDragActive
+                        ? "Thả file vào đây..."
+                        : "Kéo và thả hình ảnh hoặc nhấn để chọn"}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500">PNG, JPG tối đa 5MB</p>
                   </div>
-                  <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-                    {images.map((file, index) => {
-                      let imageUrl = typeof file === "object" ? URL.createObjectURL(file) : file;
 
+                  <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                    {images.filter(Boolean).map((file, index) => {
+                      let imageUrl = typeof file === "object" ? URL.createObjectURL(file) : file;
                       return (
-                        <div key={`new-${index}`} className="relative">
+                        <div key={`new-${index}`} className="relative overflow-hidden rounded-lg shadow-md group">
                           <img
                             src={imageUrl}
-                            alt={`old preview ${index + 1}`}
-                            className="h-24 w-24 object-cover rounded-md"
+                            alt={`Preview ${index + 1}`}
+                            className="h-32 w-full object-cover transform transition duration-300 group-hover:scale-105"
                           />
                           <button
                             type="button"
                             onClick={() => removeImage(index, false)}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                            className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                           >
-                            <FiTrash2 className="w-4 h-4" />
+                            <FiTrash2 className="h-4 w-4" />
                           </button>
                         </div>
                       );
                     })}
-                    {imagesUpdate.map((file, index) => {
-                      let imageUrl1 = typeof file === "object" ? URL.createObjectURL(file) : file;
 
+                    {imagesUpdate.filter(Boolean).map((file, index) => {
+                      let imageUrl1 = typeof file === "object" ? URL.createObjectURL(file) : file;
                       return (
-                        <div key={`new-${index}`} className="relative">
+                        <div key={`update-${index}`} className="relative overflow-hidden rounded-lg shadow-md group">
                           <img
                             src={imageUrl1}
-                            alt={`old preview ${index + 1}`}
-                            className="h-24 w-24 object-cover rounded-md"
+                            alt={`Preview ${index + 1}`}
+                            className="h-32 w-full object-cover transform transition duration-300 group-hover:scale-105"
                           />
                           <button
                             type="button"
                             onClick={() => removeImage(index, false)}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                            className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                           >
-                            <FiTrash2 className="w-4 h-4" />
+                            <FiTrash2 className="h-4 w-4" />
                           </button>
                         </div>
                       );
                     })}
+
                   </div>
-
                 </div>
-
                 <div className="w-full">
                   <div className="flex items-center justify-between">
                     <h4 className="text-lg font-medium text-gray-900">Thông số kỹ thuật</h4>
-                    <button
-                      type="button"
-                      onClick={addSpecification}
-                      className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-                    >
-                      <FiPlus className="-ml-1 mr-2 h-5 w-5" />
-                      Thêm thông số
-                    </button>
                   </div>
                   <div className="mt-4 space-y-4">
-                    {specifications.map((spec, index) => (
-                      <div key={index} className="flex gap-4">
-                        {selectedCategory && productSpecs.length > 0 && (
-                          <>
-                            <select
-                              className="flex-1 p-3 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                              value={spec.name}
-                              onChange={(e) => handleSpecificationChange(index, "name", e.target.value)}
-
-                            >
-                              <option value="" disabled>Chọn loại thông số</option>
-                              {productSpecs.map((spec, index) => (
-                                <option key={index} value={spec.key}>
-                                  {spec.value}
-                                </option>
-                              ))}
-                            </select>
-
-                            <input
-                              type="text"
-                              placeholder="Value"
-                              value={spec.value}
-                              onChange={(e) => handleSpecificationChange(index, "value", e.target.value)}
-                              className="flex-1 p-3 rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                            />
-                            {index > 0 && (
-                              <button
-                                type="button"
-                                onClick={() => removeSpecification(index)}
-                                className="inline-flex items-center p-2 border border-transparent rounded-md text-red-600 hover:bg-red-50"
-                              >
-                                <FiTrash2 className="h-5 w-5" />
-                              </button>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    ))}
-
+                    {specsFields.length > 0 &&
+                      specsFields.map((spec) => (
+                        <div key={spec.key} className="flex items-center justify-between">
+                          <label htmlFor={spec.key} className="w-1/3 text-sm font-medium text-gray-700">
+                            {spec.value}
+                          </label>
+                          <select
+                            id={spec.key}
+                            name={spec.key}
+                            value={productData[spec.key] || ""}  // Hiển thị giá trị đã load
+                            onChange={(e) => handleSpecChange(spec.key, e.target.value)}
+                            className="w-2/3 p-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500"
+                          >
+                            <option value="" disabled>
+                              Chọn {spec.value}
+                            </option>
+                            {spec.options.map((option) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      ))}
                   </div>
                 </div>
               </div>

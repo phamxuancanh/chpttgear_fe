@@ -93,7 +93,7 @@ export default function Login() {
                 const { accessToken, currentUser } = result;
                 let userRole = currentUser?.key;
                 let data;
-
+    
                 if (userRole) {
                     try {
                         const decrypted = CryptoJS.AES.decrypt(
@@ -103,31 +103,36 @@ export default function Login() {
                         data = decrypted.toString(CryptoJS.enc.Utf8);
                     } catch (error) {
                         console.error('Decryption error:', error);
-                        // Xử lý lỗi giải mã nếu cần
                     }
                 }
-
+    
                 const payload = {
                     token: accessToken,
                     user: currentUser
                 };
-
-                console.log(payload); // Đảm bảo log payload chứ không phải currentUser
-
-                dispatch(login(payload)); // Dispatch action với payload đúng format
-
+    
+                console.log("Trước khi dispatch:", payload);
+                
+                // Chờ Redux cập nhật trước khi tiếp tục
+                await dispatch(login(payload));
+    
+                console.log("Sau khi dispatch:", payload);
+    
+                // Điều hướng sau khi Redux đã cập nhật
                 if (data === 'R1' || data === 'R2') {
                     navigate(ROUTES.DASHBOARD.path);
                 } else {
                     navigate(ROUTES.HOME_PAGE.path);
                 }
+    
                 toast.success('Đăng nhập thành công');
             }
         } catch (error) {
             console.error(error);
-            toast.error('Đăng nhập thất bại'); // Thêm thông báo lỗi khi Google sign in thất bại
+            toast.error('Đăng nhập thất bại');
         }
     };
+    
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-800 py-12 px-4 sm:px-6 lg:px-8">
@@ -147,7 +152,7 @@ export default function Login() {
                 <div className="w-full md:w-1/2 p-8 sm:p-12">
                     <div className="w-full max-w-md mx-auto">
                         <h2 className="text-3xl font-bold text-gray-900 text-center mb-8">
-                            Welcome Back
+                            Chào mừng trở lại
                         </h2>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
@@ -156,7 +161,7 @@ export default function Login() {
                                     htmlFor="username"
                                     className="block text-sm font-medium text-gray-700"
                                 >
-                                    Username
+                                    Tên đăng nhập /  Email
                                 </label>
                                 <div className="mt-1">
                                     <input
@@ -179,7 +184,7 @@ export default function Login() {
                                     htmlFor="password"
                                     className="block text-sm font-medium text-gray-700"
                                 >
-                                    Password
+                                    Mật khẩu
                                 </label>
                                 <div className="mt-1 relative">
                                     <input
@@ -213,7 +218,7 @@ export default function Login() {
                                     type="button"
                                     className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
                                 >
-                                    Forgot your password?
+                                    Quên mật khẩu?
                                 </button>
                             </Link>
 
@@ -225,7 +230,7 @@ export default function Login() {
                                 {isLoading ? (
                                     <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                 ) : (
-                                    "Sign In"
+                                    "Đăng nhập"
                                 )}
                             </button>
 
@@ -243,7 +248,7 @@ export default function Login() {
                                     <div className="w-full border-t border-gray-300"></div>
                                 </div>
                                 <div className="relative flex justify-center text-sm">
-                                    <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                                    <span className="px-2 bg-white text-gray-500">Hoặc tiếp tục với</span>
                                 </div>
                             </div>
 
@@ -253,7 +258,7 @@ export default function Login() {
                                 className="w-full flex items-center justify-center gap-2 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                             >
                                 <FcGoogle className="w-5 h-5" />
-                                Sign in with Google
+                                Đăng nhập với Google
                             </button>
 
                             <Link to="/">
