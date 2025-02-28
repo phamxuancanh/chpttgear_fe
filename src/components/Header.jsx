@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/anchor-is-valid */
 import React, { useEffect, useState, useRef } from "react";
 import { FiShoppingCart, FiUser, FiMenu, FiBell } from "react-icons/fi";
 import { FaPlus, FaMinus } from "react-icons/fa";
@@ -5,6 +6,7 @@ import { IoMdArrowDropdown } from "react-icons/io";
 import LOGO from "../assets/logo.png"
 import { Link, useNavigate } from "react-router-dom";
 import { calculateShippingFee, getSuggestions, signOut } from "../routers/ApiRoutes";
+import { IoMenu } from "react-icons/io5";
 import ROUTES from '../constants/Page';
 import { toast } from "react-toastify";
 import { useDispatch } from 'react-redux';
@@ -14,6 +16,8 @@ import { FiSearch } from "react-icons/fi";
 
 import { logout, setToken } from '../redux/authSlice';
 import Loading from "../utils/Loading";
+import { useCategory } from "../context/CategoryContext";
+
 export default function Header() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -31,6 +35,8 @@ export default function Header() {
     const [suggestions, setSuggestions] = useState([]);
     const searchRef = useRef(null);
     const [loading, setLoading] = useState(false)
+    const { isCategoryOpen, setIsCategoryOpen } = useCategory();
+
     const fetchSuggestions = debounce(async (value) => {
         try {
             const response = await getSuggestions(value);
@@ -40,11 +46,8 @@ export default function Header() {
             console.error('Error fetching suggestions:', error);
         }
     }, 1000);
-    console.log(suggestions);
 
     const handleSearchClick = async () => {
-        // const response = await searchProducts({ params: { search: searchTerm } });
-        // console.log(response.data);
         setSuggestions([])
         const encodedSearchTerm = encodeURIComponent(searchTerm);
         navigate(`${ROUTES.SEARCH_RESULTS.path}?name=${encodedSearchTerm}`);
@@ -66,28 +69,6 @@ export default function Header() {
             handleSearchClick();
         }
     };
-    const products = [
-        {
-            name: "Microcontrollers",
-            subItems: ["Arduino", "Raspberry Pi", "ESP32", "STM32"]
-        },
-        {
-            name: "Sensors",
-            subItems: ["Temperature", "Humidity", "Motion", "Pressure"]
-        },
-        {
-            name: "LED Components",
-            subItems: ["RGB LEDs", "LED Strips", "LED Modules", "Drivers"]
-        },
-        {
-            name: "Resistors & Capacitors",
-            subItems: ["Carbon Film", "Metal Film", "Ceramic", "Electrolytic"]
-        },
-        {
-            name: "Development Boards",
-            subItems: ["NodeMCU", "Arduino Nano", "Mega 2560", "PIC"]
-        }
-    ];
 
     const [cartItems, setCartItems] = useState([
         {
@@ -128,6 +109,7 @@ export default function Header() {
 
 
     const setDropdownProduct = () => {
+        setIsCategoryOpen(!isCategoryOpen)
         setShowProductDropdown(!showProductDropdown)
         setShowCartDropdown(false)
         setShowUserDropdown(false)
@@ -205,6 +187,7 @@ export default function Header() {
         function handleClickOutside(event) {
             if (searchRef.current && !searchRef.current.contains(event.target)) {
                 setSuggestions([]);
+                setShowProductDropdown(false)
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
@@ -214,53 +197,32 @@ export default function Header() {
     }, []);
     return (
         <div>
-            {loading ? <Loading /> : <nav className="bg-black text-white shadow-lg py-2 sticky z-10 flex items-center justify-center">
+            {loading ? <Loading /> : <nav className="bg-black text-white shadow-lg py-2 sticky flex items-center justify-center z-20">
                 <div className="w-11/12">
-                    <div className="flex items-center justify-between h-16 ">
-                        <Link to="/">
-                            <img src={LOGO} width={150} height={150} />
-                        </Link>
-                        <div className="hidden md:flex items-center space-x-8 w-3/5">
-                            <Link to="/" onClick={handleLinkClick} className="hover:text-blue-400 transition duration-300">
-                                Trang chủ
+                    <div className="w-full flex items-center justify-between h-16  ">
+                        <div className="w-1/12 ">
+                            <Link to="/">
+                                <img src={LOGO} width={150} height={150} />
                             </Link>
-                            <div className="relative">
+                        </div>
+                        <div className="hidden md:flex w-8/12 items-center space-x-5  justify-between px-8">
+                            <Link
+                                to="/"
+                                onClick={handleLinkClick}
+                                className="relative  font-semibold text-white px-4 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-indigo-500 hover:to-blue-500 transition-all duration-300 shadow-lg hover:shadow-xl text-base w-2/12 flex justify-center items-center"
+                            >
+                                <p className="text-base">Trang chủ</p>
+                            </Link>
+                            <div className="relative w-3/12 ">
                                 <button
-                                    className="hover:text-blue-400 transition duration-300 flex items-center"
-                                    onClick={() => setDropdownProduct()}
+                                    className="relative group flex items-center gap-2 font-semibold text-white px-4 py-3 rounded-lg bg-gradient-to-r from-red-500 to-pink-500 hover:from-pink-500 hover:to-red-500 transition-all duration-300 shadow-lg hover:shadow-xl text-base  "
+                                    onClick={() => setDropdownProduct(!showProductDropdown)}
                                 >
-                                    Sản phẩm
-                                    <IoMdArrowDropdown className="ml-1" />
+                                    <IoMenu className={`text-xl  transition-transform duration-300 ${showProductDropdown ? "rotate-90" : ""}`} />
+                                    <span>Danh mục</span>
                                 </button>
-                                {showProductDropdown && (
-                                    <div
-                                        className="absolute z-50 mt-2 w-48 rounded-md shadow-lg bg-white text-black"
-                                    >
-                                        {products.map((product, index) => (
-                                            <div key={index} className="relative group">
-                                                <Link onClick={handleLinkClick}
-                                                    to="/products"
-                                                    className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
-                                                >
-                                                    {product.name}
-                                                </Link>
-                                                <div className="absolute left-full top-0 w-48 hidden group-hover:block rounded-md shadow-lg bg-white text-black">
-                                                    {product.subItems.map((subItem, subIndex) => (
-                                                        <Link to="/products" onClick={handleLinkClick}
-                                                            key={subIndex}
-
-                                                            className="block px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-600 transition duration-300"
-                                                        >
-                                                            {subItem}
-                                                        </Link>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
                             </div>
-                            <div className="container mx-auto px-4 py-4 flex items-center justify-between text-black w-6/12">
+                            <div className="container w-7/12 mx-auto px-4 py-4 flex items-center justify-between text-black ">
                                 <div className="flex-1 w-10/12 flex items-center" ref={searchRef}>
 
                                     <div className="relative flex-grow">
@@ -290,18 +252,21 @@ export default function Header() {
                                     </div>
                                     <button
                                         onClick={handleSearchClick}
-                                        className="ml-1 px-4 py-2 w-[13vh] bg-green-200 text-base font-semibold  text-black rounded-md hover:bg-primary-dark transition-colors"
+                                        className="ml-1 px-4 py-2 w-[15vh] bg-green-200 text-base font-semibold  text-black rounded-md hover:bg-primary-dark transition-colors"
                                     >
                                         Tìm kiếm
                                     </button>
                                 </div>
                             </div>
-                            <a href="#" className="hover:text-blue-400 transition duration-300">
+                            <a
+                                href="#"
+                                className="relative font-semibold w-[17vh] flex justify-center items-center text-white px-4 py-3 rounded-lg bg-gradient-to-r from-green-500 to-teal-500 hover:from-teal-500 hover:to-green-500 transition-all duration-300 shadow-lg hover:shadow-xl"
+                            >
                                 Tin tức
                             </a>
                         </div>
 
-                        <div className="hidden md:flex items-center space-x-6">
+                        <div className="w-3/12 hidden md:flex items-center justify-between px-10 space-x-6 ">
                             <div className="relative">
                                 <button
                                     className="hover:text-blue-400 transition duration-300"
@@ -498,34 +463,6 @@ export default function Header() {
                                 Sản phẩm
                                 <IoMdArrowDropdown />
                             </button>
-
-                            {isDropdownOpen && (
-                                <div className="pl-4 space-y-1">
-                                    {products.map((product, index) => (
-                                        <div key={index}>
-                                            <Link to="/products"
-                                                onClick={handleLinkClick}
-                                                href="#"
-                                                className="block px-3 py-2 rounded-md text-gray-300 hover:bg-gray-900 transition duration-300"
-                                            >
-                                                {product.name}
-                                            </Link>
-                                            <div className="pl-4">
-                                                {product.subItems.map((subItem, subIndex) => (
-                                                    <Link to="/products"
-                                                        onClick={handleLinkClick}
-                                                        key={subIndex}
-
-                                                        className="block px-3 py-2 rounded-md text-gray-400 hover:bg-gray-900 transition duration-300"
-                                                    >
-                                                        {subItem}
-                                                    </Link>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
                             <a
                                 href="#"
                                 className="block px-3 py-2 rounded-md hover:bg-gray-900 transition duration-300"
@@ -557,7 +494,6 @@ export default function Header() {
                                         ))}
                                     </div>
                                 )}
-
                             </div>
                             <div className=" space-x-4 px-3 py-2">
                                 <button

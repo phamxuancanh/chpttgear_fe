@@ -26,7 +26,6 @@
     "react-helmet": "^6.1.0",
     "react-icons": "^5.4.0",
     "react-intersection-observer": "^9.15.1",
-    "react-lazyload": "^3.2.1",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.1.1",
     "react-scripts": "5.0.1",
