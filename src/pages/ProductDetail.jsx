@@ -228,84 +228,62 @@ export default function ProductDetail() {
                 <div className="grid md:grid-cols-2 gap-8 mb-12">
                     {/* <ImageGallery items={images} /> */}
                     <div className="w-full max-w-3xl mx-auto">
-                    <div className="w-full h-[40vh] flex items-center justify-center rounded-xl overflow-hidden shadow-lg mb-4 bg-red-100 relative">
-    {/* Nút điều hướng trái */}
-    <button
-        onClick={() => setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length)}
-        className="absolute inset-y-1/2 -left-4 transform -translate-y-1/2 bg-white p-3 rounded-full shadow-lg hover:scale-110 transition-all duration-200"
-    >
-        <FaArrowLeft className="text-gray-600 text-xl" />
-    </button>
+                        {/* Hình ảnh lớn */}
+                        <div className="relative w-full h-[50vh] flex items-center justify-center rounded-xl overflow-hidden shadow-xl mb-6 bg-gray-100">
+                            <button
+                                onClick={() => setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length)}
+                                className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-white p-3 rounded-full shadow-md hover:scale-110 transition-all duration-200 z-10"
+                            >
+                                <FaArrowLeft className="text-gray-600 text-xl" />
+                            </button>
 
-    {/* LightGallery - Click ảnh lớn để phóng to */}
-    <LightGallery plugins={[lgThumbnail, lgZoom]}>
-        {images.map((src, index) => (
-            <a key={index} href={src} className={index === currentImageIndex ? "block" : "hidden"}>
-                <img
-                    src={src}
-                    alt={`Ảnh ${index + 1}`}
-                    className="w-full h-[40vh] object-contain rounded-xl shadow-lg transition-all duration-300"
-                />
-            </a>
-        ))}
-    </LightGallery>
+                            <LightGallery plugins={[lgThumbnail, lgZoom]}>
+                                {images.map((src, index) => (
+                                    <a key={index} href={src} className={index === currentImageIndex ? "block" : "hidden"}>
+                                        <img
+                                            src={src}
+                                            alt={`Ảnh ${index + 1}`}
+                                            className="w-full h-[50vh] object-contain rounded-xl transition-all duration-300 flex items-center justify-center"
+                                        />
+                                    </a>
+                                ))}
+                            </LightGallery>
 
-    {/* Nút điều hướng phải */}
-    <button
-        onClick={() => setCurrentImageIndex((prev) => (prev + 1) % images.length)}
-        className="absolute inset-y-1/2 -right-4 transform -translate-y-1/2 bg-white p-3 rounded-full shadow-lg hover:scale-110 transition-all duration-200"
-    >
-        <FaArrowRight className="text-gray-600 text-xl" />
-    </button>
-</div>
-
+                            <button
+                                onClick={() => setCurrentImageIndex((prev) => (prev + 1) % images.length)}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-white p-3 rounded-full shadow-md hover:scale-110 transition-all duration-200 z-10"
+                            >
+                                <FaArrowRight className="text-gray-600 text-xl" />
+                            </button>
+                        </div>
 
                         {/* Slider Thumbnail */}
                         <Swiper
-                            spaceBetween={15}
-                            slidesPerView={3}
+                            spaceBetween={10} // Giữ khoảng cách hợp lý
+                            slidesPerView={4}
                             navigation
                             modules={[Navigation]}
-                            className="mt-4 px-2"
+                            className="mt-3 px-4"
                         >
                             {images.map((src, index) => (
-                                <SwiperSlide key={index}>
-                                    <img
-                                        src={src}
-                                        className={`w-20 h-20 object-cover rounded-lg cursor-pointer border-2 transition-all duration-200 ${index === currentImageIndex
-                                                ? "border-blue-500 shadow-md scale-110"
-                                                : "border-gray-300 hover:border-gray-500"
-                                            }`}
-                                        onClick={() => setCurrentImageIndex(index)}
-                                        alt={`Thumbnail ${index + 1}`}
-                                    />
+                                <SwiperSlide key={index} className="flex items-center justify-center">
+                                    <div className="flex items-center justify-center w-full h-24">
+                                        <img
+                                            src={src}
+                                            className={`max-w-24 max-h-24 object-cover rounded-md cursor-pointer border-2 transition-all duration-200 ${index === currentImageIndex
+                                                    ? "border-blue-500"
+                                                    : "border-gray-300 hover:border-gray-400"
+                                                }`}
+                                            onClick={() => setCurrentImageIndex(index)}
+                                            alt={`Thumbnail ${index + 1}`}
+                                        />
+                                    </div>
                                 </SwiperSlide>
                             ))}
                         </Swiper>
+
+
                     </div>
-                    {/* Image Carousel */}
-                    {/* <div className="relative flex justify-center items-center  rounded-lg p-2">
-                        <img
-                            src={images[currentImageIndex] || "https://images.unsplash.com/photo-1595044426077-d36d9236d54a"}
-                            alt={`Product view ${currentImageIndex + 1}`}
-                            className="w-[30vh] h-[30vh] object-contain rounded-lg"
-                        />
-                        <button
-                            onClick={() => handleImageNavigation("prev")}
-                            className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-lg"
-                        >
-                            <FaArrowLeft />
-                        </button>
-                        <button
-                            onClick={() => handleImageNavigation("next")}
-                            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-lg"
-                        >
-                            <FaArrowRight />
-                        </button>
-                    </div> */}
-
-
-                    {/* Product Details */}
                     <div>
                         <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
                         <div className="flex items-center mb-4 text-lg text-orange-400">

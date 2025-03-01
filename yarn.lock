@@ -3834,6 +3834,7 @@ chokidar@^3.4.2, chokidar@^3.5.3, chokidar@^3.6.0:
     firebase "^10.13.1"
     framer-motion "^12.4.7"
     jwt-decode "^4.0.0"
+    lightgallery "^2.8.2"
     lightgallery.js "^1.4.0"
     react "^19.0.0"
     react-avatar-editor "^13.0.2"
