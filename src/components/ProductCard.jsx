@@ -9,7 +9,7 @@ export default function ProductCard({ product }) {
             <Link to={`/product/${product.id}`}>
                 <div className="flex justify-center items-center h-[30vh]">
                     <img
-                        src={product.image.split(',')[0] || "https://via.placeholder.com/150"}
+                        src={product.image.split(',')[0]}
                         alt={product.name}
                         loading="lazy"
                         className="w-[30vh] h-[30vh] object-cover rounded-lg"

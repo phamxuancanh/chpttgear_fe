@@ -337,7 +337,7 @@ export const getQuantityInStock = async (product_id) => {
 export const findCartByUserId = async (userId) => {
     return await requestWithJwt.get(`/carts/findByUserId/${userId}`);
 };
-export const findCartItemsByCartId = async (cartId) => { 
+export const findCartItemsByCartId = async (cartId) => {
     return await requestWithJwt.get(`/carts/cart_items/findByCartId/${cartId}`);
 };
 export const updateQuantityCartItem = async (cartItemId, payload) => {
@@ -378,9 +378,10 @@ export const getOrderById = async (orderId) => {
     return await requestWithJwt.get(`/orders/${orderId}`);
 };
 
-export const getOrdersByUserId = async (userId) => {
-    return await requestWithJwt.get(`/orders/orders/${userId}`);
+export const getOrdersByUserId = async (userId, page = 1, limit = 5) => {
+    return await requestWithJwt.get(`/orders/orders/${userId}?page=${page}&limit=${limit}`);
 };
+
 
 export const createOrder = async (payload) => {
     return await requestWithJwt.post(`/orders/`, payload);
@@ -412,43 +413,39 @@ export const deleteOrderItem = async (orderItemId) => {
     return await requestWithJwt.delete(`/orders/order-items/${orderItemId}`);
 };
 
-// import axios from "axios";
-
-export const calculateShippingFee = async () => {
+export const calculateShippingFee = async (fromDistrictId, fromWardCode, toDistrictId, toWardCode) => {
     try {
-        const response = await axios.post(
-            "https://dev-online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee",
-            {
-                service_id: 53321,
-                insurance_value: 500000,
-                coupon: null,
-                from_district_id: 1542,
-                to_district_id: 1444,
-                to_ward_code: 20314,
-                height: 15,
-                length: 15,
-                weight: 1000,
-                width: 15
-            },
-            {
-                headers: {
-                    "Content-Type": "application/json",
-                    "Token": "aa43f060-d157-11ef-b2e4-6ec7c647cc27",
-                    "ShopId": "195800"
-                }
-            }
-        );
+        const response = await requestWithJwt.post(`/orders/calculate-fee`, {
+            service_id: 53321,
+            from_district_id: fromDistrictId,
+            from_ward_code: fromWardCode,
+            to_district_id: toDistrictId,
+            to_ward_code: toWardCode,
+            height: 50,
+            length: 20,
+            weight: 1000,
+            width: 20,
+            insurance_value: 10000
+        });
 
         return response.data?.data?.total || 0;
     } catch (error) {
-        console.error("Error calculating shipping fee:", error);
-        return 0;
+        console.error("Lỗi khi gọi API GHN:", error);
+        throw error.response?.data || { message: "Lỗi khi gọi API GHN" };
     }
 };
 
+export const getPaypalSuccess = async (orderId, token, payerID) => {
+    return await requestWithJwt.get(
+        `/orders/paypal/success?orderId=${orderId}&token=${token}&PayerID=${payerID}`
+    );
+};
 
-
-
+export const getPaypalCancel = async (orderId) => {
+    return await requestWithJwt.get(
+        `/orders/paypal/cancel?orderId=${orderId}`
+    );
+};
 // paymentService
 
 // shippingService

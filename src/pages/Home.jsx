@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { findAllCategory, getAllProduct, getSuggestions } from "../routers/ApiRoutes";
 import { Pagination } from '@mui/material'
 import { styled } from '@mui/system'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import ROUTES from '../constants/Page';
 import { debounce, set } from 'lodash'
 import Loading from "../utils/Loading";
@@ -114,12 +114,17 @@ export default function Home() {
     };
     const [categoriesFromDB, setCategoriesFromDB] = useState([]);
     const { isCategoryOpen, setIsCategoryOpen } = useCategory();
+    const [selectedCategory, setSelectedCategory] = useState(null);
+
+    const handleCategoryClick = (category) => {
+        setSelectedCategory((prevCategory) => (prevCategory === category ? null : category));
+    };
+
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const res = await findAllCategory();
-                console.log(res.data);
                 setCategoriesFromDB(res.data);
             } catch (error) {
                 console.error("Error fetching categories:", error);
@@ -201,6 +206,7 @@ export default function Home() {
         function handleClickOutside(event) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setIsCategoryOpen(false); // Click ra ngoài thì menu mờ đi, không ẩn
+                setSelectedCategory(null)
             }
         }
 
@@ -215,43 +221,47 @@ export default function Home() {
             {isCategoryOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 z-10 transition-opacity duration-500"></div>
             )}
+
             {loading ? <Loading /> :
                 <div className="container mx-auto bg-white  w-11/12 rounded-lg  px-4 py-1">
-                    <div className="w-full flex justify-center px-5 py-2" onMouseLeave={() => setHoveredCategory(null)}>
-                        <div className="w-2/12 flex justify-center ">
-                            <img src={BANNER2} alt="" className="w-fit h-[80vh] rounded-lg mr-4" />
-                        </div>
-                        <div
-                            ref={dropdownRef}
-                            className={`w-2/12 bg-white p-4 rounded-lg shadow-md relative z-20 transition-opacity duration-500 
-                        ${isCategoryOpen ? "opacity-100" : "opacity-100"}`}
-                        >
-                            {categoriesFromDB.map((category) => (
-                                <div
-                                    key={category.id}
-                                    className={`text-sm cursor-pointer font-bold rounded-lg px-4 py-3 flex items-center justify-between
-                    ${hoveredCategory === category.name ? "text-white bg-red-600" : "text-black hover:text-white hover:bg-red-600"}`}
-                                    onMouseEnter={() => setHoveredCategory(category.name)}
-                                >
-                                    {category.name}
-                                    <IoIosArrowForward className="text-sm" />
-                                </div>
-                            ))}
-                        </div>
-                        <div className="w-8/12 relative">
-                            {hoveredCategory && (
-                                <div className="absolute inset-0 bg-white text-black font-medium z-10 p-6 rounded-lg shadow-lg">
+                    <div className="w-full flex justify-center px-5 py-2 relative">
+                        <div className="w-2/12 flex relative z-50 mr-5">
+                            <div
+                                ref={dropdownRef}
+                                className="w-full bg-white p-4 rounded-lg shadow-md transition-opacity duration-500"
+                            >
+                                {categoriesFromDB.slice(10, 20).map((category) => (
+                                    <div
+                                        key={category.id}
+                                        className={`text-sm cursor-pointer font-bold rounded-lg px-4 py-3 flex items-center justify-between
+                                ${selectedCategory === category.name ? "text-white bg-red-600" : "text-black hover:text-white hover:bg-red-600 mt-1"}`}
+                                        onClick={() => handleCategoryClick(category.name)}
+                                    >
+                                        {category.name}
+                                        <IoIosArrowForward className="text-sm" />
+                                    </div>
+                                ))}
+                            </div>
+                            {selectedCategory && (
+                                <div className="absolute left-full top-0 w-[75vw] h-full ml-2 bg-white text-black font-medium p-6 rounded-lg shadow-2xl z-50 
+                                transition-all duration-300 scale-100 overflow-auto" >
                                     <div className="grid grid-cols-5 gap-6">
-                                        {specDefinitions[hoveredCategory] && specDefinitions[hoveredCategory].length > 0 ? (
-                                            specDefinitions[hoveredCategory].map(({ key, value, options }) => (
+                                        {specDefinitions[selectedCategory] && specDefinitions[selectedCategory].length > 0 ? (
+                                            specDefinitions[selectedCategory].map(({ key, value, options }) => (
                                                 <div key={key} className="flex flex-col space-y-2">
                                                     <span className="font-bold text-red-600">{value}</span>
                                                     <div className="flex flex-col space-y-1">
-                                                        {options.map((option) => (
-                                                            <span key={option} className="text-gray-700 hover:text-red-600 duration-300 cursor-pointer">
-                                                                {option}
-                                                            </span>
-                                                        ))}
+                                                        <div className="flex flex-col space-y-1">
+                                                            {options.map((option) => (
+                                                                <Link
+                                                                    key={option}
+                                                                    to="/products"
+                                                                    className="text-gray-700 hover:text-red-600 duration-300 cursor-pointer block"
+                                                                >
+                                                                    {option}
+                                                                </Link>
+                                                            ))}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))
@@ -261,11 +271,13 @@ export default function Home() {
                                     </div>
                                 </div>
                             )}
-
-
+                        </div>
+                        <div className="w-8/12 relative z-10">
                             <div className="relative w-full h-[40vh] flex items-center justify-center rounded-lg overflow-hidden shadow-lg bg-black">
+                                {isCategoryOpen && (
+                                    <div className="fixed inset-0 bg-black bg-opacity-50 z-10 transition-opacity duration-500"></div>
+                                )}
                                 <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-black opacity-60"></div>
-
                                 <AnimatePresence mode="wait">
                                     <motion.img
                                         key={currentImageIndex}
@@ -278,14 +290,12 @@ export default function Home() {
                                         transition={{ duration: 0.7 }}
                                     />
                                 </AnimatePresence>
-
                                 <button
                                     onClick={() => handleImageNavigation("prev")}
                                     className="absolute left-4 text-white p-3 bg-gray-900/50 rounded-full hover:bg-gray-800 transition"
                                 >
                                     <GrPrevious size={24} />
                                 </button>
-
                                 <button
                                     onClick={() => handleImageNavigation("next")}
                                     className="absolute right-4 text-white p-3 bg-gray-900/50 rounded-full hover:bg-gray-800 transition"
@@ -293,12 +303,16 @@ export default function Home() {
                                     <GrNext size={24} />
                                 </button>
                             </div>
-
                             <div className="w-full">
                                 <img src={BANNER3} alt="" className="w-full h-fit rounded-lg mt-10" />
                             </div>
                         </div>
-
+                        <div className="w-2/12 flex justify-center ml-5 relative z-10">
+                            {isCategoryOpen && (
+                                <div className="fixed inset-0 bg-black bg-opacity-50 z-10 transition-opacity duration-500"></div>
+                            )}
+                            <img src={BANNER2} alt="" className="w-fit h-[80vh] rounded-lg mr-4" />
+                        </div>
                     </div>
                     <section className="mb-12">
 

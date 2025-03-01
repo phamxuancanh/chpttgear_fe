@@ -21,7 +21,7 @@ export default function Footer() {
         {
             icon: <FaCreditCard className="text-red-500 text-3xl" />,
             title: "THANH TOÁN TIỆN LỢI",
-            description: "Trả tiền mặt, CK, trả góp 0%",
+            description: "Trả tiền mặt, Thanh toán bằng Paypal",
         },
         {
             icon: <FaComments className="text-red-500 text-3xl" />,
