@@ -343,12 +343,20 @@ export const findCartItemsByCartId = async (cartId) => {
 export const updateQuantityCartItem = async (cartItemId, payload) => {
     try {
         console.log("1234", cartItemId, payload);
-        return await requestWithJwt.put(`/carts/cart_items/updateQuantityByCartItemId/${cartItemId}`,
-            payload.toString(), // Chuyển số thành chuỗi
-            { headers: { "Content-Type": "text/plain" } }
+        return await requestWithJwt.put(`/carts/cart_items/updateQuantityByCartItemId/${cartItemId}`, 
+        { newQuantity: payload },
+        {headers: { 'Content-Type': 'application/json' } }
         );
     } catch (error) {
         console.error('Error updating quantity:', error);
+        throw error;
+    }
+};
+export const deleteCart = async (cartId) => {
+    try {
+        return await requestWithJwt.delete(`/carts/deleteByCartId/${cartId}`);
+    } catch (error) {
+        console.error('Error deleting cart:', error);
         throw error;
     }
 };
