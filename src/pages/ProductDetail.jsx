@@ -8,7 +8,21 @@ import { findProductById, findSpecificationsByProductId, getQuantityInStock, get
 import { FaDongSign, FaCashRegister } from "react-icons/fa6";
 import Loading from "../utils/Loading";
 import { FiShoppingCart } from "react-icons/fi";
+import ImageGallery from "react-image-gallery";
+import "react-image-gallery/styles/css/image-gallery.css";
 
+import LightGallery from "lightgallery/react";
+import "lightgallery/css/lightgallery.css";
+import "lightgallery/css/lg-zoom.css";
+import "lightgallery/css/lg-thumbnail.css";
+
+import lgThumbnail from "lightgallery/plugins/thumbnail"
+import lgZoom from "lightgallery/plugins/zoom";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import { Navigation } from "swiper/modules";
 
 export default function ProductDetail() {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -24,6 +38,7 @@ export default function ProductDetail() {
     const [images, setImages] = useState([])
     const [loading, setLoading] = useState(false)
     const [specs, setspecs] = useState([])
+
     const scrollToReviews = () => {
         console.log("a")
         if (reviewsRef.current) {
@@ -31,6 +46,11 @@ export default function ProductDetail() {
         }
     };
 
+    const images2 = [
+        { original: "https://canhbk29.s3.ap-southeast-2.amazonaws.com/defaultAVT.jpg", thumbnail: "url_thumbnail_1" },
+        { original: "https://canhbk29.s3.ap-southeast-2.amazonaws.com/defaultAVT.jpg", thumbnail: "url_thumbnail_2" },
+    ];
+    const images3 = ["https://canhbk29.s3.ap-southeast-2.amazonaws.com/defaultAVT.jpg", "https://canhbk29.s3.ap-southeast-2.amazonaws.com/defaultAVT.jpg"];
 
     // useEffect(() => {
     //     const fetchData = async () => {
@@ -134,7 +154,6 @@ export default function ProductDetail() {
             image: "https://images.unsplash.com/photo-1587202372599-36e756f1a00e"
         }
     ];
-
     const ratings = [
         { product_id: 4090, user: "John Doe", score: 2, comment: "được tặng 2 thanh ram là có lắp vô máy chưa ad, nếu mua thêm ổ cứng ssd thì có gắn vô dùm không? hay phải tự mình gắn, còn cài win nữa?", date: "2024-01-15" },
         { product_id: 4090, user: "Jane Smith", score: 2.5, comment: "Lên tảng nước aio thì sao admin nhỉ", date: "2024-01-10" },
@@ -142,8 +161,6 @@ export default function ProductDetail() {
         { product_id: 4090, user: "Bob Williams", score: 2.2, comment: "Good but a bit pricey.", date: "2024-02-01" },
         { product_id: 4090, user: "Charlie Brown", score: 2, comment: "Worth every penny!", date: "2024-02-08" }
     ];
-
-
 
     const handleImageNavigation = (direction) => {
         if (direction === "next") {
@@ -209,29 +226,64 @@ export default function ProductDetail() {
             {loading ? <Loading /> : <main className="container mx-auto px-4 pt-24 pb-12 w-10/12">
                 {/* Product Information */}
                 <div className="grid md:grid-cols-2 gap-8 mb-12">
-                    {/* Image Carousel */}
-                    <div className="relative flex justify-center items-center  rounded-lg p-2">
-                        <img
-                            src={images[currentImageIndex] || "https://images.unsplash.com/photo-1595044426077-d36d9236d54a"}
-                            alt={`Product view ${currentImageIndex + 1}`}
-                            className="w-[30vh] h-[30vh] object-contain rounded-lg"
-                        />
-                        <button
-                            onClick={() => handleImageNavigation("prev")}
-                            className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-lg"
+                    {/* <ImageGallery items={images} /> */}
+                    <div className="w-full max-w-3xl mx-auto">
+                        {/* Hình ảnh lớn */}
+                        <div className="relative w-full h-[50vh] flex items-center justify-center rounded-xl overflow-hidden shadow-xl mb-6 bg-gray-100">
+                            <button
+                                onClick={() => setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length)}
+                                className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-white p-3 rounded-full shadow-md hover:scale-110 transition-all duration-200 z-10"
+                            >
+                                <FaArrowLeft className="text-gray-600 text-xl" />
+                            </button>
+
+                            <LightGallery plugins={[lgThumbnail, lgZoom]}>
+                                {images.map((src, index) => (
+                                    <a key={index} href={src} className={index === currentImageIndex ? "block" : "hidden"}>
+                                        <img
+                                            src={src}
+                                            alt={`Ảnh ${index + 1}`}
+                                            className="w-full h-[50vh] object-contain rounded-xl transition-all duration-300 flex items-center justify-center"
+                                        />
+                                    </a>
+                                ))}
+                            </LightGallery>
+
+                            <button
+                                onClick={() => setCurrentImageIndex((prev) => (prev + 1) % images.length)}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-white p-3 rounded-full shadow-md hover:scale-110 transition-all duration-200 z-10"
+                            >
+                                <FaArrowRight className="text-gray-600 text-xl" />
+                            </button>
+                        </div>
+
+                        {/* Slider Thumbnail */}
+                        <Swiper
+                            spaceBetween={10} // Giữ khoảng cách hợp lý
+                            slidesPerView={4}
+                            navigation
+                            modules={[Navigation]}
+                            className="mt-3 px-4"
                         >
-                            <FaArrowLeft />
-                        </button>
-                        <button
-                            onClick={() => handleImageNavigation("next")}
-                            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-lg"
-                        >
-                            <FaArrowRight />
-                        </button>
+                            {images.map((src, index) => (
+                                <SwiperSlide key={index} className="flex items-center justify-center">
+                                    <div className="flex items-center justify-center w-full h-24">
+                                        <img
+                                            src={src}
+                                            className={`max-w-24 max-h-24 object-cover rounded-md cursor-pointer border-2 transition-all duration-200 ${index === currentImageIndex
+                                                    ? "border-blue-500"
+                                                    : "border-gray-300 hover:border-gray-400"
+                                                }`}
+                                            onClick={() => setCurrentImageIndex(index)}
+                                            alt={`Thumbnail ${index + 1}`}
+                                        />
+                                    </div>
+                                </SwiperSlide>
+                            ))}
+                        </Swiper>
+
+
                     </div>
-
-
-                    {/* Product Details */}
                     <div>
                         <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
                         <div className="flex items-center mb-4 text-lg text-orange-400">
