@@ -125,7 +125,6 @@ export default function Home() {
         const fetchData = async () => {
             try {
                 const res = await findAllCategory();
-                console.log(res.data);
                 setCategoriesFromDB(res.data);
             } catch (error) {
                 console.error("Error fetching categories:", error);

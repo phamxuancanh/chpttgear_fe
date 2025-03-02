@@ -1,10 +1,10 @@
 import { combineReducers } from "redux";
 import  persistedReducer  from "./authSlice";
-import persisteCartdReducer from "./cartSlice";
+import persistedCartReducer from "./cartSlice";
 
 const rootReducer = combineReducers({
   auth: persistedReducer,
-  shoppingCart: persisteCartdReducer,
+  shoppingCart: persistedCartReducer,
 });
 
 export default rootReducer;

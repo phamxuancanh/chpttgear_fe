@@ -7,6 +7,8 @@ import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import ChatButton from "../components/ChatButton";
 import loadable from '@loadable/component';
 import Loading from "../components/loading";
+import PaypalSuccess from "../pages/PaypalSuccess";
+import PaypalCancel from "../pages/PaypalCancel";
 const Home = loadable(async () => {
     const module = await import('../pages/Home');
     return module;
@@ -222,6 +224,22 @@ const AppRouter = () => {
                             <Layout>
                                 <Payment />
                             </Layout>
+                        </AuthRoute>
+                    }
+                />
+                <Route
+                    path={Page.PAYMENT_SUCCESS_PAGE.path}
+                    element={
+                        <AuthRoute>
+                            <PaypalSuccess />
+                        </AuthRoute>
+                    }
+                />
+                <Route
+                    path={Page.PAYMENT_CANCEL_PAGE.path}
+                    element={
+                        <AuthRoute>
+                            <PaypalCancel />
                         </AuthRoute>
                     }
                 />
