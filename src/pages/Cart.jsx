@@ -3,71 +3,82 @@ import { FiTrash2, FiPlus, FiMinus } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useSelector, useDispatch } from "react-redux";
-import { 
-    findCartByUserId, findCartItemsByCartId, findAllProduct,
+import {
+    findCartItemsByCartId, findAllProduct,
     updateQuantityCartItem, deleteCartItem
 } from "../routers/ApiRoutes";
 import {
-    setCartRedux, setCartItemsRedux, addItemToCart, removeItemFromCart,
+    setCartRedux, setCartItemsRedux, setSelectedItemsRedux, addItemToCart, removeItemFromCart,
     increaseQuantityItem, decrementQuantityItem, clearCart
 } from "../redux/cartSlice";
+import { FaDongSign } from "react-icons/fa6";
 
 export default function Cart() {
 
     const dispatch = useDispatch();
-    const userFromRedux = useSelector((state) => state.auth.user);
-    const [cart, setCart] = useState({});
+    const selectedItemFromRedux = useSelector(state => state.shoppingCart.selectItems);
+    const cartFromRedux = useSelector((state) => state.shoppingCart.cart);
     const [cartItems, setCartItems] = useState([]);
-    const [products, setProducts] = useState([]);
+    const [selectedItems, setSelectedItems] = useState([]);
 
     useEffect(() => {
         const fetchCart = async () => {
             try {
-                const cartResponse = await findCartByUserId(userFromRedux.id);
-                if (cartResponse.data) {
-                    // Gọi API song song để tăng tốc độ
-                    const [cartItemResponse, productsResponse] = await Promise.all([
-                        findCartItemsByCartId(cartResponse.data.id),
-                        findAllProduct()
-                    ]);
-                    const cartItemsMapped = cartItemResponse.data.map(item => {
-                        const product = productsResponse.data.find(p => p.id === item.productId);
-                        return {
-                            itemId: item.id,
-                            productId: item.productId,
-                            name: product?.name,
-                            price: parseFloat(product?.price),
-                            quantity: parseInt(item.quantity),
-                            image: product?.image
-                        };
-                    });
-                    setCart(cartResponse.data);
-                    setCartItems(cartItemsMapped);
-                    dispatch(setCartRedux({ cart: cartResponse.data }));
-                    dispatch(setCartItemsRedux({ items: cartItemsMapped }));
-                }
+                console.log("cartFromRedux", cartFromRedux);
+                const [cartItemResponse, productsResponse] = await Promise.all([
+                    findCartItemsByCartId(cartFromRedux.id),
+                    findAllProduct()
+                ]);
+                const cartItemsMapped = cartItemResponse.data.map(item => {
+                    const product = productsResponse.data.find(p => p.id === item.productId);
+                    return {
+                        itemId: item.id,
+                        productId: item.productId,
+                        name: product?.name,
+                        price: parseFloat(product?.price),
+                        quantity: parseInt(item.quantity),
+                        image: product?.image
+                    };
+                });
+                setCartItems(cartItemsMapped);
+                dispatch(setCartItemsRedux({ items: cartItemsMapped }));
             } catch (error) {
-                toast.error("Failed to fetch cart or cart items");
+                toast.error("Lỗi load dữ liệu giỏ hàng");
             }
         };
-        if (userFromRedux?.id) {
+        if (cartFromRedux?.id) {
             fetchCart();
         }
-    }, [userFromRedux?.id]);
+    }, [cartFromRedux?.id]);
 
-    // const updateQuantity = (productId, newQuantity) => {
-    //     if (newQuantity < 1) return;
-    //     setCartItems(cartItems.map(item =>
-    //         item.productId === productId ? { ...item, quantity: newQuantity } : item
-    //     ));
-    // };
+    useEffect(() => {
+        if (JSON.stringify(selectedItems) !== JSON.stringify(selectedItemFromRedux)) {
+            dispatch(setSelectedItemsRedux({ selectItems: selectedItems })); // cập nhật selectedItems vào redux
+        }
+    }, [selectedItems, dispatch]);
+
+    useEffect(() => {
+        setSelectedItems(selectedItemFromRedux); // lấy selectedItems từ redux
+    }, []);
 
     const increateseQuantity = async (itemId, newQuantity) => {
         setCartItems(cartItems.map(item =>
-            item.itemId === itemId ? { ...item, quantity: newQuantity} : item
+            item.itemId === itemId ? { ...item, quantity: newQuantity } : item
         ));
         dispatch(increaseQuantityItem({ itemId }));
-        await updateQuantityCartItem(itemId, {newQuantity} );
+        try {
+            const updateResponse = await updateQuantityCartItem(itemId, newQuantity);
+            if (updateResponse.data.quantity === 0) {
+                const deleteResponse = await deleteCartItem(itemId);
+                if (deleteResponse.data) {
+                    setCartItems(cartItems.filter(item => item.itemId !== itemId));
+                    dispatch(removeItemFromCart({ itemId }));
+                }
+            };
+            toast.success("Cập nhật số lượng sản phẩm thành công");
+        } catch (error) {
+            toast.error("Lỗi cập nhật số lượng sản phẩm");
+        };
     };
 
     const decrementQuantity = async (itemId, newQuantity) => {
@@ -75,15 +86,22 @@ export default function Cart() {
             item.itemId === itemId ? { ...item, quantity: newQuantity } : item
         ));
         dispatch(decrementQuantityItem({ itemId }));
-        console.log(newQuantity);
-        console.log(typeof newQuantity);
-        const updateResponse = await updateQuantityCartItem(itemId, newQuantity);
-        if (updateResponse.data.quantity === 0) {
-            const deleteResponse = await deleteCartItem(itemId);
-            if (deleteResponse.data) {
-                setCartItems(cartItems.filter(item => item.itemId !== itemId));
-                dispatch(removeItemFromCart({ itemId }));
-            }
+        try {
+            const updateResponse = await updateQuantityCartItem(itemId, newQuantity);
+            if (updateResponse.data.quantity === 0) {
+                const deleteResponse = await deleteCartItem(itemId);
+                if (deleteResponse.data) {
+                    setCartItems(cartItems.filter(item => item.itemId !== itemId));
+                    dispatch(removeItemFromCart({ itemId }));
+                    console.log("length", cartItems.length);
+                    // if (cartItems.length === 0) {
+                    //   dispatch(clearCart());
+                    // };
+                };
+            };
+            toast.success("Cập nhật số lượng sản phẩm thành công");
+        } catch (error) {
+            toast.error("Lỗi cập nhật số lượng sản phẩm");
         };
     };
 
@@ -96,9 +114,24 @@ export default function Cart() {
         return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
     };
 
+    const handlerSelectItem = (e, item) => {
+        console.log("e", e);
+        if (e.target.checked) {
+            setSelectedItems([...selectedItems, item]);
+        } else {
+            setSelectedItems(selectedItems.filter(i => i.itemId !== item.itemId));
+        };
+    };
+
     const CartItem = ({ item }) => (
         <div className="flex items-center justify-between p-4 mb-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
             <div className="flex items-center space-x-4 flex-1">
+                <input
+                    className="accent-red-400 w-5 h-5 m-2"
+                    type="checkbox"
+                    checked={Array.isArray(selectedItemFromRedux) && selectedItemFromRedux.some(i => i.itemId === item.itemId)}
+                    onChange={(e) => handlerSelectItem(e, item)}
+                />
                 <img
                     src={item.image}
                     alt={item.name}
@@ -109,8 +142,8 @@ export default function Cart() {
                 />
                 <div className="flex-1">
                     <h3 className="text-lg font-semibold text-gray-800">{item.name}</h3>
-                    <p className="text-gray-600">${item.price.toFixed(2)}</p>
-                    <div className="flex items-center space-x-2 mt-2">
+                    <p className="text-gray-600">{item.price.toFixed(2)}</p>
+                    <div className="flex items-center space-x- mt-2">
                         <button
                             onClick={() => decrementQuantity(item.itemId, item.quantity - 1)}
                             className="p-1 rounded-full hover:bg-gray-100"
@@ -160,8 +193,11 @@ export default function Cart() {
                                         <span>{cartItems.reduce((acc, item) => acc + item.quantity, 0)}</span>
                                     </div>
                                     <div className="flex justify-between text-xl font-bold">
-                                        <span>Tổng thanh toán:</span>
-                                        <span>${calculateTotal().toFixed(2)}</span>
+                                        <span>Tổng tiền:</span>
+                                        <div className="flex items-center space-x-2">
+                                            <span>{calculateTotal().toLocaleString('en-US')}</span>
+                                            <span><FaDongSign /></span>
+                                        </div>
                                     </div>
                                 </div>
                                 <Link to='/payment'>

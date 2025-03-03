@@ -17,6 +17,8 @@ import { FiSearch } from "react-icons/fi";
 import { logout, setToken } from '../redux/authSlice';
 import Loading from "../utils/Loading";
 import { useCategory } from "../context/CategoryContext";
+import { setCartRedux, setCartItemsRedux, removeItemFromCart, increaseQuantityItem, decrementQuantityItem } from "../redux/cartSlice";
+import { findCartByUserId, findCartItemsByCartId, findAllProduct, updateQuantityCartItem, deleteCartItem } from "../routers/ApiRoutes";
 
 export default function Header() {
     const dispatch = useDispatch();
@@ -30,9 +32,11 @@ export default function Header() {
     const [showUserDropdown, setShowUserDropdown] = useState(false);
     const [showBellDropdown, setShowBellDropdown] = useState(false);
     const user = useSelector((state) => state.auth.user);
+    const cartItemRedux = useSelector(state => state.shoppingCart.items);
     const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
     const [searchTerm, setSearchTerm] = useState('');
     const [suggestions, setSuggestions] = useState([]);
+    const [cartItems, setCartItems] = useState([]);
     const searchRef = useRef(null);
     const [loading, setLoading] = useState(false)
     const { isCategoryOpen, setIsCategoryOpen } = useCategory();
@@ -70,29 +74,29 @@ export default function Header() {
         }
     };
 
-    const [cartItems, setCartItems] = useState([
-        {
-            id: 1,
-            name: "Wireless Headphones",
-            price: 199.99,
-            quantity: 1,
-            image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e"
-        },
-        {
-            id: 2,
-            name: "Smart Watch",
-            price: 299.99,
-            quantity: 1,
-            image: "https://images.unsplash.com/photo-1546868871-7041f2a55e12"
-        },
-        {
-            id: 3,
-            name: "Wireless Earbuds",
-            price: 149.99,
-            quantity: 1,
-            image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df"
-        }
-    ]);
+    // const [cartItems, setCartItems] = useState([
+    //     {
+    //         id: 1,
+    //         name: "Wireless Headphones",
+    //         price: 199.99,
+    //         quantity: 1,
+    //         image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e"
+    //     },
+    //     {
+    //         id: 2,
+    //         name: "Smart Watch",
+    //         price: 299.99,
+    //         quantity: 1,
+    //         image: "https://images.unsplash.com/photo-1546868871-7041f2a55e12"
+    //     },
+    //     {
+    //         id: 3,
+    //         name: "Wireless Earbuds",
+    //         price: 149.99,
+    //         quantity: 1,
+    //         image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df"
+    //     }
+    // ]);
     const updateQuantity = (id, action) => {
         setCartItems(prevItems =>
             prevItems.map(item => {
@@ -168,7 +172,81 @@ export default function Header() {
         } finally {
             setLoading(false)
         }
-    }
+    };
+
+    const increateseQuantity = async (itemId, newQuantity) => {
+        setCartItems(cartItems.map(item =>
+            item.itemId === itemId ? { ...item, quantity: newQuantity } : item
+        ));
+        dispatch(increaseQuantityItem({ itemId }));
+        try {
+            const updateResponse = await updateQuantityCartItem(itemId, newQuantity);
+            if (updateResponse.data.quantity === 0) {
+                const deleteResponse = await deleteCartItem(itemId);
+                if (deleteResponse.data) {
+                    setCartItems(cartItems.filter(item => item.itemId !== itemId));
+                    dispatch(removeItemFromCart({ itemId }));
+                }
+            };
+            toast.success("Cập nhật số lượng sản phẩm thành công");
+        } catch (error) {
+            toast.error("Lỗi cập nhật số lượng sản phẩm");
+        };
+    };
+
+    const decrementQuantity = async (itemId, newQuantity) => {
+        setCartItems(cartItems.map(item =>
+            item.itemId === itemId ? { ...item, quantity: newQuantity } : item
+        ));
+        dispatch(decrementQuantityItem({ itemId }));
+        try {
+            const updateResponse = await updateQuantityCartItem(itemId, newQuantity);
+            if (updateResponse.data.quantity === 0) {
+                const deleteResponse = await deleteCartItem(itemId);
+                if (deleteResponse.data) {
+                    setCartItems(cartItems.filter(item => item.itemId !== itemId));
+                    dispatch(removeItemFromCart({ itemId }));
+                    console.log("length", cartItems.length);
+                };
+            };
+            toast.success("Cập nhật số lượng sản phẩm thành công");
+        } catch (error) {
+            toast.error("Lỗi cập nhật số lượng sản phẩm");
+        };
+    };
+    useEffect(() => {
+        const fetchCart = async () => {
+            try {
+                const cartResponse = await findCartByUserId(user.id);
+                if (cartResponse.data) {
+                    // Gọi API song song để tăng tốc độ
+                    const [cartItemResponse, productsResponse] = await Promise.all([
+                        findCartItemsByCartId(cartResponse.data.id),
+                        findAllProduct()
+                    ]);
+                    const cartItemsMapped = cartItemResponse.data.map(item => {
+                        const product = productsResponse.data.find(p => p.id === item.productId);
+                        return {
+                            itemId: item.id,
+                            productId: item.productId,
+                            name: product?.name,
+                            price: parseFloat(product?.price),
+                            quantity: parseInt(item.quantity),
+                            image: product?.image
+                        };
+                    });
+                    setCartItems(cartItemsMapped);
+                    dispatch(setCartRedux({ cart: cartResponse.data }));
+                    dispatch(setCartItemsRedux({ items: cartItemsMapped }));
+                }
+            } catch (error) {
+                toast.error("Lỗi load dữ liệu giỏ hàng");
+            }
+        };
+        if (user?.id) {
+            fetchCart();
+        }
+    }, [user?.id]);
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -323,7 +401,7 @@ export default function Header() {
                                                         <div className="mt-1 flex items-center gap-4">
                                                             <div className="flex items-center border rounded-lg">
                                                                 <button
-                                                                    onClick={() => updateQuantity(item.id, "decrease")}
+                                                                    onClick={() => decrementQuantity(item.itemId, item.quantity - 1)}
                                                                     className="p-2 hover:bg-gray-100 transition-colors duration-200"
                                                                     aria-label="Decrease quantity"
                                                                 >
@@ -333,7 +411,7 @@ export default function Header() {
                                                                     {item.quantity}
                                                                 </span>
                                                                 <button
-                                                                    onClick={() => updateQuantity(item.id, "increase")}
+                                                                    onClick={() => increateseQuantity(item.itemId, item.quantity + 1)}
                                                                     className="p-2 hover:bg-gray-100 transition-colors duration-200"
                                                                     aria-label="Increase quantity"
                                                                 >
