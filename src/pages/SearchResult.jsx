@@ -202,46 +202,58 @@ export default function SearchResult() {
           console.error("Error fetching results:", error);
         }
       };
-      
       useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
-      
-        // Chuyển toàn bộ query param thành object
-        // ví dụ: ?name=a&category=Headphones&spec_type=In-ear
-        // sẽ thành { name: "a", category: "Headphones", spec_type: "In-ear" }
         const allParams = {};
+        const initialData = {};
+    
+        // Chuyển toàn bộ query param thành object
         for (const [key, value] of queryParams.entries()) {
-          allParams[key] = value;
+            allParams[key] = value;
         }
-      
-        // Nếu cần parse một số param thành số, ví dụ "page", "price_gte", "price_lte"
-        // ta có thể làm như sau:
         if (allParams.page) {
-          allParams.page = parseInt(allParams.page, 10);
-          if (isNaN(allParams.page)) {
-            allParams.page = 1;
-          }
+            allParams.page = parseInt(allParams.page, 10);
+            if (isNaN(allParams.page)) {
+                allParams.page = 1;
+            }
         } else {
-          allParams.page = 1; // giá trị mặc định
+            allParams.page = 1; // giá trị mặc định
         }
-      
+
         if (allParams.price_gte) {
-          const num = parseFloat(allParams.price_gte);
-          allParams.price_gte = isNaN(num) ? undefined : num;
+            const num = parseFloat(allParams.price_gte);
+            allParams.price_gte = isNaN(num) ? undefined : num;
         }
         if (allParams.price_lte) {
-          const num = parseFloat(allParams.price_lte);
-          allParams.price_lte = isNaN(num) ? undefined : num;
+            const num = parseFloat(allParams.price_lte);
+            allParams.price_lte = isNaN(num) ? undefined : num;
         }
-      
-        // Tương tự nếu bạn muốn parse "name" thành search, có thể gán thêm
-        // allParams.search = allParams.name || undefined;
-      
+
+        // Parse các giá trị cần thiết
+        allParams.page = parseInt(allParams.page, 10) || 1;
+        allParams.price_gte = parseFloat(allParams.price_gte) || 0;
+        allParams.price_lte = parseFloat(allParams.price_lte) || 100000000;
+    
+        const matchedCategory = categories.find(
+            (cat) => cat.name.toLowerCase() === allParams.category?.toLowerCase()
+        );
+        setSelectedCategory(matchedCategory ? matchedCategory.id : "");
+        setSelectedColor(allParams.color || "");
+        setPriceRange([allParams.price_gte, allParams.price_lte]);
+    
+        // Lấy thông tin specsFields
+        specsFields.forEach((spec) => {
+            if (allParams[spec.key]) {
+                initialData[spec.key] = allParams[spec.key];
+            }
+        });
+        setProductData(initialData);
+    
         console.log("All params:", allParams);
-      
-        // Gọi API với tất cả các param
         fetchResults(allParams);
-      }, [location.search]);
+    }, [location.search, specsFields]);
+
+
     const totalPage = useMemo(() => {
         const size = (results?.data != null) ? results?.size : 5;
         const totalRecord = (results?.data != null) ? results?.totalRecords : 5;
