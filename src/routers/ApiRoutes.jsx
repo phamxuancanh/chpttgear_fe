@@ -343,12 +343,21 @@ export const findCartItemsByCartId = async (cartId) => {
 export const updateQuantityCartItem = async (cartItemId, payload) => {
     try {
         console.log("1234", cartItemId, payload);
-        return await requestWithJwt.put(`/carts/cart_items/updateQuantityByCartItemId/${cartItemId}`, 
-        { newQuantity: payload },
-        {headers: { 'Content-Type': 'application/json' } }
+        return await requestWithJwt.put(`/carts/cart_items/updateQuantityByCartItemId/${cartItemId}`,
+            { newQuantity: payload },
+            { headers: { 'Content-Type': 'application/json' } }
         );
     } catch (error) {
         console.error('Error updating quantity:', error);
+        throw error;
+    }
+};
+export const createCartItem = (payload) => {
+    try {
+        console.log("add to cart", payload);
+        return requestWithJwt.post(`/carts/cart_items/createCartItems`, payload);
+    } catch (error) {
+        console.error('Error creating cart item:', error);
         throw error;
     }
 };
