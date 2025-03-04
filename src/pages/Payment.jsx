@@ -16,7 +16,7 @@ export default function Payment() {
   const [selectedProvince, setSelectedProvince] = useState({ id: "", name: "" });
   const [selectedDistrict, setSelectedDistrict] = useState({ id: "", name: "" });
   const [selectedWard, setSelectedWard] = useState({ id: "", name: "" });
-
+  const selectedItems = useSelector(state => state.shoppingCart.selectItems)
   const [provinces, setProvinces] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [wards, setWards] = useState([]);
@@ -35,10 +35,49 @@ export default function Payment() {
 
   // Khi chọn Tỉnh/Thành phố, cập nhật danh sách Quận/Huyện
   useEffect(() => {
-    setProvinces(provinceData)
+    setProvinces(provinceData);
     console.log(userFromRedux)
     console.log(addresses)
   }, []);
+
+  useEffect(() => {
+    if (!selectedAddress || provinces.length === 0) return;
+
+    const parts = selectedAddress.split(",").map((part) => part.trim());
+    const provinceName = parts[parts.length - 1];
+    const districtName = parts[parts.length - 2];
+    const wardName = parts[parts.length - 3];
+
+    const province = provinces.find((p) =>
+      p.NameExtension.includes(provinceName) || p.ProvinceName === provinceName
+    );
+    if (!province) return;
+
+    setSelectedProvince({ id: province.ProvinceID, name: province.ProvinceName });
+
+    // Lấy danh sách quận/huyện từ tỉnh
+    const filteredDistricts = province.Districts || [];
+    setDistricts(filteredDistricts);
+
+    // Nếu đã có quận/huyện, tiếp tục set quận/huyện
+    const district = filteredDistricts.find((d) =>
+      d.NameExtension.includes(districtName) || d.DistrictName === districtName
+    );
+    if (district) {
+      setSelectedDistrict({ id: district.DistrictID, name: district.DistrictName });
+
+      // Lấy danh sách phường/xã từ quận/huyện
+      const filteredWards = district.Wards || [];
+      setWards(filteredWards);
+
+      const ward = filteredWards.find((w) =>
+        w.NameExtension.includes(wardName) || w.WardName === wardName
+      );
+      if (ward) {
+        setSelectedWard({ id: ward.WardCode, name: ward.WardName });
+      }
+    }
+  }, [selectedAddress, provinces]);
 
 
   const handleProvinceChange = (e) => {
@@ -112,43 +151,43 @@ export default function Payment() {
     }));
   };
 
-  const handleSelectAddress = (address) => {
-    if (!address) return;
+  // const handleSelectAddress = (address) => {
+  //   if (!address) return;
 
-    // Tách địa chỉ thành từng phần (theo dấu ", ")
-    const parts = address.split(",").map((part) => part.trim());
+  //   // Tách địa chỉ thành từng phần (theo dấu ", ")
+  //   const parts = address.split(",").map((part) => part.trim());
 
-    // Lấy tên tỉnh/thành phố, quận/huyện, phường/xã từ cuối lên
-    const provinceName = parts[parts.length - 1];
-    const districtName = parts[parts.length - 2];
-    const wardName = parts[parts.length - 3];
-    console.log(provinceName);
-    console.log(districtName);
-    console.log(wardName);
+  //   // Lấy tên tỉnh/thành phố, quận/huyện, phường/xã từ cuối lên
+  //   const provinceName = parts[parts.length - 1];
+  //   const districtName = parts[parts.length - 2];
+  //   const wardName = parts[parts.length - 3];
+  //   console.log(provinceName);
+  //   console.log(districtName);
+  //   console.log(wardName);
 
-    // Tìm ID của tỉnh/thành phố từ danh sách provinces
-    const province = provinces.find((p) => p.ProvinceName === provinceName);
-    const provinceId = province ? province.ProvinceID : "";
+  //   // Tìm ID của tỉnh/thành phố từ danh sách provinces
+  //   const province = provinces.find((p) => p.ProvinceName === provinceName);
+  //   const provinceId = province ? province.ProvinceID : "";
 
-    // Lấy danh sách quận/huyện của tỉnh vừa chọn
-    const districtsInProvince = province ? districts.filter((d) => d.ProvinceID === province.ProvinceID) : [];
+  //   // Lấy danh sách quận/huyện của tỉnh vừa chọn
+  //   const districtsInProvince = province ? districts.filter((d) => d.ProvinceID === province.ProvinceID) : [];
 
-    // Tìm ID của quận/huyện
-    const district = districtsInProvince.find((d) => d.DistrictName === districtName);
-    const districtId = district ? district.DistrictID : "";
+  //   // Tìm ID của quận/huyện
+  //   const district = districtsInProvince.find((d) => d.DistrictName === districtName);
+  //   const districtId = district ? district.DistrictID : "";
 
-    // Lấy danh sách phường/xã của quận vừa chọn
-    const wardsInDistrict = district ? wards.filter((w) => w.DistrictID === district.DistrictID) : [];
+  //   // Lấy danh sách phường/xã của quận vừa chọn
+  //   const wardsInDistrict = district ? wards.filter((w) => w.DistrictID === district.DistrictID) : [];
 
-    // Tìm ID của phường/xã
-    const ward = wardsInDistrict.find((w) => w.WardName === wardName);
-    const wardId = ward ? ward.WardCode : "";
+  //   // Tìm ID của phường/xã
+  //   const ward = wardsInDistrict.find((w) => w.WardName === wardName);
+  //   const wardId = ward ? ward.WardCode : "";
 
-    // Cập nhật state của dropdown
-    setSelectedProvince({ id: provinceId, name: provinceName });
-    setSelectedDistrict({ id: districtId, name: districtName });
-    setSelectedWard({ id: wardId, name: wardName });
-  };
+  //   // Cập nhật state của dropdown
+  //   setSelectedProvince({ id: provinceId, name: provinceName });
+  //   setSelectedDistrict({ id: districtId, name: districtName });
+  //   setSelectedWard({ id: wardId, name: wardName });
+  // };
 
 
   const handleSubmit = async (e) => {
@@ -198,10 +237,10 @@ export default function Payment() {
         const orderItemPromises = cartItems.map(item =>
           createOrderItem({
             order_id: orderId,
-            product_id: item.id,
+            product_id: item.productId,
             quantity: item.quantity,
             price: item.price,
-            profit: item.profit,
+            profit: 0,
           })
         );
 
@@ -228,8 +267,6 @@ export default function Payment() {
       setLoading(false);
     }
   };
-
-
 
   const cartItems = [
     {
@@ -303,7 +340,7 @@ export default function Payment() {
           user={userFromRedux}
           onSelect={(newAddress) => {
             setSelectedAddress(newAddress);
-            handleSelectAddress(newAddress);
+            // handleSelectAddress(newAddress);
             setIsModalOpen(false);
           }}
         />
@@ -471,7 +508,7 @@ export default function Payment() {
           <div className="md:col-span-2 bg-gray-200 p-4 rounded-md shadow-md">
             <div className="flex flex-col gap-4">
               {cartItems.map((item) => (
-                <div key={item.id} className="p-4 bg-white rounded-lg shadow flex items-center gap-4">
+                <div key={item.itemId} className="p-4 bg-white rounded-lg shadow flex items-center gap-4">
                   <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-md" />
                   <div className="flex-1">
                     <h3 className="text-md font-medium text-gray-900">{item.name}</h3>

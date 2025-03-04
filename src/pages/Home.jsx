@@ -59,8 +59,6 @@ import MenuModal from "../components/Modal/MenuModal";
 export default function Home() {
     const { isCategoryOpen, setIsCategoryOpen } = useCategory();
 
-
-
     const categories = [
         { name: "Laptop", img: TYPE1 },
         { name: "PC", img: TYPE2 },
@@ -141,8 +139,6 @@ export default function Home() {
                     <div className="w-full flex justify-center px-5 py-2 relative">
                         <div className="w-2/12 flex relative z-50 mr-5">
                             <MenuModal />
-
-
                         </div>
                         <div className="w-8/12 relative z-10">
                             <div className="relative w-full h-[40vh] flex items-center justify-center rounded-lg overflow-hidden shadow-lg bg-black">
@@ -192,14 +188,16 @@ export default function Home() {
                             <h2 className="text-2xl font-bold text-foreground mb-6">Danh mục sản phẩm</h2>
                             <div className="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-10 gap-6 text-center">
                                 {categories.map((item, index) => (
-                                    <div key={index} className="flex flex-col items-center space-y-2 cursor-pointer">
-                                        <img
-                                            src={item.img}
-                                            alt={item.name}
-                                            className="w-16 h-16 object-contain rounded-lg "
-                                        />
-                                        <span className="text-sm font-medium">{item.name}</span>
-                                    </div>
+                                    <Link to={"/products"}>
+                                        <div key={index} className="flex flex-col items-center space-y-2 cursor-pointer">
+                                            <img
+                                                src={item.img}
+                                                alt={item.name}
+                                                className="w-16 h-16 object-contain rounded-lg "
+                                            />
+                                            <span className="text-sm font-medium">{item.name}</span>
+                                        </div>
+                                    </Link>
                                 ))}
                             </div>
                         </div>
@@ -208,34 +206,58 @@ export default function Home() {
                     <section className="mb-12">
                         <img src={BANNER4} alt="" />
                         <ProductCarousel products={products} />
+                        <div className="w-full  flex justify-center items-center py-2">
+                            <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white">Xem thêm</button>
+                        </div>
                     </section>
                     <section className="mb-12">
                         <img src={BANNER5} alt="" />
                         <ProductCarousel products={products} />
+                        <div className="w-full  flex justify-center items-center py-2">
+                            <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white">Xem thêm</button>
+                        </div>
                     </section>
                     <section className="mb-12">
                         <img src={BANNER6} alt="" className="mb-10" />
                         <ProductCarousel products={products} />
+                        <div className="w-full  flex justify-center items-center py-2">
+                            <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white">Xem thêm</button>
+                        </div>
                     </section>
                     <section className="mb-12">
                         <img src={BANNER7} alt="" className="mb-10" />
                         <ProductCarousel products={products} />
+                        <div className="w-full  flex justify-center items-center py-2">
+                            <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white">Xem thêm</button>
+                        </div>
                     </section>
                     <section className="mb-12">
                         <img src={BANNER8} alt="" className="mb-10" />
                         <ProductCarousel products={products} />
+                        <div className="w-full  flex justify-center items-center py-2">
+                            <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white">Xem thêm</button>
+                        </div>
                     </section>
                     <section className="mb-12">
                         <img src={BANNER9} alt="" className="mb-10" />
                         <ProductCarousel products={products} />
+                        <div className="w-full  flex justify-center items-center py-2">
+                            <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white">Xem thêm</button>
+                        </div>
                     </section>
                     <section className="mb-12">
                         <img src={BANNER10} alt="" className="mb-10" />
                         <ProductCarousel products={products} />
+                        <div className="w-full  flex justify-center items-center py-2">
+                            <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white">Xem thêm</button>
+                        </div>
                     </section>
                     <section className="mb-12">
                         <img src={BANNER11} alt="" className="mb-10" />
                         <ProductCarousel products={products} />
+                        <div className="w-full  flex justify-center items-center py-2">
+                            <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white">Xem thêm</button>
+                        </div>
                     </section>
                 </div>}
 
