@@ -1,9 +1,16 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useCategory } from '../../context/CategoryContext';
 
 export default function SubMenuModal({ specDefinitions, selectedCategory }) {
+    const { isCategoryOpen, setIsCategoryOpen } = useCategory();
+
+    const handleClick = () => {
+        setIsCategoryOpen(false);
+    };
+
     return (
-        <div className="absolute left-full top-0 w-[75vw] h-full ml-2 bg-white text-black font-medium p-6 rounded-lg shadow-2xl z-50 
+        <div className="absolute left-full top-0 w-[68vw] h-full ml-2 bg-white text-black font-medium p-6 rounded-lg shadow-2xl z-50 
         transition-all duration-300 scale-100 overflow-auto">
             <div className="grid grid-cols-5 gap-6">
                 {specDefinitions[selectedCategory]?.length > 0 ? (
@@ -16,6 +23,7 @@ export default function SubMenuModal({ specDefinitions, selectedCategory }) {
                                         key={option}
                                         to="/products"
                                         className="text-gray-700 hover:text-red-600 duration-300 cursor-pointer block"
+                                        onClick={handleClick}
                                     >
                                         {option}
                                     </Link>
@@ -24,7 +32,7 @@ export default function SubMenuModal({ specDefinitions, selectedCategory }) {
                         </div>
                     ))
                 ) : (
-                    <div className="col-span-5 text-center text-gray-500">No data available</div>
+                    <div className="col-span-5 text-center text-gray-500">Không có dữ liệu</div>
                 )}
             </div>
         </div>
