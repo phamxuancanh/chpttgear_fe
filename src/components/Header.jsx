@@ -4,7 +4,7 @@ import { FiShoppingCart, FiUser, FiMenu, FiBell } from "react-icons/fi";
 import { FaPlus, FaMinus } from "react-icons/fa";
 import { IoMdArrowDropdown } from "react-icons/io";
 import LOGO from "../assets/logo.png"
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { calculateShippingFee, getSuggestions, signOut } from "../routers/ApiRoutes";
 import { IoMenu } from "react-icons/io5";
 import ROUTES from '../constants/Page';
@@ -13,12 +13,12 @@ import { useDispatch } from 'react-redux';
 import { useSelector } from 'react-redux';
 import { debounce } from 'lodash'
 import { FiSearch } from "react-icons/fi";
-
 import { logout, setToken } from '../redux/authSlice';
 import Loading from "../utils/Loading";
 import { useCategory } from "../context/CategoryContext";
 import { setCartRedux, setCartItemsRedux, removeItemFromCart, increaseQuantityItem, decrementQuantityItem } from "../redux/cartSlice";
 import { findCartByUserId, findCartItemsByCartId, findAllProduct, updateQuantityCartItem, deleteCartItem } from "../routers/ApiRoutes";
+import MenuModal from "./Modal/MenuModal";
 
 export default function Header() {
     const dispatch = useDispatch();
@@ -40,6 +40,7 @@ export default function Header() {
     const searchRef = useRef(null);
     const [loading, setLoading] = useState(false)
     const { isCategoryOpen, setIsCategoryOpen } = useCategory();
+    const location = useLocation();
 
     const fetchSuggestions = debounce(async (value) => {
         try {
@@ -264,6 +265,7 @@ export default function Header() {
             if (searchRef.current && !searchRef.current.contains(event.target)) {
                 setSuggestions([]);
                 setShowProductDropdown(false)
+                setIsCategoryOpen(false)
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
@@ -298,7 +300,13 @@ export default function Header() {
                                     <IoMenu className={`text-xl  transition-transform duration-300 ${showProductDropdown ? "rotate-90" : ""}`} />
                                     <span>Danh mục</span>
                                 </button>
+                                {isCategoryOpen && location.pathname !== ROUTES.HOME_PAGE.path && (
+                                    <div className="absolute top-full left-0 w-full mt-2">
+                                        <MenuModal />
+                                    </div>
+                                )}
                             </div>
+
                             <div className="container w-7/12 mx-auto px-4 py-4 flex items-center justify-between text-black ">
                                 <div className="flex-1 w-10/12 flex items-center" ref={searchRef}>
 
