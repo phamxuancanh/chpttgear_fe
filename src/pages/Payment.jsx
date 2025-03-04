@@ -21,13 +21,13 @@ export default function Payment() {
   const [selectedProvince, setSelectedProvince] = useState({ id: "", name: "" });
   const [selectedDistrict, setSelectedDistrict] = useState({ id: "", name: "" });
   const [selectedWard, setSelectedWard] = useState({ id: "", name: "" });
-
+  const selectedItems = useSelector(state => state.shoppingCart.selectItems)
   const [provinces, setProvinces] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [wards, setWards] = useState([]);
   const [shippingFee, setShippingFee] = useState(5.0);
   const userFromRedux = useSelector((state) => state.auth.user);
-
+  const cartItems = selectedItems
 
   // Khi chọn Tỉnh/Thành phố, cập nhật danh sách Quận/Huyện
   useEffect(() => {
@@ -175,10 +175,10 @@ export default function Payment() {
         const orderItemPromises = cartItems.map(item =>
           createOrderItem({
             order_id: orderId,
-            product_id: item.id,
+            product_id: item.productId,
             quantity: item.quantity,
             price: item.price,
-            profit: item.profit,
+            profit: 0,
           })
         );
 
@@ -206,34 +206,6 @@ export default function Payment() {
     }
   };
 
-
-
-  const cartItems = [
-    {
-      id: "P001",
-      name: "Wireless Headphones",
-      price: 59.99,
-      quantity: 2,
-      image: "https://via.placeholder.com/100",
-      profit: 20.5
-    },
-    {
-      id: "P002",
-      name: "Intel i5-12400F",
-      price: 19.99,
-      quantity: 1,
-      image: "https://via.placeholder.com/100",
-      profit: 8.5
-    },
-    {
-      id: "P003",
-      name: "RAM Corsair Vengeance RGB 32GB DDR5 - 6000MHz",
-      price: 39.99,
-      quantity: 1,
-      image: "https://via.placeholder.com/100",
-      profit: 19.99
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
@@ -401,7 +373,7 @@ export default function Payment() {
           <div className="md:col-span-2 bg-gray-200 p-4 rounded-md shadow-md">
             <div className="flex flex-col gap-4">
               {cartItems.map((item) => (
-                <div key={item.id} className="p-4 bg-white rounded-lg shadow flex items-center gap-4">
+                <div key={item.itemId} className="p-4 bg-white rounded-lg shadow flex items-center gap-4">
                   <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-md" />
                   <div className="flex-1">
                     <h3 className="text-md font-medium text-gray-900">{item.name}</h3>
