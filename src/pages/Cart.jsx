@@ -20,7 +20,7 @@ export default function Cart() {
     const selectedItemFromRedux = useSelector(state => state.shoppingCart.selectItems);
     const cartFromRedux = useSelector((state) => state.shoppingCart.cart);
     const [cartItems, setCartItems] = useState([]);
-    const [selectedItems, setSelectedItems] = useState([]);
+    const [selectedItems, setSelectedItems] = useState(selectedItemFromRedux);
     const [loading, setLoading] = useState(false)
 
     useEffect(() => {
@@ -58,11 +58,6 @@ export default function Cart() {
         }
     }, [cartFromRedux?.id]);
 
-    // useEffect(() => {
-    //     if (JSON.stringify(selectedItems) !== JSON.stringify(selectedItemFromRedux)) {
-    //         dispatch(setSelectedItemsRedux({ selectItems: selectedItems })); // cập nhật selectedItems vào redux
-    //     }
-    // }, [selectedItems, dispatch]);
 
     // useEffect(() => {
     //     setSelectedItems(selectedItemFromRedux); // lấy selectedItems từ redux
@@ -129,8 +124,10 @@ export default function Cart() {
     const handlerSelectItem = (e, item) => {
         if (e.target.checked) {
             setSelectedItems([...selectedItems, item]);
+            dispatch(setSelectedItemsRedux({ selectItems: [...selectedItems, item] }));
         } else {
             setSelectedItems(selectedItems.filter(i => i.itemId !== item.itemId));
+            dispatch(setSelectedItemsRedux({ selectItems: selectedItems.filter(i => i.itemId !== item.itemId) }));
         }
     };
 
