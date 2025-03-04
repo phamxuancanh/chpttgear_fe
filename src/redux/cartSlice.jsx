@@ -6,8 +6,8 @@ const cartSlice = createSlice({
   name: 'shoppingCart',
   initialState: {
     cart: null,
-    items: [{}],
-    selectItems: [{}],
+    items: [],
+    selectItems: [],
     totalAmout: 0,
   },
   reducers: {
@@ -33,7 +33,8 @@ const cartSlice = createSlice({
       };
     },
     removeItemFromCart: (state, action) => {
-      state.items = state.items.filter((item) => item.productId !== action.payload);
+      console.log(action.payload)
+      state.items = state.items.filter((item) => item.itemId !== action.payload.itemId);
       state.totalAmout = state.items.reduce((total, item) => total + item.price * item.quantity, 0);
     },
     increaseQuantityItem: (state, action) => {

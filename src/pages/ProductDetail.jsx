@@ -271,8 +271,8 @@ export default function ProductDetail() {
                                         <img
                                             src={src}
                                             className={`max-w-24 max-h-24 object-cover rounded-md cursor-pointer border-2 transition-all duration-200 ${index === currentImageIndex
-                                                    ? "border-blue-500"
-                                                    : "border-gray-300 hover:border-gray-400"
+                                                ? "border-blue-500"
+                                                : "border-gray-300 hover:border-gray-400"
                                                 }`}
                                             onClick={() => setCurrentImageIndex(index)}
                                             alt={`Thumbnail ${index + 1}`}
@@ -320,7 +320,7 @@ export default function ProductDetail() {
                                     value={quantity}
                                     onChange={(e) => {
                                         let val = Number(e.target.value);
-                                        if (val >= 1 && val <= 5) setQuantity(val);
+                                        setQuantity(val);
                                     }}
                                     className="w-12 text-center border-none outline-none"
                                 />
