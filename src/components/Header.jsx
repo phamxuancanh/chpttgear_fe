@@ -4,7 +4,7 @@ import { FiShoppingCart, FiUser, FiMenu, FiBell } from "react-icons/fi";
 import { FaPlus, FaMinus } from "react-icons/fa";
 import { IoMdArrowDropdown } from "react-icons/io";
 import LOGO from "../assets/logo.png"
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { calculateShippingFee, getSuggestions, signOut } from "../routers/ApiRoutes";
 import { IoMenu } from "react-icons/io5";
 import ROUTES from '../constants/Page';
@@ -13,12 +13,16 @@ import { useDispatch } from 'react-redux';
 import { useSelector } from 'react-redux';
 import { debounce } from 'lodash'
 import { FiSearch } from "react-icons/fi";
-
 import { logout, setToken } from '../redux/authSlice';
 import Loading from "../utils/Loading";
 import { useCategory } from "../context/CategoryContext";
 import { setCartRedux, setCartItemsRedux, clearCart } from "../redux/cartSlice";
 import { findCartByUserId, findCartItemsByCartId, findAllProduct } from "../routers/ApiRoutes";
+
+// import { setCartRedux, setCartItemsRedux, removeItemFromCart, increaseQuantityItem, decrementQuantityItem } from "../redux/cartSlice";
+// import { findCartByUserId, findCartItemsByCartId, findAllProduct, updateQuantityCartItem, deleteCartItem } from "../routers/ApiRoutes";
+// import MenuModal from "./Modal/MenuModal";
+
 
 export default function Header() {
     const dispatch = useDispatch();
@@ -40,6 +44,7 @@ export default function Header() {
     const searchRef = useRef(null);
     const [loading, setLoading] = useState(false)
     const { isCategoryOpen, setIsCategoryOpen } = useCategory();
+    const location = useLocation();
 
     const fetchSuggestions = debounce(async (value) => {
         try {
@@ -114,7 +119,11 @@ export default function Header() {
 
     const setDropdownProduct = () => {
         setIsCategoryOpen(!isCategoryOpen)
-        setShowProductDropdown(!showProductDropdown)
+        if (showProductDropdown) {
+            setShowProductDropdown(false)
+        } else {
+            setShowProductDropdown(true)
+        }
         setShowCartDropdown(false)
         setShowUserDropdown(false)
         setShowBellDropdown(false)
@@ -265,6 +274,7 @@ export default function Header() {
             if (searchRef.current && !searchRef.current.contains(event.target)) {
                 setSuggestions([]);
                 setShowProductDropdown(false)
+                // setIsCategoryOpen(false)
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
@@ -294,12 +304,18 @@ export default function Header() {
                             <div className="relative w-3/12 ">
                                 <button
                                     className="relative group flex items-center gap-2 font-semibold text-white px-4 py-3 rounded-lg bg-gradient-to-r from-red-500 to-pink-500 hover:from-pink-500 hover:to-red-500 transition-all duration-300 shadow-lg hover:shadow-xl text-base  "
-                                    onClick={() => setDropdownProduct(!showProductDropdown)}
+                                    onClick={() => setDropdownProduct()}
                                 >
                                     <IoMenu className={`text-xl  transition-transform duration-300 ${showProductDropdown ? "rotate-90" : ""}`} />
                                     <span>Danh mục</span>
                                 </button>
+                                {isCategoryOpen && location.pathname !== ROUTES.HOME_PAGE.path && (
+                                    <div className="absolute top-full -left-48 w-[35vh] mt-5">
+                                        <MenuModal />
+                                    </div>
+                                )}
                             </div>
+
                             <div className="container w-7/12 mx-auto px-4 py-4 flex items-center justify-between text-black ">
                                 <div className="flex-1 w-10/12 flex items-center" ref={searchRef}>
 
@@ -388,7 +404,7 @@ export default function Header() {
                                                     className="p-4 border-b border-gray-200 flex items-center gap-4"
                                                 >
                                                     <img
-                                                        src={item.image}
+                                                        src={item.image ? item.image.split(',')[0] : "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3"}
                                                         alt={item.name}
                                                         className="w-20 h-20 object-cover rounded-lg"
                                                         onError={(e) => {
@@ -422,7 +438,7 @@ export default function Header() {
                                     <div className="p-2 flex items-center space-x-2 border border-white rounded-lg">
                                         {isLoggedIn ? (
                                             <>
-                                                <img src={user.avatar} alt="avatar" className="w-8 h-8 rounded-full" />
+                                                <img src={user.avatar ? user?.avatar : "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3"} alt="avatar" className="w-8 h-8 rounded-full" />
                                                 <div>
                                                     <div>Xin chào</div>
                                                     <div className="font-bold">
@@ -537,7 +553,7 @@ export default function Header() {
                                     <div className="pl-4 space-y-1">
                                         {cartItems.map((item) => (
                                             <div key={item.id} className="flex items-center gap-3 mb-3">
-                                                <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded" />
+                                                <img src={item.image ? item.image.split(',')[0] : "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3"} alt={item.name} className="w-12 h-12 object-cover rounded" />
                                                 <div>
                                                     <p className="font-medium">{item.name}</p>
                                                     <p className="text-white">{item.price}</p>
@@ -558,7 +574,7 @@ export default function Header() {
                                     <div className="p-2 flex items-center space-x-2 border border-white rounded-lg">
                                         {user ? (
                                             <>
-                                                <img src={user.avatar} alt="avatar" className="w-8 h-8 rounded-full" />
+                                                <img src={user.avatar ? user.avatar : "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3"} alt="avatar" className="w-8 h-8 rounded-full" />
                                                 <div>
                                                     <div>Xin chào</div>
                                                     <div className="font-bold">{user.firstName} {user.lastName}</div>

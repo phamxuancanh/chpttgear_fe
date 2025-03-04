@@ -127,6 +127,7 @@ export default function Cart() {
     };
 
     const handlerSelectItem = (e, item) => {
+        console.log(item)
         if (e.target.checked) {
             setSelectedItems([...selectedItems, item]);
             dispatch(setSelectedItemsRedux({ selectItems: [...selectedItems, item] }));

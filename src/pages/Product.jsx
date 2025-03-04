@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FiSearch, FiSliders, FiStar, FiShoppingCart, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import ProductCard from './../components/ProductCard';
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { getAllProduct } from "../routers/ApiRoutes";
 import { FaDongSign } from "react-icons/fa6";
 import BANNER1 from "../assets/banner1.webp"
@@ -16,7 +16,7 @@ export default function Product() {
     const [products, setProducts] = useState([])
     const [maxPrice, setMaxPrice] = useState(0)
     const productsPerPage = 6;
-
+    const location = useLocation();
 
     useEffect(() => {
         const fetchData = async () => {
