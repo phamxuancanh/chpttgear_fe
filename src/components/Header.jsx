@@ -17,8 +17,8 @@ import { FiSearch } from "react-icons/fi";
 import { logout, setToken } from '../redux/authSlice';
 import Loading from "../utils/Loading";
 import { useCategory } from "../context/CategoryContext";
-import { setCartRedux, setCartItemsRedux, removeItemFromCart, increaseQuantityItem, decrementQuantityItem } from "../redux/cartSlice";
-import { findCartByUserId, findCartItemsByCartId, findAllProduct, updateQuantityCartItem, deleteCartItem } from "../routers/ApiRoutes";
+import { setCartRedux, setCartItemsRedux, clearCart } from "../redux/cartSlice";
+import { findCartByUserId, findCartItemsByCartId, findAllProduct } from "../routers/ApiRoutes";
 
 export default function Header() {
     const dispatch = useDispatch();
@@ -157,6 +157,7 @@ export default function Header() {
     const handleLogout = async () => {
         setLoading(true)
         dispatch(logout())
+        dispatch(clearCart());
         try {
             const response = await signOut()
             if (response) {
@@ -203,7 +204,7 @@ export default function Header() {
                 }
             } catch (error) {
                 console.log(error)
-                toast.error("Lỗi load dữ liệu giỏ hàng");
+                toast.error("1 Lỗi khi load dữ liệu giỏ hàng");
             }
         };
         if (user?.id) {
@@ -227,7 +228,7 @@ export default function Header() {
     useEffect(() => {
         const fetchCart = async () => {
             try {
-                console.log(user)
+                console.log("USer current: ", user );
                 const cartResponse = await findCartByUserId(user.id);
                 console.log(cartResponse.data)
                 if (cartResponse.data) {
@@ -254,7 +255,7 @@ export default function Header() {
                 }
             } catch (error) {
                 console.log(error)
-                toast.error("Lỗi load dữ liệu giỏ hàng");
+                toast.error("2 Lỗi load dữ liệu giỏ hàng");
             }
         };
         if (user?.id) {

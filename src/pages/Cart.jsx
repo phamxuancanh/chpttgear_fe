@@ -96,9 +96,6 @@ export default function Cart() {
                     setCartItems(cartItems.filter(item => item.itemId !== itemId));
                     dispatch(removeItemFromCart({ itemId }));
                     console.log("length", cartItems.length);
-                    // if (cartItems.length === 0) {
-                    //   dispatch(clearCart());
-                    // };
                 };
             };
             toast.success("Cập nhật số lượng sản phẩm thành công");
@@ -109,15 +106,23 @@ export default function Cart() {
 
     const removeItem = async (itemId) => {
         console.log(itemId)
-        dispatch(removeItemFromCart({ itemId }));
         const deleteResponse = await deleteCartItem(itemId);
+        if (deleteResponse.data) {
+            dispatch(removeItemFromCart({ itemId }));
+            toast.success("Xóa sản phẩm khỏi giỏ hàng thành công");
+        }
         setCartItems(cartItems.filter(item => item.itemId !== itemId));
-
     };
 
     const calculateTotal = () => {
         return selectedItems.length > 0
             ? selectedItems.reduce((total, item) => total + (item.price * item.quantity), 0)
+            : 0;
+    };
+    
+    const calculateNumberItem = () => {
+        return selectedItems.length > 0
+            ? selectedItems.reduce((total, item) => total + item.quantity, 0)
             : 0;
     };
 
@@ -200,7 +205,7 @@ export default function Cart() {
                                 <div className="space-y-2 mb-4">
                                     <div className="flex justify-between text-gray-600">
                                         <span>Sản phẩm:</span>
-                                        <span>{selectedItems.length}</span>
+                                        <span>{calculateNumberItem()}</span>
                                     </div>
                                     <div className="flex justify-between text-xl font-bold">
                                         <span>Tổng tiền:</span>
