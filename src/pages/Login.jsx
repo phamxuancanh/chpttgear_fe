@@ -5,7 +5,7 @@ import { FcGoogle } from "react-icons/fc";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import LOGO from "../assets/logo.png"
 import { Link, useNavigate } from "react-router-dom";
-import { googleSignIn, signIn } from "../routers/ApiRoutes";
+import { googleSignIn, signIn, createCart, findCartByUserId } from "../routers/ApiRoutes";
 import { setToLocalStorage } from "../utils/functions";
 import { toast } from "react-toastify";
 import ROUTES from '../constants/Page';
@@ -93,7 +93,15 @@ export default function Login() {
                 const { accessToken, currentUser } = result;
                 let userRole = currentUser?.key;
                 let data;
-    
+                const cartExists = await findCartByUserId(currentUser.id);
+                if (cartExists.data.id) {
+                    console.log("Cart exists", cartExists.data);
+                } else {
+                    const responseCart = await createCart(currentUser.id);
+                    if (responseCart.status === 200) {
+                        console.log("Create cart successfully");
+                    }
+                }
                 if (userRole) {
                     try {
                         const decrypted = CryptoJS.AES.decrypt(
@@ -105,26 +113,26 @@ export default function Login() {
                         console.error('Decryption error:', error);
                     }
                 }
-    
+
                 const payload = {
                     token: accessToken,
                     user: currentUser
                 };
-    
+
                 console.log("Trước khi dispatch:", payload);
-                
+
                 // Chờ Redux cập nhật trước khi tiếp tục
                 await dispatch(login(payload));
-    
+
                 console.log("Sau khi dispatch:", payload);
-    
+
                 // Điều hướng sau khi Redux đã cập nhật
                 if (data === 'R1' || data === 'R2') {
                     navigate(ROUTES.DASHBOARD.path);
                 } else {
                     navigate(ROUTES.HOME_PAGE.path);
                 }
-    
+
                 toast.success('Đăng nhập thành công');
             }
         } catch (error) {
@@ -132,7 +140,7 @@ export default function Login() {
             toast.error('Đăng nhập thất bại');
         }
     };
-    
+
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-800 py-12 px-4 sm:px-6 lg:px-8">

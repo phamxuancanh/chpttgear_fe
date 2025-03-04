@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import LOGO from "../assets/logo.png"
 import { Link, useNavigate } from "react-router-dom";
-import { signUp } from "../routers/ApiRoutes";
+import { signUp, createCart } from "../routers/ApiRoutes";
 import { toast } from "react-toastify";
 import ROUTES from "../constants/Page";
 
@@ -63,6 +63,11 @@ export default function Register() {
                 // await new Promise((resolve) => setTimeout(resolve, 2000));
                 console.log("Form submitted:", formData);
                 const response = await signUp(formData);
+                console.log("Registration Response:", response);
+                if (response.data.id) {
+                    const createCartResponse = await createCart(response.data.id);
+                    console.log("Create Cart Response:", createCartResponse);
+                }
                 if (response && response.status === 200) {
                     navigate(ROUTES.EMAIL_VERIFY_SEND_PAGE.path);
                 }

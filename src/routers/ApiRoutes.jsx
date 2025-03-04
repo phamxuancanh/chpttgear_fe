@@ -337,6 +337,12 @@ export const getQuantityInStock = async (product_id) => {
 export const findCartByUserId = async (userId) => {
     return await requestWithJwt.get(`/carts/findByUserId/${userId}`);
 };
+export const createCart = async (payload) => {
+    console.log('payload', payload);
+    return await requestWithJwt.post(`/carts/createCart`, {
+        userId: payload
+    });
+};
 export const findCartItemsByCartId = async (cartId) => {
     return await requestWithJwt.get(`/carts/cart_items/findByCartId/${cartId}`);
 };
