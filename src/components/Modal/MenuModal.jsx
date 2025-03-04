@@ -97,7 +97,9 @@ export default function MenuModal() {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [setIsCategoryOpen]);
+
     const handleCategoryClick = (category) => {
+
         setSelectedCategory((prevCategory) => (prevCategory === category ? null : category));
     };
     return (
@@ -105,6 +107,7 @@ export default function MenuModal() {
             ref={dropdownRef}
             className="w-full bg-white p-4 rounded-lg shadow-md transition-opacity duration-500"
         >
+
             {categoriesFromDB.slice(10, 20).map((category) => (
                 <div
                     key={category.id}
