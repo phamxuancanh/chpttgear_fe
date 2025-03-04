@@ -1,0 +1,76 @@
+import { useState } from "react";
+import { FaEnvelope, FaMapMarkerAlt, FaPhone, FaUser } from "react-icons/fa";
+import { FiX, FiMapPin } from "react-icons/fi";
+
+const AddressModal = ({ isOpen, onClose, user, onSelect }) => {
+    const addresses = user.address.split(";;").map((addr) => addr.split("|")[0].trim()); // Tách địa chỉ
+    const [selectedAddress, setSelectedAddress] = useState(addresses[0]);
+
+    if (!isOpen) return null; // Ẩn modal khi không mở
+
+    return (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="bg-white rounded-xl p-6 w-1/3 shadow-lg relative">
+                {/* Nút đóng */}
+                <button onClick={onClose} className="absolute top-3 right-3 text-gray-500 hover:text-gray-800">
+                    <FiX size={22} />
+                </button>
+
+                <h2 className="flex justify-center text-xl font-semibold text-gray-900 mb-4">Chọn Địa Chỉ Nhận Hàng</h2>
+
+                {/* Thông tin người dùng */}
+                <div className="flex items-center gap-4 border-b pb-4 m-4">
+                    <div>
+                        <div className="flex items-center gap-2 text-gray-700">
+                            <FaUser className="text-blue-500" />
+                            <span className="font-semibold">{user.firstName + ' ' + user.lastName}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-500 mt-1">
+                            <FaEnvelope className="text-green-500" />
+                            <span>{user.email}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-500 mt-1">
+                            <FaPhone className="text-green-500" />
+                            <span>{user.phone}</span>
+                        </div>
+
+                    </div>
+                </div>
+
+                {/* Danh sách địa chỉ */}
+                <div className="space-y-3 max-h-60 overflow-y-auto">
+                    {addresses.length > 0 ? (
+                        addresses.map((address, index) => (
+                            <div
+                                key={index}
+                                className={`p-4 border rounded-lg flex items-center gap-2 cursor-pointer transition-all 
+                                    ${selectedAddress === address ? "border-blue-600 bg-blue-100" : "border-gray-300 bg-white"}`}
+                                onClick={() => setSelectedAddress(address)}
+                            >
+                                <FiMapPin className="text-red-500" />
+                                <span className="text-gray-700">{address}</span>
+                            </div>
+                        ))
+                    ) : (
+                        <p className="text-gray-500 text-center">Chưa có địa chỉ nào</p>
+                    )}
+                </div>
+
+                {/* Nút xác nhận */}
+                <button
+                    onClick={() => {
+                        onSelect(selectedAddress);
+                        onClose();
+                    }}
+                    disabled={!selectedAddress}
+                    className={`mt-5 w-full py-2 rounded-lg transition
+                        ${selectedAddress ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
+                >
+                    Chọn địa chỉ
+                </button>
+            </div>
+        </div>
+    );
+};
+
+export default AddressModal;
