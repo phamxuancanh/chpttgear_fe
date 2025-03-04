@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { FiShoppingCart } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { FaDongSign } from "react-icons/fa6";
@@ -6,22 +6,28 @@ import { createCartItem, updateQuantityCartItem } from "../routers/ApiRoutes";
 import { setCartItemsRedux, increaseQuantityItem } from "../redux/cartSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import { useModal } from "../context/ModalProvider";
+
 
 export default function ProductCard({ product }) {
 
     const dispatch = useDispatch();
     const cart = useSelector(state => state.shoppingCart.cart);
     const cartItems = useSelector(state => state.shoppingCart.items);
+    const { openModal } = useModal();
+
 
     const handlerAddToCart = async ({ product }) => {
+        console.log(product)
+        console.log(cartItems)
         const item = cartItems.find(item => item.productId === product.id);
-        console.log("item", item);
         if (item) {
             try {
                 const updateItemResponse = await updateQuantityCartItem(item.itemId, item.quantity + 1);
+                console.log(updateItemResponse)
                 if (updateItemResponse.data) {
                     dispatch(increaseQuantityItem({ itemId: item.itemId }));
-                    toast.success("Thêm thành công");
+                    openModal("Sản phẩm đã được thêm vào Giỏ hàng!");
                 } else {
                     toast.error("Lỗi khi thêm sản phẩm vào giỏ hàng");
                 }
@@ -34,10 +40,15 @@ export default function ProductCard({ product }) {
             const newCartItem = {
                 productId: product.id,
                 quantity: 1,
-                cart
+                cart: cart
             };
+            console.log("newCartItem:", newCartItem);
+
             const createItemResponse = await createCartItem(newCartItem);
-            if (createItemResponse.data) {
+            console.log("createItemResponse:", createItemResponse);
+
+            if (createItemResponse.status === 201 && createItemResponse.data) {
+
                 const newItem = {
                     itemId: createItemResponse.data.id,
                     productId: createItemResponse.data.productId,
@@ -46,14 +57,21 @@ export default function ProductCard({ product }) {
                     quantity: createItemResponse.data.quantity,
                     image: product.image
                 };
-                dispatch(setCartItemsRedux({ items: [...cartItems, newItem] }));
-                toast.success("Đã thêm sản phẩm vào giỏ hàng");
+
+                const updatedCartItems = cartItems ? [...cartItems, newItem] : [newItem];
+
+                dispatch(setCartItemsRedux({ items: updatedCartItems }));
+
+                openModal("Sản phẩm đã được thêm vào Giỏ hàng!");
             } else {
+                console.log("Lỗi khi thêm sản phẩm");
                 toast.error("Lỗi khi thêm sản phẩm vào giỏ hàng");
             }
         } catch (error) {
+            console.error("Lỗi trong quá trình thêm sản phẩm:", error);
             toast.error("Lỗi khi thêm sản phẩm vào giỏ hàng");
-        };
+        }
+
     };
 
     return (
@@ -61,8 +79,8 @@ export default function ProductCard({ product }) {
             <Link to={`/product/${product.id}`}>
                 <div className="flex justify-center items-center h-[30vh]">
                     <img
-                        src={product.image.split(',')[0]}
-                        alt={product.name}
+                        src={product.image ? product.image.split(',')[0] : "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3"}
+                        alt={product.name || "Product Image"}
                         loading="lazy"
                         className="w-[30vh] h-[30vh] object-cover rounded-lg"
                         onError={(e) => {
@@ -71,6 +89,7 @@ export default function ProductCard({ product }) {
                     />
                 </div>
             </Link>
+
 
             {/* Nội dung sản phẩm */}
             <div className="p-4 flex flex-col flex-grow">
@@ -107,6 +126,7 @@ export default function ProductCard({ product }) {
                     Thêm vào giỏ hàng
                 </button>
             </div>
+
         </div>
     );
 }

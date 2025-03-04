@@ -366,6 +366,7 @@ export default function Home() {
                         <ProductCarousel products={products} />
                     </section>
                 </div>}
+            {/* <SuccessModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} text="Sản phẩm đã được thêm vào Giỏ hàng" /> */}
         </div>
     );
 };

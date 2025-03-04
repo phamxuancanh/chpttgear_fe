@@ -10,6 +10,8 @@ import { store, persistor } from "./redux/store";
 import { reload } from "./utils/functions";
 import { CategoryProvider } from "./context/CategoryContext";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { ModalProvider } from "./context/ModalProvider";
+import SuccessModal from "./components/Modal/SuccessModal";
 
 const queryClient = new QueryClient();
 
@@ -18,15 +20,18 @@ function App() {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <QueryClientProvider client={queryClient}>
-          <CategoryProvider>  {/* Bọc ở đây */}
-            <Helmet>
-              <title>CHPTT GEAR</title>
-              <link rel="shortcut icon" href="./logo192.png" />
-            </Helmet>
-            <ErrorBoundary onReset={reload}>
-              <AppRouter />
-            </ErrorBoundary>
-          </CategoryProvider>
+          <ModalProvider>
+            <SuccessModal />
+            <CategoryProvider>  {/* Bọc ở đây */}
+              <Helmet>
+                <title>CHPTT GEAR</title>
+                <link rel="shortcut icon" href="./logo192.png" />
+              </Helmet>
+              <ErrorBoundary onReset={reload}>
+                <AppRouter />
+              </ErrorBoundary>
+            </CategoryProvider>
+          </ModalProvider>
           <ToastContainer
             position="bottom-right"
             autoClose={2000}

@@ -174,46 +174,6 @@ export default function Header() {
         }
     };
 
-    const increateseQuantity = async (itemId, newQuantity) => {
-        setCartItems(cartItems.map(item =>
-            item.itemId === itemId ? { ...item, quantity: newQuantity } : item
-        ));
-        dispatch(increaseQuantityItem({ itemId }));
-        try {
-            const updateResponse = await updateQuantityCartItem(itemId, newQuantity);
-            if (updateResponse.data.quantity === 0) {
-                const deleteResponse = await deleteCartItem(itemId);
-                if (deleteResponse.data) {
-                    setCartItems(cartItems.filter(item => item.itemId !== itemId));
-                    dispatch(removeItemFromCart({ itemId }));
-                }
-            };
-            toast.success("Cập nhật số lượng sản phẩm thành công");
-        } catch (error) {
-            toast.error("Lỗi cập nhật số lượng sản phẩm");
-        };
-    };
-
-    const decrementQuantity = async (itemId, newQuantity) => {
-        setCartItems(cartItems.map(item =>
-            item.itemId === itemId ? { ...item, quantity: newQuantity } : item
-        ));
-        dispatch(decrementQuantityItem({ itemId }));
-        try {
-            const updateResponse = await updateQuantityCartItem(itemId, newQuantity);
-            if (updateResponse.data.quantity === 0) {
-                const deleteResponse = await deleteCartItem(itemId);
-                if (deleteResponse.data) {
-                    setCartItems(cartItems.filter(item => item.itemId !== itemId));
-                    dispatch(removeItemFromCart({ itemId }));
-                    console.log("length", cartItems.length);
-                };
-            };
-            toast.success("Cập nhật số lượng sản phẩm thành công");
-        } catch (error) {
-            toast.error("Lỗi cập nhật số lượng sản phẩm");
-        };
-    };
     useEffect(() => {
         const fetchCart = async () => {
             try {
@@ -236,10 +196,13 @@ export default function Header() {
                         };
                     });
                     setCartItems(cartItemsMapped);
+                    console.log(cartItemsMapped)
+                    console.log(cartResponse.data)
                     dispatch(setCartRedux({ cart: cartResponse.data }));
                     dispatch(setCartItemsRedux({ items: cartItemsMapped }));
                 }
             } catch (error) {
+                console.log(error)
                 toast.error("Lỗi load dữ liệu giỏ hàng");
             }
         };
@@ -262,6 +225,41 @@ export default function Header() {
         setShowUserDropdown(false);
     };
     useEffect(() => {
+        const fetchCart = async () => {
+            try {
+                console.log(user)
+                const cartResponse = await findCartByUserId(user.id);
+                console.log(cartResponse.data)
+                if (cartResponse.data) {
+                    // Gọi API song song để tăng tốc độ
+                    const [cartItemResponse, productsResponse] = await Promise.all([
+                        findCartItemsByCartId(cartResponse.data.id),
+                        findAllProduct()
+                    ]);
+                    const cartItemsMapped = cartItemResponse.data.map(item => {
+                        const product = productsResponse.data.find(p => p.id === item.productId);
+                        return {
+                            itemId: item.id,
+                            productId: item.productId,
+                            name: product?.name,
+                            price: parseFloat(product?.price),
+                            quantity: parseInt(item.quantity),
+                            image: product?.image
+                        };
+                    });
+                    setCartItems(cartItemsMapped);
+                    console.log(cartResponse.data)
+                    dispatch(setCartRedux({ cart: cartResponse.data }));
+                    dispatch(setCartItemsRedux({ items: cartItemsMapped }));
+                }
+            } catch (error) {
+                console.log(error)
+                toast.error("Lỗi load dữ liệu giỏ hàng");
+            }
+        };
+        if (user?.id) {
+            fetchCart();
+        }
         function handleClickOutside(event) {
             if (searchRef.current && !searchRef.current.contains(event.target)) {
                 setSuggestions([]);
@@ -272,10 +270,11 @@ export default function Header() {
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
+
     }, []);
     return (
         <div>
-            {loading ? <Loading /> : <nav className="bg-black text-white shadow-lg py-2 sticky flex items-center justify-center z-20">
+            {loading ? <Loading /> : <nav className="bg-black text-white shadow-lg py-2 sticky flex items-center justify-center z-20 ">
                 <div className="w-11/12">
                     <div className="w-full flex items-center justify-between h-16  ">
                         <div className="w-1/12 ">
@@ -370,19 +369,19 @@ export default function Header() {
                                 >
                                     <FiShoppingCart className="h-6 w-6" />
 
-                                    {cartItems.length > 0 && (
+                                    {cartItemRedux.length >= 0 && (
                                         <span className="absolute -top-3 -right-3 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                                            {cartItems.length}
+                                            {cartItemRedux.length}
                                         </span>
                                     )}
                                 </button>
                                 {showCartDropdown && (
                                     <div
-                                        className="absolute  z-50 right-0 mt-2 w-[48vh] rounded-md shadow-lg bg-white text-black"
+                                        className="absolute  z-50 right-0 mt-2 w-[48vh]  rounded-md shadow-lg bg-white text-black"
                                     >
-                                        <div className="p-4">
-                                            <h3 className="text-lg font-semibold mb-3">Shopping Cart</h3>
-                                            {cartItems.map((item) => (
+                                        <div className="py-4 px-2">
+                                            <h3 className="font-medium mb-3 text-base text-gray-400 ml-2">Sản phẩm mới thêm</h3>
+                                            {cartItemRedux.length > 0 && cartItemRedux.slice(0, 3).map((item) => (
                                                 <div
                                                     key={item.id}
                                                     className="p-4 border-b border-gray-200 flex items-center gap-4"
@@ -396,36 +395,13 @@ export default function Header() {
                                                             e.target.src = "https://images.unsplash.com/photo-1576566588028-4147f3842f27";
                                                         }}
                                                     />
-                                                    <div className="flex-1">
-                                                        <h3 className="font-medium text-gray-800">{item.name}</h3>
-                                                        <div className="mt-1 flex items-center gap-4">
-                                                            <div className="flex items-center border rounded-lg">
-                                                                <button
-                                                                    onClick={() => decrementQuantity(item.itemId, item.quantity - 1)}
-                                                                    className="p-2 hover:bg-gray-100 transition-colors duration-200"
-                                                                    aria-label="Decrease quantity"
-                                                                >
-                                                                    <FaMinus className="w-3 h-3 text-gray-600" />
-                                                                </button>
-                                                                <span className="px-4 py-2 text-gray-700">
-                                                                    {item.quantity}
-                                                                </span>
-                                                                <button
-                                                                    onClick={() => increateseQuantity(item.itemId, item.quantity + 1)}
-                                                                    className="p-2 hover:bg-gray-100 transition-colors duration-200"
-                                                                    aria-label="Increase quantity"
-                                                                >
-                                                                    <FaPlus className="w-3 h-3 text-gray-600" />
-                                                                </button>
-                                                            </div>
-                                                            <span className="text-gray-600">
-                                                                ${(item.price * item.quantity).toFixed(2)}
-                                                            </span>
-                                                        </div>
+                                                    <div className="flex-1 w-8/12 ">
+                                                        <h3 className="font-medium text-gray-800 truncate ">{item.name}</h3>
                                                     </div>
                                                 </div>
                                             ))}
-                                            <div className="w-full flex justify-center items-center ">
+                                            <div className="w-full flex justify-between items-center px-2">
+                                                <h5 className="font-normal mb-3 text-xs text-gray-500 mt-5">{cartItemRedux.length} sản phẩm thêm vào vỏ hàng</h5>
                                                 <Link to="/cart" onClick={handleLinkClick}>
                                                     <button className=" bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 mt-3">
                                                         Xem giỏ hàng

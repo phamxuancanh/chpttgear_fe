@@ -12,6 +12,7 @@ import {
     increaseQuantityItem, decrementQuantityItem, clearCart
 } from "../redux/cartSlice";
 import { FaDongSign } from "react-icons/fa6";
+import Loading from './../utils/Loading';
 
 export default function Cart() {
 
@@ -20,9 +21,11 @@ export default function Cart() {
     const cartFromRedux = useSelector((state) => state.shoppingCart.cart);
     const [cartItems, setCartItems] = useState([]);
     const [selectedItems, setSelectedItems] = useState([]);
+    const [loading, setLoading] = useState(false)
 
     useEffect(() => {
         const fetchCart = async () => {
+            setLoading(true)
             try {
                 console.log("cartFromRedux", cartFromRedux);
                 const [cartItemResponse, productsResponse] = await Promise.all([
@@ -42,8 +45,12 @@ export default function Cart() {
                 });
                 setCartItems(cartItemsMapped);
                 dispatch(setCartItemsRedux({ items: cartItemsMapped }));
+                setLoading(false)
             } catch (error) {
+                console.log(error)
                 toast.error("Lỗi load dữ liệu giỏ hàng");
+            } finally {
+                setLoading(false)
             }
         };
         if (cartFromRedux?.id) {
@@ -51,15 +58,15 @@ export default function Cart() {
         }
     }, [cartFromRedux?.id]);
 
-    useEffect(() => {
-        if (JSON.stringify(selectedItems) !== JSON.stringify(selectedItemFromRedux)) {
-            dispatch(setSelectedItemsRedux({ selectItems: selectedItems })); // cập nhật selectedItems vào redux
-        }
-    }, [selectedItems, dispatch]);
+    // useEffect(() => {
+    //     if (JSON.stringify(selectedItems) !== JSON.stringify(selectedItemFromRedux)) {
+    //         dispatch(setSelectedItemsRedux({ selectItems: selectedItems })); // cập nhật selectedItems vào redux
+    //     }
+    // }, [selectedItems, dispatch]);
 
-    useEffect(() => {
-        setSelectedItems(selectedItemFromRedux); // lấy selectedItems từ redux
-    }, []);
+    // useEffect(() => {
+    //     setSelectedItems(selectedItemFromRedux); // lấy selectedItems từ redux
+    // }, []);
 
     const increateseQuantity = async (itemId, newQuantity) => {
         setCartItems(cartItems.map(item =>
@@ -105,22 +112,26 @@ export default function Cart() {
         };
     };
 
-    const removeItem = (itemId) => {
-        setCartItems(cartItems.filter(item => item.itemId !== itemId));
+    const removeItem = async (itemId) => {
+        console.log(itemId)
         dispatch(removeItemFromCart({ itemId }));
+        const deleteResponse = await deleteCartItem(itemId);
+        setCartItems(cartItems.filter(item => item.itemId !== itemId));
+
     };
 
     const calculateTotal = () => {
-        return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+        return selectedItems.length > 0
+            ? selectedItems.reduce((total, item) => total + (item.price * item.quantity), 0)
+            : 0;
     };
 
     const handlerSelectItem = (e, item) => {
-        console.log("e", e);
         if (e.target.checked) {
             setSelectedItems([...selectedItems, item]);
         } else {
             setSelectedItems(selectedItems.filter(i => i.itemId !== item.itemId));
-        };
+        }
     };
 
     const CartItem = ({ item }) => (
@@ -129,7 +140,7 @@ export default function Cart() {
                 <input
                     className="accent-red-400 w-5 h-5 m-2"
                     type="checkbox"
-                    checked={Array.isArray(selectedItemFromRedux) && selectedItemFromRedux.some(i => i.itemId === item.itemId)}
+                    checked={selectedItems.some(i => i.itemId === item.itemId)}
                     onChange={(e) => handlerSelectItem(e, item)}
                 />
                 <img
@@ -169,9 +180,11 @@ export default function Cart() {
         </div>
     );
 
+
     return (
+
         <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-            <div className="w-10/12 mx-auto">
+            {loading ? <Loading /> : <div className="w-10/12 mx-auto">
                 <h1 className="text-3xl font-bold text-gray-900 mb-8">Giỏ hàng</h1>
                 {cartItems.length === 0 ? (
                     <div className="text-center py-12 bg-white rounded-lg shadow">
@@ -185,12 +198,12 @@ export default function Cart() {
                             ))}
                         </div>
                         <div className="lg:col-span-1">
-                            <div className="bg-white p-6 rounded-lg shadow-md">
+                            <div className="bg-white p-6 rounded-lg shadow-md sticky top-4">
                                 <h2 className="text-xl font-semibold mb-4">Tóm tắt giỏ hàng</h2>
                                 <div className="space-y-2 mb-4">
                                     <div className="flex justify-between text-gray-600">
                                         <span>Sản phẩm:</span>
-                                        <span>{cartItems.reduce((acc, item) => acc + item.quantity, 0)}</span>
+                                        <span>{selectedItems.length}</span>
                                     </div>
                                     <div className="flex justify-between text-xl font-bold">
                                         <span>Tổng tiền:</span>
@@ -209,7 +222,7 @@ export default function Cart() {
                         </div>
                     </div>
                 )}
-            </div>
+            </div>}
         </div>
     );
 };
