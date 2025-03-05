@@ -179,7 +179,7 @@ export default function Profile() {
         let currentUserAddresses = user?.address ? user.address.split(";;") : [];
         let newAddressToAdd =
             formData.address.trim() +
-            " " +
+            ", " +
             selectedWard.name +
             ", " +
             selectedDistrict.name +
