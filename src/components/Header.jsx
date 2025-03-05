@@ -16,6 +16,7 @@ import { FiSearch } from "react-icons/fi";
 import { logout, setToken } from '../redux/authSlice';
 import Loading from "../utils/Loading";
 import { useCategory } from "../context/CategoryContext";
+import CryptoJS from 'crypto-js';
 import { setCartRedux, setCartItemsRedux, clearCart } from "../redux/cartSlice";
 import { findCartByUserId, findCartItemsByCartId, findAllProduct } from "../routers/ApiRoutes";
 import MenuModal from "./Modal/MenuModal";
@@ -23,7 +24,6 @@ import MenuModal from "./Modal/MenuModal";
 // import { setCartRedux, setCartItemsRedux, removeItemFromCart, increaseQuantityItem, decrementQuantityItem } from "../redux/cartSlice";
 // import { findCartByUserId, findCartItemsByCartId, findAllProduct, updateQuantityCartItem, deleteCartItem } from "../routers/ApiRoutes";
 // import MenuModal from "./Modal/MenuModal";
-
 
 export default function Header() {
     const dispatch = useDispatch();
@@ -37,6 +37,19 @@ export default function Header() {
     const [showUserDropdown, setShowUserDropdown] = useState(false);
     const [showBellDropdown, setShowBellDropdown] = useState(false);
     const user = useSelector((state) => state.auth.user);
+    const userRoleEncrypted = user?.key;
+     let userRole;
+        if (userRoleEncrypted) {
+          try {
+            const decrypted = CryptoJS.AES.decrypt(
+              userRoleEncrypted,
+              process.env.REACT_APP_CRYPTO
+            );
+            userRole = decrypted.toString(CryptoJS.enc.Utf8);
+          } catch (error) {
+            console.error('Decryption error:', error);
+          }
+        }
     const cartItemRedux = useSelector(state => state.shoppingCart.items);
     const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
     const [searchTerm, setSearchTerm] = useState('');
@@ -480,13 +493,17 @@ export default function Header() {
                                                 >
                                                     Hồ sơ
                                                 </Link>
-                                                <Link
-                                                    onClick={handleLinkClick}
-                                                    to="/dashboard"
-                                                    className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
-                                                >
-                                                    Vào trang quản lý
-                                                </Link>
+
+                                                    {userRole === 'R1' && (
+                                                        <Link
+                                                            onClick={handleLinkClick}
+                                                            to="/dashboard"
+                                                            className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
+                                                        >
+                                                            Vào trang quản lý
+                                                        </Link>
+                                                    )}
+
                                                 <Link
                                                     onClick={handleLinkClick}
                                                     to="/orders"
