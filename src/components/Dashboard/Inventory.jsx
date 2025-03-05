@@ -73,16 +73,7 @@ export default function Inventory() {
 
         setShowCreateOrder(true);
 
-        // const res = await axios.post("http://localhost:2222/api/v1/inventory/calculate-fee", {
-        //     "fromDistrict": 1542,
-        //     "toDistrict": 1444,
-        //     "toWard": "20314",
-        //     "weight": 1000,
-        //     "height": 15,
-        //     "length": 15,
-        //     "width": 15
-        // })
-        // console.log(res.data)
+
     };
 
 
