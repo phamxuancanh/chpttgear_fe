@@ -428,28 +428,6 @@ export const deleteOrderItem = async (orderItemId) => {
     return await requestWithJwt.delete(`/orders/order-items/${orderItemId}`);
 };
 
-export const calculateShippingFee = async (fromDistrictId, fromWardCode, toDistrictId, toWardCode) => {
-    try {
-        const response = await requestWithJwt.post(`/orders/calculate-fee`, {
-            service_id: 53321,
-            from_district_id: fromDistrictId,
-            from_ward_code: fromWardCode,
-            to_district_id: toDistrictId,
-            to_ward_code: toWardCode,
-            height: 50,
-            length: 20,
-            weight: 1000,
-            width: 20,
-            insurance_value: 10000
-        });
-
-        return response.data?.data?.total || 0;
-    } catch (error) {
-        console.error("Lỗi khi gọi API GHN:", error);
-        throw error.response?.data || { message: "Lỗi khi gọi API GHN" };
-    }
-};
-
 export const getPaypalSuccess = async (orderId, token, payerID) => {
     return await requestWithJwt.get(
         `/orders/paypal/success?orderId=${orderId}&token=${token}&PayerID=${payerID}`
@@ -464,6 +442,21 @@ export const getPaypalCancel = async (orderId) => {
 // paymentService
 
 // shippingService
+export const calculateShippingFee = async (toDistrict, toWard, weight, ShopId) => {
+    try {
+        const res = await requestWithJwt.post("/shipping/calculate-fee", {
+            "toDistrict": toDistrict,
+            "toWard": toWard,
+            "weight": weight,
+            "ShopId": ShopId
+        })
+
+        return res.data.shippingFee || 0
+    } catch (error) {
+        console.error("Lỗi khi gọi API GHN:", error);
+        throw error.response?.data || { message: "Lỗi khi gọi API GHN" };
+    }
+};
 
 // reviewService
 
