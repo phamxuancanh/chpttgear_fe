@@ -4,7 +4,7 @@ import { FiShoppingCart, FiUser, FiMenu, FiBell } from "react-icons/fi";
 import { FaPlus, FaMinus } from "react-icons/fa";
 import { IoMdArrowDropdown } from "react-icons/io";
 import LOGO from "../assets/logo.png"
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { calculateShippingFee, getSuggestions, signOut } from "../routers/ApiRoutes";
 import { IoMenu } from "react-icons/io5";
 import ROUTES from '../constants/Page';
@@ -17,6 +17,13 @@ import { logout, setToken } from '../redux/authSlice';
 import Loading from "../utils/Loading";
 import { useCategory } from "../context/CategoryContext";
 import CryptoJS from 'crypto-js';
+import { setCartRedux, setCartItemsRedux, clearCart } from "../redux/cartSlice";
+import { findCartByUserId, findCartItemsByCartId, findAllProduct } from "../routers/ApiRoutes";
+import MenuModal from "./Modal/MenuModal";
+
+// import { setCartRedux, setCartItemsRedux, removeItemFromCart, increaseQuantityItem, decrementQuantityItem } from "../redux/cartSlice";
+// import { findCartByUserId, findCartItemsByCartId, findAllProduct, updateQuantityCartItem, deleteCartItem } from "../routers/ApiRoutes";
+// import MenuModal from "./Modal/MenuModal";
 
 export default function Header() {
     const dispatch = useDispatch();
@@ -43,12 +50,15 @@ export default function Header() {
             console.error('Decryption error:', error);
           }
         }
+    const cartItemRedux = useSelector(state => state.shoppingCart.items);
     const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
     const [searchTerm, setSearchTerm] = useState('');
     const [suggestions, setSuggestions] = useState([]);
+    const [cartItems, setCartItems] = useState([]);
     const searchRef = useRef(null);
     const [loading, setLoading] = useState(false)
     const { isCategoryOpen, setIsCategoryOpen } = useCategory();
+    const location = useLocation();
 
     const fetchSuggestions = debounce(async (value) => {
         try {
@@ -83,29 +93,29 @@ export default function Header() {
         }
     };
 
-    const [cartItems, setCartItems] = useState([
-        {
-            id: 1,
-            name: "Wireless Headphones",
-            price: 199.99,
-            quantity: 1,
-            image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e"
-        },
-        {
-            id: 2,
-            name: "Smart Watch",
-            price: 299.99,
-            quantity: 1,
-            image: "https://images.unsplash.com/photo-1546868871-7041f2a55e12"
-        },
-        {
-            id: 3,
-            name: "Wireless Earbuds",
-            price: 149.99,
-            quantity: 1,
-            image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df"
-        }
-    ]);
+    // const [cartItems, setCartItems] = useState([
+    //     {
+    //         id: 1,
+    //         name: "Wireless Headphones",
+    //         price: 199.99,
+    //         quantity: 1,
+    //         image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e"
+    //     },
+    //     {
+    //         id: 2,
+    //         name: "Smart Watch",
+    //         price: 299.99,
+    //         quantity: 1,
+    //         image: "https://images.unsplash.com/photo-1546868871-7041f2a55e12"
+    //     },
+    //     {
+    //         id: 3,
+    //         name: "Wireless Earbuds",
+    //         price: 149.99,
+    //         quantity: 1,
+    //         image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df"
+    //     }
+    // ]);
     const updateQuantity = (id, action) => {
         setCartItems(prevItems =>
             prevItems.map(item => {
@@ -123,7 +133,11 @@ export default function Header() {
 
     const setDropdownProduct = () => {
         setIsCategoryOpen(!isCategoryOpen)
-        setShowProductDropdown(!showProductDropdown)
+        if (showProductDropdown) {
+            setShowProductDropdown(false)
+        } else {
+            setShowProductDropdown(true)
+        }
         setShowCartDropdown(false)
         setShowUserDropdown(false)
         setShowBellDropdown(false)
@@ -166,6 +180,7 @@ export default function Header() {
     const handleLogout = async () => {
         setLoading(true)
         dispatch(logout())
+        dispatch(clearCart());
         try {
             const response = await signOut()
             if (response) {
@@ -181,7 +196,44 @@ export default function Header() {
         } finally {
             setLoading(false)
         }
-    }
+    };
+
+    useEffect(() => {
+        const fetchCart = async () => {
+            try {
+                const cartResponse = await findCartByUserId(user.id);
+                if (cartResponse.data) {
+                    // Gọi API song song để tăng tốc độ
+                    const [cartItemResponse, productsResponse] = await Promise.all([
+                        findCartItemsByCartId(cartResponse.data.id),
+                        findAllProduct()
+                    ]);
+                    const cartItemsMapped = cartItemResponse.data.map(item => {
+                        const product = productsResponse.data.find(p => p.id === item.productId);
+                        return {
+                            itemId: item.id,
+                            productId: item.productId,
+                            name: product?.name,
+                            price: parseFloat(product?.price),
+                            quantity: parseInt(item.quantity),
+                            image: product?.image
+                        };
+                    });
+                    setCartItems(cartItemsMapped);
+                    console.log(cartItemsMapped)
+                    console.log(cartResponse.data)
+                    dispatch(setCartRedux({ cart: cartResponse.data }));
+                    dispatch(setCartItemsRedux({ items: cartItemsMapped }));
+                }
+            } catch (error) {
+                console.log(error)
+                toast.error("1 Lỗi khi load dữ liệu giỏ hàng");
+            }
+        };
+        if (user?.id) {
+            fetchCart();
+        }
+    }, [user?.id]);
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -197,20 +249,57 @@ export default function Header() {
         setShowUserDropdown(false);
     };
     useEffect(() => {
+        const fetchCart = async () => {
+            try {
+                console.log("USer current: ", user);
+                const cartResponse = await findCartByUserId(user.id);
+                console.log(cartResponse.data)
+                if (cartResponse.data) {
+                    // Gọi API song song để tăng tốc độ
+                    const [cartItemResponse, productsResponse] = await Promise.all([
+                        findCartItemsByCartId(cartResponse.data.id),
+                        findAllProduct()
+                    ]);
+                    const cartItemsMapped = cartItemResponse.data.map(item => {
+                        const product = productsResponse.data.find(p => p.id === item.productId);
+                        return {
+                            itemId: item.id,
+                            productId: item.productId,
+                            name: product?.name,
+                            price: parseFloat(product?.price),
+                            quantity: parseInt(item.quantity),
+                            image: product?.image
+                        };
+                    });
+                    setCartItems(cartItemsMapped);
+                    console.log(cartResponse.data)
+                    dispatch(setCartRedux({ cart: cartResponse.data }));
+                    dispatch(setCartItemsRedux({ items: cartItemsMapped }));
+                }
+            } catch (error) {
+                console.log(error)
+                toast.error("2 Lỗi load dữ liệu giỏ hàng");
+            }
+        };
+        if (user?.id) {
+            fetchCart();
+        }
         function handleClickOutside(event) {
             if (searchRef.current && !searchRef.current.contains(event.target)) {
                 setSuggestions([]);
                 setShowProductDropdown(false)
+                // setIsCategoryOpen(false)
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
+
     }, []);
     return (
         <div>
-            {loading ? <Loading /> : <nav className="bg-black text-white shadow-lg py-2 sticky flex items-center justify-center z-20">
+            {loading ? <Loading /> : <nav className="bg-black text-white shadow-lg py-2 sticky flex items-center justify-center z-20 ">
                 <div className="w-11/12">
                     <div className="w-full flex items-center justify-between h-16  ">
                         <div className="w-1/12 ">
@@ -229,12 +318,18 @@ export default function Header() {
                             <div className="relative w-3/12 ">
                                 <button
                                     className="relative group flex items-center gap-2 font-semibold text-white px-4 py-3 rounded-lg bg-gradient-to-r from-red-500 to-pink-500 hover:from-pink-500 hover:to-red-500 transition-all duration-300 shadow-lg hover:shadow-xl text-base  "
-                                    onClick={() => setDropdownProduct(!showProductDropdown)}
+                                    onClick={() => setDropdownProduct()}
                                 >
                                     <IoMenu className={`text-xl  transition-transform duration-300 ${showProductDropdown ? "rotate-90" : ""}`} />
                                     <span>Danh mục</span>
                                 </button>
+                                {isCategoryOpen && location.pathname !== ROUTES.HOME_PAGE.path && (
+                                    <div className="absolute top-full -left-48 w-[35vh] mt-5">
+                                        <MenuModal />
+                                    </div>
+                                )}
                             </div>
+
                             <div className="container w-7/12 mx-auto px-4 py-4 flex items-center justify-between text-black ">
                                 <div className="flex-1 w-10/12 flex items-center" ref={searchRef}>
 
@@ -305,25 +400,25 @@ export default function Header() {
                                 >
                                     <FiShoppingCart className="h-6 w-6" />
 
-                                    {cartItems.length > 0 && (
+                                    {cartItemRedux.length >= 0 && (
                                         <span className="absolute -top-3 -right-3 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                                            {cartItems.length}
+                                            {cartItemRedux.length}
                                         </span>
                                     )}
                                 </button>
                                 {showCartDropdown && (
                                     <div
-                                        className="absolute  z-50 right-0 mt-2 w-[48vh] rounded-md shadow-lg bg-white text-black"
+                                        className="absolute  z-50 right-0 mt-2 w-[48vh]  rounded-md shadow-lg bg-white text-black"
                                     >
-                                        <div className="p-4">
-                                            <h3 className="text-lg font-semibold mb-3">Shopping Cart</h3>
-                                            {cartItems.map((item) => (
+                                        <div className="py-4 px-2">
+                                            <h3 className="font-medium mb-3 text-base text-gray-400 ml-2">Sản phẩm mới thêm</h3>
+                                            {cartItemRedux.length > 0 && cartItemRedux.slice(0, 3).map((item) => (
                                                 <div
                                                     key={item.id}
                                                     className="p-4 border-b border-gray-200 flex items-center gap-4"
                                                 >
                                                     <img
-                                                        src={item.image}
+                                                        src={item.image ? item.image.split(',')[0] : "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3"}
                                                         alt={item.name}
                                                         className="w-20 h-20 object-cover rounded-lg"
                                                         onError={(e) => {
@@ -331,36 +426,13 @@ export default function Header() {
                                                             e.target.src = "https://images.unsplash.com/photo-1576566588028-4147f3842f27";
                                                         }}
                                                     />
-                                                    <div className="flex-1">
-                                                        <h3 className="font-medium text-gray-800">{item.name}</h3>
-                                                        <div className="mt-1 flex items-center gap-4">
-                                                            <div className="flex items-center border rounded-lg">
-                                                                <button
-                                                                    onClick={() => updateQuantity(item.id, "decrease")}
-                                                                    className="p-2 hover:bg-gray-100 transition-colors duration-200"
-                                                                    aria-label="Decrease quantity"
-                                                                >
-                                                                    <FaMinus className="w-3 h-3 text-gray-600" />
-                                                                </button>
-                                                                <span className="px-4 py-2 text-gray-700">
-                                                                    {item.quantity}
-                                                                </span>
-                                                                <button
-                                                                    onClick={() => updateQuantity(item.id, "increase")}
-                                                                    className="p-2 hover:bg-gray-100 transition-colors duration-200"
-                                                                    aria-label="Increase quantity"
-                                                                >
-                                                                    <FaPlus className="w-3 h-3 text-gray-600" />
-                                                                </button>
-                                                            </div>
-                                                            <span className="text-gray-600">
-                                                                ${(item.price * item.quantity).toFixed(2)}
-                                                            </span>
-                                                        </div>
+                                                    <div className="flex-1 w-8/12 ">
+                                                        <h3 className="font-medium text-gray-800 truncate ">{item.name}</h3>
                                                     </div>
                                                 </div>
                                             ))}
-                                            <div className="w-full flex justify-center items-center ">
+                                            <div className="w-full flex justify-between items-center px-2">
+                                                <h5 className="font-normal mb-3 text-xs text-gray-500 mt-5">{cartItemRedux.length} sản phẩm thêm vào vỏ hàng</h5>
                                                 <Link to="/cart" onClick={handleLinkClick}>
                                                     <button className=" bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 mt-3">
                                                         Xem giỏ hàng
@@ -380,7 +452,7 @@ export default function Header() {
                                     <div className="p-2 flex items-center space-x-2 border border-white rounded-lg">
                                         {isLoggedIn ? (
                                             <>
-                                                <img src={user.avatar} alt="avatar" className="w-8 h-8 rounded-full" />
+                                                <img src={user.avatar ? user?.avatar : "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3"} alt="avatar" className="w-8 h-8 rounded-full" />
                                                 <div>
                                                     <div>Xin chào</div>
                                                     <div className="font-bold">
@@ -499,7 +571,7 @@ export default function Header() {
                                     <div className="pl-4 space-y-1">
                                         {cartItems.map((item) => (
                                             <div key={item.id} className="flex items-center gap-3 mb-3">
-                                                <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded" />
+                                                <img src={item.image ? item.image.split(',')[0] : "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3"} alt={item.name} className="w-12 h-12 object-cover rounded" />
                                                 <div>
                                                     <p className="font-medium">{item.name}</p>
                                                     <p className="text-white">{item.price}</p>
@@ -520,7 +592,7 @@ export default function Header() {
                                     <div className="p-2 flex items-center space-x-2 border border-white rounded-lg">
                                         {user ? (
                                             <>
-                                                <img src={user.avatar} alt="avatar" className="w-8 h-8 rounded-full" />
+                                                <img src={user.avatar ? user.avatar : "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3"} alt="avatar" className="w-8 h-8 rounded-full" />
                                                 <div>
                                                     <div>Xin chào</div>
                                                     <div className="font-bold">{user.firstName} {user.lastName}</div>
