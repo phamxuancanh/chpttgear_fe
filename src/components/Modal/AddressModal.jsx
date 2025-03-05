@@ -1,16 +1,39 @@
-import { useState } from "react";
+import axios from "axios";
+import { useEffect, useState } from "react";
 import { FaEnvelope, FaMapMarkerAlt, FaPhone, FaUser } from "react-icons/fa";
 import { FiX, FiMapPin } from "react-icons/fi";
+import { calculateShippingFee } from "../../routers/ApiRoutes";
+import Loading from "../loading";
 
-const AddressModal = ({ isOpen, onClose, user, onSelect }) => {
-    const addresses = user.address.split(";;").map((addr) => addr.split("|")[0].trim()); // Tách địa chỉ
+const AddressModal = ({ isOpen, onClose, user, onSelect, setShippingFee }) => {
+    const addresses = user.address.split(";;") // Tách địa chỉ
     const [selectedAddress, setSelectedAddress] = useState(addresses[0]);
-
+    const [loading, setLoading] = useState(false)
     if (!isOpen) return null; // Ẩn modal khi không mở
+
+
+    const handleChangeAddress = async () => {
+        setLoading(true);
+
+        const [address, code] = selectedAddress.split("|").map((s) => s.trim());
+        const [toWard, toDistrict] = code.split(",").map((s) => s.trim());
+
+        onSelect(address);
+        try {
+            const res = await calculateShippingFee(parseInt(toDistrict), toWard, 1000, 195800);
+            setShippingFee(res);
+        } catch (error) {
+            console.error("Error calculating shipping fee:", error);
+        } finally {
+            setLoading(false);
+            onClose();
+        }
+    };
+
 
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div className="bg-white rounded-xl p-6 w-1/3 shadow-lg relative">
+            {loading ? <Loading /> : <div className="bg-white rounded-xl p-6 w-1/3 shadow-lg relative">
                 {/* Nút đóng */}
                 <button onClick={onClose} className="absolute top-3 right-3 text-gray-500 hover:text-gray-800">
                     <FiX size={22} />
@@ -48,7 +71,7 @@ const AddressModal = ({ isOpen, onClose, user, onSelect }) => {
                                 onClick={() => setSelectedAddress(address)}
                             >
                                 <FiMapPin className="text-red-500" />
-                                <span className="text-gray-700">{address}</span>
+                                <span className="text-gray-700">{address.split("|")[0].trim()}</span>
                             </div>
                         ))
                     ) : (
@@ -58,17 +81,14 @@ const AddressModal = ({ isOpen, onClose, user, onSelect }) => {
 
                 {/* Nút xác nhận */}
                 <button
-                    onClick={() => {
-                        onSelect(selectedAddress);
-                        onClose();
-                    }}
+                    onClick={() => handleChangeAddress()}
                     disabled={!selectedAddress}
                     className={`mt-5 w-full py-2 rounded-lg transition
                         ${selectedAddress ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
                 >
                     Chọn địa chỉ
                 </button>
-            </div>
+            </div>}
         </div>
     );
 };

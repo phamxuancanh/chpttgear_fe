@@ -7,6 +7,11 @@ import { useSelector } from "react-redux";
 import { calculateShippingFee, createOrder, createOrderItem } from "../routers/ApiRoutes";
 import Loading from "../utils/Loading";
 import AddressModal from "../components/Modal/AddressModal";
+import { useModal } from "../context/ModalProvider";
+import axios from "axios";
+import { XMLParser } from 'fast-xml-parser';
+import { PiApproximateEqualsThin } from "react-icons/pi";
+import { FaDongSign } from "react-icons/fa6";
 
 export default function Payment() {
 
@@ -20,11 +25,16 @@ export default function Payment() {
   const [provinces, setProvinces] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [wards, setWards] = useState([]);
-  const [shippingFee, setShippingFee] = useState(5.0);
+  const [shippingFee, setShippingFee] = useState(0);
   const userFromRedux = useSelector((state) => state.auth.user);
-  const addresses = userFromRedux.address.split(";;").map((addr) => addr.split("|")[0].trim()); // Tách địa chỉ
+  console.log(userFromRedux?.address)
+  const addresses = userFromRedux?.address?.split(";;").map((addr) => addr.split("|")[0].trim()); // Tách địa chỉ
   const [selectedAddress, setSelectedAddress] = useState(addresses[0]);
+  const selectedCodeAddress = userFromRedux?.address?.split(";;").map((addr) => addr.split("|")[1].trim())[0]
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { openModal } = useModal();
+  const [date, setDate] = useState("");
+  const [usdRate, setUsdRate] = useState(null);
   const [formData, setFormData] = useState({
     fullName: userFromRedux ? userFromRedux.firstName + ' ' + userFromRedux.lastName : "",
     phoneNumber: userFromRedux ? userFromRedux.phone : "",
@@ -35,49 +45,86 @@ export default function Payment() {
 
   // Khi chọn Tỉnh/Thành phố, cập nhật danh sách Quận/Huyện
   useEffect(() => {
+    const fetchExchangeRate = async () => {
+      try {
+        const response = await axios.get(
+          "https://portal.vietcombank.com.vn/Usercontrols/TVPortal.TyGia/pXML.aspx?b=8"
+        );
+
+        console.log(response.data)
+
+        // Parse XML thành JSON
+        const parser = new XMLParser({ ignoreAttributes: false });
+        const jsonData = parser.parse(response.data);
+
+        setDate(jsonData.ExrateList.DateTime)
+        // Kiểm tra cấu trúc JSON
+        if (jsonData.ExrateList && jsonData.ExrateList.Exrate) {
+          const exrateArray = Array.isArray(jsonData.ExrateList.Exrate)
+            ? jsonData.ExrateList.Exrate
+            : [jsonData.ExrateList.Exrate]; // Nếu chỉ có 1 đối tượng, biến nó thành mảng
+
+          setUsdRate(
+            exrateArray.find((rate) => rate["@_CurrencyCode"] === "USD")
+          );
+        }
+      } catch (error) {
+        console.error("Lỗi khi gọi API:", error);
+      }
+    };
+
+    fetchExchangeRate();
     setProvinces(provinceData);
     console.log(userFromRedux)
     console.log(addresses)
   }, []);
 
   useEffect(() => {
-    if (!selectedAddress || provinces.length === 0) return;
+    const fetchData = async () => {
+      console.log(selectedAddress)
+      if (!selectedAddress || provinces.length === 0) return;
 
-    const parts = selectedAddress.split(",").map((part) => part.trim());
-    const provinceName = parts[parts.length - 1];
-    const districtName = parts[parts.length - 2];
-    const wardName = parts[parts.length - 3];
+      const parts = selectedAddress.split(",").map((part) => part.trim());
+      const provinceName = parts[parts.length - 1];
+      const districtName = parts[parts.length - 2];
+      const wardName = parts[parts.length - 3];
 
-    const province = provinces.find((p) =>
-      p.NameExtension.includes(provinceName) || p.ProvinceName === provinceName
-    );
-    if (!province) return;
+      const [toWard, toDistrict] = selectedCodeAddress.split(',')
+      // const res = await calculateShippingFee(parseInt(toDistrict), toWard, 1000, 195800);
+      // setShippingFee(res);
 
-    setSelectedProvince({ id: province.ProvinceID, name: province.ProvinceName });
-
-    // Lấy danh sách quận/huyện từ tỉnh
-    const filteredDistricts = province.Districts || [];
-    setDistricts(filteredDistricts);
-
-    // Nếu đã có quận/huyện, tiếp tục set quận/huyện
-    const district = filteredDistricts.find((d) =>
-      d.NameExtension.includes(districtName) || d.DistrictName === districtName
-    );
-    if (district) {
-      setSelectedDistrict({ id: district.DistrictID, name: district.DistrictName });
-
-      // Lấy danh sách phường/xã từ quận/huyện
-      const filteredWards = district.Wards || [];
-      setWards(filteredWards);
-
-      const ward = filteredWards.find((w) =>
-        w.NameExtension.includes(wardName) || w.WardName === wardName
+      const province = provinces.find((p) =>
+        p.NameExtension?.includes(provinceName) || p.ProvinceName === provinceName
       );
-      if (ward) {
-        setSelectedWard({ id: ward.WardCode, name: ward.WardName });
+      if (!province) return;
+
+      setSelectedProvince({ id: province.ProvinceID, name: province.ProvinceName });
+
+      // Lấy danh sách quận/huyện từ tỉnh
+      const filteredDistricts = province.Districts || [];
+      setDistricts(filteredDistricts);
+
+      // Nếu đã có quận/huyện, tiếp tục set quận/huyện
+      const district = filteredDistricts.find((d) =>
+        d.NameExtension?.includes(districtName) || d.DistrictName === districtName
+      );
+      if (district) {
+        setSelectedDistrict({ id: district.DistrictID, name: district.DistrictName });
+
+        // Lấy danh sách phường/xã từ quận/huyện
+        const filteredWards = district.Wards || [];
+        setWards(filteredWards);
+
+        const ward = filteredWards.find((w) =>
+          w.NameExtension.includes(wardName) || w.WardName === wardName
+        );
+        if (ward) {
+          setSelectedWard({ id: ward.WardCode, name: ward.WardName });
+        }
       }
     }
-  }, [selectedAddress, provinces]);
+    fetchData()
+  }, [selectedAddress, provinces, selectedWard]);
 
 
   const handleProvinceChange = (e) => {
@@ -256,8 +303,7 @@ export default function Payment() {
             throw new Error("Không tìm thấy approvalUrl từ PayPal");
           }
         }
-
-        alert("Đơn hàng đã được tạo thành công!");
+        openModal("Tạo đơn hàng thành công")
         navigate("/orders");
       }
     } catch (error) {
@@ -268,32 +314,7 @@ export default function Payment() {
     }
   };
 
-  const cartItems = [
-    {
-      id: "P001",
-      name: "Wireless Headphones",
-      price: 59.99,
-      quantity: 2,
-      image: "https://via.placeholder.com/100",
-      profit: 20.5
-    },
-    {
-      id: "P002",
-      name: "Intel i5-12400F",
-      price: 19.99,
-      quantity: 1,
-      image: "https://via.placeholder.com/100",
-      profit: 8.5
-    },
-    {
-      id: "P003",
-      name: "RAM Corsair Vengeance RGB 32GB DDR5 - 6000MHz",
-      price: 39.99,
-      quantity: 1,
-      image: "https://via.placeholder.com/100",
-      profit: 19.99
-    },
-  ];
+  const cartItems = selectedItems
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
@@ -343,6 +364,7 @@ export default function Payment() {
             // handleSelectAddress(newAddress);
             setIsModalOpen(false);
           }}
+          setShippingFee={setShippingFee}
         />
       </div>
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-xl p-8">
@@ -512,7 +534,7 @@ export default function Payment() {
                   <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-md" />
                   <div className="flex-1">
                     <h3 className="text-md font-medium text-gray-900">{item.name}</h3>
-                    <p className="text-gray-700">Đơn giá: ${item.price.toFixed(2)}</p>
+                    <p className="text-gray-700">Đơn giá: {item.price.toLocaleString('en-US')}</p>
                   </div>
                   <p className="text-gray-700">Số lượng: {item.quantity}</p>
                 </div>
@@ -525,21 +547,21 @@ export default function Payment() {
                 {/* Tổng tiền hàng */}
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-md text-gray-900">Tổng tiền hàng:</span>
-                  <span className="text-md font-semibold text-gray-700">${cartItems.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2)}</span>
+                  <span className="text-md font-semibold text-gray-700 flex justify-start items-center">{cartItems.reduce((total, item) => total + item.price * item.quantity, 0).toLocaleString('en-US')} <FaDongSign /></span>
                 </div>
 
                 {/* Phí ship */}
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-md text-gray-900">Phí vận chuyển:</span>
-                  <span className="text-md font-semibold text-gray-700">${shippingFee.toFixed(2)}</span>
+                  <span className="text-md font-semibold text-gray-700 flex justify-start items-center">{shippingFee.toLocaleString('en-US')}<FaDongSign /></span>
                 </div>
 
                 <hr className="my-2" />
 
                 {/* Tổng thanh toán cuối cùng */}
-                <div className="flex justify-between items-center text-lg font-bold text-red-600">
+                <div className="flex justify-between items-center text-lg font-bold text-red-600 ">
                   <span>Tổng cộng:</span>
-                  <span>${(cartItems.reduce((total, item) => total + item.price * item.quantity, 0) + shippingFee).toFixed(2)}</span>
+                  <span className="flex justify-start items-center">{(cartItems.reduce((total, item) => total + item.price * item.quantity, 0) + shippingFee).toLocaleString('en-US')}<FaDongSign /></span>
                 </div>
               </div>
             </div>
@@ -565,8 +587,15 @@ export default function Payment() {
                   onChange={handleInputChange}
                   className="hidden"
                 />
-                <FaPaypal className="text-indigo-500 text-2xl mr-3" />
-                <span className="text-gray-800">PayPal</span>
+                <div className="flex flex-col items-start">
+                  <div className="flex items-center">
+                    <FaPaypal className="text-indigo-500 text-2xl mr-3" />
+                    <span className="text-gray-800 font-semibold">PayPal</span>
+                  </div>
+                  <span className="text-red-600 text-sm mt-1 flex justify-start items-center">1 USD <PiApproximateEqualsThin className="mx-1" /> {usdRate?.["@_Transfer"]} VNĐ {date}</span>
+
+                </div>
+
               </label>
 
               <label
@@ -612,7 +641,7 @@ export default function Payment() {
             onClick={handleSubmit}
             className="w-full bg-indigo-500 text-white py-3 rounded-lg font-semibold hover:bg-indigo-600 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 mt-4"
           >
-            Continue
+            Tiếp tục
           </button>
           {/* </Link> */}
         </form>
