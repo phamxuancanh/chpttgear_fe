@@ -18,6 +18,7 @@ import Loading from "../utils/Loading";
 import { useCategory } from "../context/CategoryContext";
 import { setCartRedux, setCartItemsRedux, clearCart } from "../redux/cartSlice";
 import { findCartByUserId, findCartItemsByCartId, findAllProduct } from "../routers/ApiRoutes";
+import MenuModal from "./Modal/MenuModal";
 
 // import { setCartRedux, setCartItemsRedux, removeItemFromCart, increaseQuantityItem, decrementQuantityItem } from "../redux/cartSlice";
 // import { findCartByUserId, findCartItemsByCartId, findAllProduct, updateQuantityCartItem, deleteCartItem } from "../routers/ApiRoutes";
@@ -237,7 +238,7 @@ export default function Header() {
     useEffect(() => {
         const fetchCart = async () => {
             try {
-                console.log("USer current: ", user );
+                console.log("USer current: ", user);
                 const cartResponse = await findCartByUserId(user.id);
                 console.log(cartResponse.data)
                 if (cartResponse.data) {

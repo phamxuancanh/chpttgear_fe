@@ -268,32 +268,7 @@ export default function Payment() {
     }
   };
 
-  const cartItems = [
-    {
-      id: "P001",
-      name: "Wireless Headphones",
-      price: 59.99,
-      quantity: 2,
-      image: "https://via.placeholder.com/100",
-      profit: 20.5
-    },
-    {
-      id: "P002",
-      name: "Intel i5-12400F",
-      price: 19.99,
-      quantity: 1,
-      image: "https://via.placeholder.com/100",
-      profit: 8.5
-    },
-    {
-      id: "P003",
-      name: "RAM Corsair Vengeance RGB 32GB DDR5 - 6000MHz",
-      price: 39.99,
-      quantity: 1,
-      image: "https://via.placeholder.com/100",
-      profit: 19.99
-    },
-  ];
+  const cartItems = selectedItems;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">

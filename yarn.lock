@@ -3849,6 +3849,7 @@ chokidar@^3.4.2, chokidar@^3.5.3, chokidar@^3.6.0:
     react-icons "^5.4.0"
     react-image-gallery "^1.4.0"
     react-intersection-observer "^9.15.1"
+    react-lightgallery "^0.9.0"
     react-redux "^9.2.0"
     react-router-dom "^7.1.1"
     react-scripts "5.0.1"
