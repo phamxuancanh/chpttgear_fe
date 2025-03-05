@@ -20,7 +20,7 @@ const authSlice = createSlice({
           state.token = action.payload;
         },
         updateUser: (state, action) => {
-            state.user = { ...state.user, ...action.payload }; // Cập nhật thông tin user
+            state.user = { ...state.user, ...action.payload };
         },
     },
 });

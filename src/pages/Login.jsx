@@ -110,14 +110,8 @@ export default function Login() {
                     token: accessToken,
                     user: currentUser
                 };
-    
-                console.log("Trước khi dispatch:", payload);
-                
                 // Chờ Redux cập nhật trước khi tiếp tục
                 await dispatch(login(payload));
-    
-                console.log("Sau khi dispatch:", payload);
-    
                 // Điều hướng sau khi Redux đã cập nhật
                 if (data === 'R1' || data === 'R2') {
                     navigate(ROUTES.DASHBOARD.path);

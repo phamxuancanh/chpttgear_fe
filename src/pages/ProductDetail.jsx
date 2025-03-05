@@ -46,12 +46,6 @@ export default function ProductDetail() {
         }
     };
 
-    const images2 = [
-        { original: "https://canhbk29.s3.ap-southeast-2.amazonaws.com/defaultAVT.jpg", thumbnail: "url_thumbnail_1" },
-        { original: "https://canhbk29.s3.ap-southeast-2.amazonaws.com/defaultAVT.jpg", thumbnail: "url_thumbnail_2" },
-    ];
-    const images3 = ["https://canhbk29.s3.ap-southeast-2.amazonaws.com/defaultAVT.jpg", "https://canhbk29.s3.ap-southeast-2.amazonaws.com/defaultAVT.jpg"];
-
     // useEffect(() => {
     //     const fetchData = async () => {
     //         try {
@@ -83,7 +77,6 @@ export default function ProductDetail() {
                     getQuantityInStock(id),
                     findSpecificationsByProductId(id)
                 ]);
-                console.log(productRes.data)
                 if (productRes?.data) {
                     setProduct(productRes.data);
                     console.log(productRes.data.image.split(','))
