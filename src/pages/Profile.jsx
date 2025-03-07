@@ -235,28 +235,29 @@ export default function Profile() {
         setLoading(true);
         let currentUserAddresses = user?.address ? user.address.split(";;").map(item => item.trim()) : [];
         if (currentUserAddresses.length === 1) {
-            toast.error("You must have at least one address")
-            handleCloseDeleteAdressModal(addressToDelete)
+            toast.error("You must have at least one address");
+            handleCloseDeleteAdressModal(addressToDelete);
             return;
         }
         let updatedAddresses = currentUserAddresses.filter(address => address !== addressToDelete);
-        updatedAddresses = updatedAddresses.join(";;")
+        updatedAddresses = updatedAddresses.join(";;");
         setFormData(prevFormData => ({
             ...prevFormData,
             address: updatedAddresses
-        }))
+        }));
         const response = await editUserById(userFromRedux.id, { ...formData, address: updatedAddresses });
         if (response.status === 200) {
             toast.success("Delete address successfully");
             setUser(response.data);
             setFormData(response.data);
+            dispatch(updateUser(response.data));
         } else {
             toast.error("Delete address failed");
         }
         setLoading(false);
         handleCloseDeleteAdressModal(addressToDelete);
     };
-
+    
     const validateForm = () => {
         const nameRegex = /^[A-Za-zÀ-Ỹà-ỹ\s]{2,50}$/;
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
