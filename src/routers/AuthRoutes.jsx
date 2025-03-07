@@ -52,10 +52,10 @@ const AuthRoute = ({ children, allowedRoles }) => {
       }
     }
 
-    if ((userRole === 'R1' || userRole === 'R2') && location.pathname !== ROUTES.DASHBOARD.path) {
-      console.log('auth route 1')
-      return <Navigate to={ROUTES.DASHBOARD.path} />;
-    }
+    // if ((userRole === 'R1' || userRole === 'R2') && location.pathname !== ROUTES.DASHBOARD.path) {
+    //   console.log('auth route 1')
+    //   return <Navigate to={ROUTES.DASHBOARD.path} />;
+    // }
 
     if (userRole !== 'R1' && userRole !== 'R2' && location.pathname === ROUTES.DASHBOARD.path) {
       console.log('auth route 2')
