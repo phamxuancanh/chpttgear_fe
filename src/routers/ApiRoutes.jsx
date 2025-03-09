@@ -385,9 +385,10 @@ export const deleteCartItem = async (cartItemId) => {
 };
 
 // orderService
-export const getAllOrders = async () => {
-    return await requestWithJwt.get(`/orders/`);
+export const getAllOrders = async (page = 1, pageSize = 10) => {
+    return await requestWithJwt.get(`/orders?page=${page}&pageSize=${pageSize}`);
 };
+
 
 export const getOrderById = async (orderId) => {
     return await requestWithJwt.get(`/orders/${orderId}`);
@@ -440,6 +441,61 @@ export const getPaypalCancel = async (orderId) => {
     );
 };
 // paymentService
+export const createPayment = async (paymentData) => {
+    return await requestWithJwt.post('/payments', paymentData);
+};
+
+export const getPaymentById = async (paymentId) => {
+    return await requestWithJwt.get(`/payments/${paymentId}`);
+};
+
+export const getPaymentsByOrderId = async (orderId) => {
+    return await requestWithJwt.get(`/payments/orders/${orderId}`);
+};
+
+export const updatePayment = async (paymentId, updateData) => {
+    return await requestWithJwt.put(`/payments/${paymentId}`, updateData);
+};
+
+export const deletePayment = async (paymentId) => {
+    return await requestWithJwt.delete(`/payments/${paymentId}`);
+};
+
+export const createTransaction = async (transactionData) => {
+    return await requestWithJwt.post('/transactions', transactionData);
+};
+
+export const getTransactionById = async (transactionId) => {
+    return await requestWithJwt.get(`/transactions/${transactionId}`);
+};
+
+export const getTransactionsByPaymentId = async (paymentId) => {
+    return await requestWithJwt.get(`/transactions/payment/${paymentId}`);
+};
+
+export const updateTransactionStatus = async (transactionId, statusData) => {
+    return await requestWithJwt.put(`/transactions/${transactionId}/status`, statusData);
+};
+
+export const handlePaymentGatewayResponse = async (responseData) => {
+    return await requestWithJwt.post('/transactions/payment-response', responseData);
+};
+
+export const createRefund = async (refundData) => {
+    return await requestWithJwt.post('/refunds', refundData);
+};
+
+export const getRefundById = async (refundId) => {
+    return await requestWithJwt.get(`/refunds/${refundId}`);
+};
+
+export const getRefundsByPayment = async (paymentId) => {
+    return await requestWithJwt.get(`/refunds/payment/${paymentId}`);
+};
+
+export const updateRefundStatus = async (refundId, statusData) => {
+    return await requestWithJwt.put(`/refunds/${refundId}/status`, statusData);
+};
 
 // shippingService
 export const calculateShippingFee = async (toDistrict, toWard, weight, ShopId) => {
