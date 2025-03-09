@@ -4,7 +4,7 @@
 import React from 'react'
 import { PacmanLoader } from 'react-spinners'
 const Loading = () => {
-    return <div className="flex justify-center items-center w-full h-140 mt-20">
+    return <div className="absolute inset-0 flex justify-center items-center w-full h-140 mt-20">
         <PacmanLoader
             className='flex justify-center items-center w-full mt-20'
             color='#5EEAD4'

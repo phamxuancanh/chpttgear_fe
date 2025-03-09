@@ -177,6 +177,7 @@ export default function Profile() {
             return;
         }
         let currentUserAddresses = user?.address ? user.address.split(";;") : [];
+        console.log(currentUserAddresses)
         let newAddressToAdd =
             formData.address.trim() +
             ", " +
@@ -201,6 +202,7 @@ export default function Profile() {
         }
         currentUserAddresses.push(newAddressToAdd);
         const updatedAddresses = currentUserAddresses.join(";;");
+        console.log(updatedAddresses)
         setFormData({ ...formData, address: updatedAddresses });
         try {
             setLoading(true);

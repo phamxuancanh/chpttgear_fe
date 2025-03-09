@@ -3,8 +3,8 @@ import { FaPaypal, FaMoneyBillWave, FaChevronDown, FaMapMarkerAlt, FaUser, FaEnv
 import { TbTruckDelivery } from "react-icons/tb";
 import { Link, useNavigate } from "react-router-dom";
 import provinceData from "../assets/address/province.json";
-import { useSelector } from "react-redux";
-import { calculateShippingFee, createOrder, createOrderItem } from "../routers/ApiRoutes";
+import { useDispatch, useSelector } from "react-redux";
+import { calculateShippingFee, createOrder, createOrderItem, editUserById } from "../routers/ApiRoutes";
 import Loading from "../utils/Loading";
 import AddressModal from "../components/Modal/AddressModal";
 import { useModal } from "../context/ModalProvider";
@@ -12,6 +12,8 @@ import axios from "axios";
 import { XMLParser } from 'fast-xml-parser';
 import { PiApproximateEqualsThin } from "react-icons/pi";
 import { FaDongSign } from "react-icons/fa6";
+import { toast } from "react-toastify";
+import { updateUser } from "../redux/authSlice";
 
 export default function Payment() {
 
@@ -41,6 +43,7 @@ export default function Payment() {
     email: userFromRedux ? userFromRedux.email : "",
     paymentMethod: "",
   });
+  const dispatch = useDispatch();
 
   // Khi chọn Tỉnh/Thành phố, cập nhật danh sách Quận/Huyện
   useEffect(() => {
@@ -73,6 +76,7 @@ export default function Payment() {
 
     fetchExchangeRate();
     setProvinces(provinceData);
+    console.log(userFromRedux)
   }, []);
 
   useEffect(() => {
@@ -84,6 +88,7 @@ export default function Payment() {
       const provinceName = parts[parts.length - 1];
       const districtName = parts[parts.length - 2];
       const wardName = parts[parts.length - 3];
+      const houseNumber = parts[parts.length - 4];
 
       const [toWard, toDistrict] = selectedCodeAddress.split(',')
       // const res = await calculateShippingFee(parseInt(toDistrict), toWard, 1000, 195800);
@@ -116,7 +121,13 @@ export default function Payment() {
         );
         if (ward) {
           setSelectedWard({ id: ward.WardCode, name: ward.WardName });
-          const res = await calculateShippingFee(parseInt(district.DistrictID), ward.WardCode, 1000, 195800);
+          setFormData((prev) => ({
+            ...prev,
+            streetAddress: houseNumber,
+          }));
+          console.log(district.DistrictID, ward.WardCode)
+          const res = await calculateShippingFee(parseInt(district?.DistrictID), ward?.WardCode, 1000, 195800);
+          console.log(res)
           setShippingFee(res);
         }
       }
@@ -228,7 +239,28 @@ export default function Payment() {
 
     console.log(payload);
 
+
+    let isConfirmed = false;
+
+    if (!addresses.includes(payload.houseNumber)) {
+      isConfirmed = window.confirm("Có vẻ bạn đang sử dụng một địa chỉ mới. Bạn có muốn lưu địa chỉ này không?");
+    }
+
     try {
+      if (isConfirmed) {
+        const currentUserAddresses = userFromRedux?.address ? userFromRedux.address.split(";;") : [];
+        const newAddressToAdd = payload.houseNumber + '|' + selectedWard.id + ',' + selectedDistrict.id + ',' + selectedProvince.id;
+        currentUserAddresses.push(newAddressToAdd);
+        const updatedAddresses = currentUserAddresses.join(";;");
+        console.log(updatedAddresses);
+        const response = await editUserById(userFromRedux.id, { address: updatedAddresses });
+        if (response.status === 200) {
+          toast.success("Set default address successfully");
+          dispatch(updateUser(response.data));
+        } else {
+          toast.error("Set default address failed");
+        }
+      }
       const resOrder = await createOrder(payload);
 
       if (resOrder.status === 201) {

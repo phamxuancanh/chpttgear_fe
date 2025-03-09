@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { FaSearch, FaEye, FaEdit } from "react-icons/fa";
 import OrderDetailsModal from "../Modal/OrderDetailsModal";
+import { getAllOrders } from "../../routers/ApiRoutes";
+import Loading from "../loading";
 
 export default function Order() {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -9,49 +11,38 @@ export default function Order() {
     const [dateRange, setDateRange] = useState({ start: "", end: "" });
     const [statusFilter, setStatusFilter] = useState("all");
     const [searchQuery, setSearchQuery] = useState("");
+    const [orders, setOrders] = useState(null);
+    const [page, setPage] = useState(1);
+    const [pageSize] = useState(10);
+    const [totalPages, setTotalPages] = useState(1);
+    const [loading, setLoading] = useState(false);
 
-    const dummyOrders = [
-        {
-            id: "ORD001",
-            date: new Date(),
-            total: 1500000,
-            paymentMethod: "Thanh toán khi nhận hàng",
-            status: "Đang Chuẩn Bị",
-            customer: {
-                name: "Nguyễn Văn A",
-                phone: "0123456789",
-                address: "123 Đường ABC, Quận 1, TP.HCM"
-            },
-            items: [
-                { name: "Sản phẩm 1", quantity: 2, price: 500000 },
-                { name: "Sản phẩm 2", quantity: 1, price: 500000 }
-            ],
-            notes: "Giao hàng giờ hành chính"
-        },
-        {
-            id: "ORD002",
-            date: new Date(),
-            total: 2000000,
-            paymentMethod: "Chuyển khoản ngân hàng",
-            status: "Đã Xác Nhận",
-            customer: {
-                name: "Trần Thị B",
-                phone: "0987654321",
-                address: "456 Đường XYZ, Quận 2, TP.HCM"
-            },
-            items: [
-                { name: "Sản phẩm 3", quantity: 1, price: 2000000 }
-            ],
-            notes: ""
+
+    const fetchAllOrder = async (pageNumber) => {
+        try {
+            const res = await getAllOrders(pageNumber, pageSize);
+            setOrders(res.data.orders);
+            setTotalPages(res.data.totalPages);
+        } catch (error) {
+            console.error("Lỗi khi gọi API:", error);
         }
-    ];
+    };
+
+    // useEffect sẽ quản lý việc gọi API
+    useEffect(() => {
+        setLoading(true);
+        fetchAllOrder(page)
+            .then(() => setLoading(false))
+            .catch(() => setLoading(false));
+    }, [page]); // Chỉ gọi lại khi `page` thay đổi
+
 
     const statusColors = {
-        "Đang Chuẩn Bị": "bg-yellow-100 text-yellow-800",
-        "Đã Xác Nhận": "bg-blue-100 text-blue-800",
-        "Đang Vận Chuyển": "bg-purple-100 text-purple-800",
-        "Đã Giao": "bg-green-100 text-green-800",
-        "Đã Hủy": "bg-red-100 text-red-800"
+        "PENDING": "bg-yellow-100 text-yellow-800",
+        "PAID": "bg-blue-100 text-blue-800",
+        "SHIPPED": "bg-purple-100 text-purple-800",
+        "DELIVERED": "bg-green-100 text-green-800",
+        "CANCELLED": "bg-red-100 text-red-800"
     };
 
     const handleViewDetails = (order) => {
@@ -59,7 +50,7 @@ export default function Order() {
         setIsModalOpen(true);
     };
 
-    const filteredOrders = dummyOrders.filter((order) => {
+    const filteredOrders = orders?.filter((order) => {
         const matchesSearchQuery =
             searchQuery === "" ||
             order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -77,6 +68,7 @@ export default function Order() {
 
     return (
         <div className="min-h-screen bg-gray-50 p-4">
+            {loading && <Loading />}
             <div className="max-w-7xl mx-auto">
                 <h1 className="text-3xl font-bold text-gray-800 mb-8">Quản Lý Đơn Hàng</h1>
 
@@ -145,17 +137,17 @@ export default function Order() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                                {filteredOrders.length > 0 ? (
+                                {filteredOrders?.length > 0 ? (
                                     filteredOrders.map((order) => (
                                         <tr key={order.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 whitespace-nowrap">{order.id}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">{order.order_id}</td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                {format(order.date, "dd/MM/yyyy HH:mm")}
+                                                {format(order.createdAt, "dd/MM/yyyy HH:mm")}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                {order.total.toLocaleString()}đ
+                                                {order.total_amount.toLocaleString()}đ
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">{order.paymentMethod}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">{order.payment_method}</td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[order.status]}`}>
                                                     {order.status}
@@ -182,6 +174,32 @@ export default function Order() {
                         </table>
                     </div>
                 </div>
+            </div>
+            <div className="flex justify-center mt-5">
+                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    {/* Nút Trang Trước */}
+                    <button
+                        onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+                        disabled={page === 1}
+                        className="relative inline-flex items-center px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
+                    >
+                        Trang trước
+                    </button>
+
+                    {/* Hiển thị số trang */}
+                    <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                        {`Trang ${page} / ${totalPages}`}
+                    </span>
+
+                    {/* Nút Trang Sau */}
+                    <button
+                        onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={page === totalPages}
+                        className="relative inline-flex items-center px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
+                    >
+                        Trang sau
+                    </button>
+                </nav>
             </div>
 
             {isModalOpen && (
