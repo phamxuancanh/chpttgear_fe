@@ -3,7 +3,7 @@ import { FiShoppingCart } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { FaDongSign } from "react-icons/fa6";
 import { createCartItem, updateQuantityCartItem } from "../routers/ApiRoutes";
-import { setCartItemsRedux, increaseQuantityItem } from "../redux/cartSlice";
+import { setCartItemsRedux, increaseQuantityItem, setSelectedItemsRedux } from "../redux/cartSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { useModal } from "../context/ModalProvider";
@@ -15,13 +15,20 @@ export default function ProductCard({ product }) {
     const cart = useSelector(state => state.shoppingCart.cart);
     const cartItems = useSelector(state => state.shoppingCart.items);
     const { openModal } = useModal();
-
+    const selectedItems = useSelector(state => state.shoppingCart.selectItems);
 
     const handlerAddToCart = async ({ product }) => {
         console.log(product)
         console.log(cartItems)
         const item = cartItems.find(item => item.productId === product.id);
         if (item) {
+            const updatedItems = selectedItems.map(i => 
+                i.itemId === item.itemId ? { ...i, quantity: i.quantity + 1 } : i
+            );
+            if (!selectedItems.some(i => i.itemId === item.itemId)) {
+                updatedItems.push({ ...item, quantity: 1 });
+            }
+            dispatch(setSelectedItemsRedux({ selectItems: updatedItems }));
             try {
                 const updateItemResponse = await updateQuantityCartItem(item.itemId, item.quantity + 1);
                 console.log(updateItemResponse)
