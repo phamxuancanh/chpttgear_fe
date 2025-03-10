@@ -6,6 +6,8 @@ import { Pagination, Slider } from '@mui/material'
 import { findAllCategory, findAllSpecification, searchProducts } from "../routers/ApiRoutes";
 import ProductCard from "../components/ProductCard";
 import { ClockLoader } from "react-spinners"
+import { set } from "date-fns";
+import { all } from "axios";
 
 const useQuery = () => {
     return new URLSearchParams(useLocation().search);
@@ -100,19 +102,7 @@ export default function SearchResult() {
         fetchCategories();
         fetchSpecifications();
     }, []);
-    const handleCategoryChange = (e) => {
-        const selectedIndex = e.target.selectedIndex;
-        const selectedId = e.target.value;
-        const selectedName = e.target.options[selectedIndex].text;
-        setSelectedCategory({ id: selectedId, name: selectedName });
-    };
-    useEffect(() => {
-        if (selectedCategory.name) {
-            setSpecsFields(specDefinitions[selectedCategory.name] || []);
-        } else {
-            setSpecsFields([]);
-        }
-    }, [selectedCategory]);
+
     const colors = [
         { key: "black", value: "Đen" },
         { key: "white", value: "Trắng" },
@@ -260,9 +250,31 @@ export default function SearchResult() {
     const [results, setResults] = useState(null);
     const searchParams = new URLSearchParams(location.search);
     const name = searchParams.get('name');
+    const handleCategoryChange = (e) => {
+        const selectedIndex = e.target.selectedIndex;
+        const selectedId = e.target.value;
+        const selectedName = e.target.options[selectedIndex].text;
+        if (selectedId === "") {
+            // setSelectedCategory({ id: "", name: "" });
+            setSelectedCategory("");
+        } else {
+            setSelectedCategory({ id: selectedId, name: selectedName });
+        }
+        // setSelectedCategory({ id: selectedId, name: selectedName });
+    };
+    useEffect(() => {
+        if (selectedCategory.id) {
+            console.log("Selected category:", selectedCategory);
+            setSpecsFields(specDefinitions[selectedCategory.name] || []);
+        }
+        else {
+            setSpecsFields([]);
+        }
+
+    }, [selectedCategory]);
     useEffect(() => {
         // Reset các combobox về giá trị mặc định khi search param "name" thay đổi
-        setSelectedCategory({ id: "all", name: "" });
+        setSelectedCategory({ id: "", name: "" });
         setSelectedColor("");
         setProductData({});
         setPriceRange([0, 100000000]);
@@ -278,10 +290,27 @@ export default function SearchResult() {
       };
       useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
+        const categoryParam = queryParams.get("category") || "";
+        if (categoryParam !== "" && categories.length > 0) {
+            const categoryFound = categories.find(
+                (c) => c.name.trim().toLowerCase() === categoryParam.trim().toLowerCase()
+            );
+            if (categoryFound) {
+                setSelectedCategory({ id: categoryFound.id, name: categoryFound.name });
+            } else {
+                setSelectedCategory({ id: "", name: categoryParam });
+            }
+        } else {
+            setSelectedCategory({ id: "", name: "" });
+        }
+    }, [location.search, categories]);
+      useEffect(() => {
+        const queryParams = new URLSearchParams(location.search);
         const allParams = {};
         const initialData = {};
-    
-        // Chuyển toàn bộ query param thành object
+
+        setSelectedColor(queryParams.get("color") || "all");
+        setPriceRange([parseFloat(queryParams.get("price_gte")) || 0, parseFloat(queryParams.get("price_lte")) || 100000000]);
         for (const [key, value] of queryParams.entries()) {
             allParams[key] = value;
         }
@@ -290,9 +319,16 @@ export default function SearchResult() {
             if (isNaN(allParams.page)) {
                 allParams.page = 1;
             }
+            setPage(allParams.page);
         } else {
-            allParams.page = 1; // giá trị mặc định
+            allParams.page = 1;
         }
+        if (selectedCategory && selectedCategory.name.trim() !== "") {
+            queryParams.set("category", selectedCategory.name);
+        } else {
+            queryParams.delete("category");
+        }
+        allParams.search = name || "";
 
         if (allParams.price_gte) {
             const num = parseFloat(allParams.price_gte);
@@ -307,25 +343,25 @@ export default function SearchResult() {
         allParams.page = parseInt(allParams.page, 10) || 1;
         allParams.price_gte = parseFloat(allParams.price_gte) || 0;
         allParams.price_lte = parseFloat(allParams.price_lte) || 100000000;
-    
-        const matchedCategory = categories.find(
-            (cat) => cat.name.toLowerCase() === allParams.category?.toLowerCase()
-        );
-        setSelectedCategory(matchedCategory ? matchedCategory.id : "");
-        setSelectedColor(allParams.color || "");
+
+        if (selectedColor && selectedColor !== "all") {
+            queryParams.set("color", selectedColor);
+        } else {
+            queryParams.delete("color");
+        }
         setPriceRange([allParams.price_gte, allParams.price_lte]);
     
         // Lấy thông tin specsFields
         specsFields.forEach((spec) => {
-            if (allParams[spec.key]) {
-                initialData[spec.key] = allParams[spec.key];
+            if (allParams[`spec_${spec.key}`] && allParams[`spec_${spec.key}`] !== "all") {
+                initialData[spec.key] = allParams[`spec_${spec.key}`];
             }
         });
         setProductData(initialData);
     
         console.log("All params:", allParams);
         fetchResults(allParams);
-    }, [location.search, specsFields]);
+    }, [location.search]);
 
 
     const totalPage = useMemo(() => {
@@ -340,33 +376,58 @@ export default function SearchResult() {
     };
     const handleFilterClick = () => {
         setLoading(true);
+        console.log("Filtering...");
         try {
-          const queryParams = new URLSearchParams(location.search);
-          // Cập nhật/Thêm các param thông thường
-          queryParams.set("page", 1);
-          if (name) {
-            queryParams.set("search", name);
-          }
-          if (selectedCategory && selectedCategory.name) {
-            queryParams.set("category", selectedCategory.name);
-          }
-          if (selectedColor) {
-            queryParams.set("color", selectedColor);
-          }
-          queryParams.set("price_gte", priceRange[0]);
-          queryParams.set("price_lte", priceRange[1]);
-      
-          for (const key in productData) {
-            if (productData[key]) {
-              queryParams.set(`spec_${key}`, productData[key]);
+            const queryParams = new URLSearchParams(location.search);
+    
+            // Cập nhật/Thêm các param thông thường
+            queryParams.set("page", 1);
+            if (name) {
+                queryParams.set("search", name);
             }
-          }
-          navigate(`?${queryParams.toString()}`);
+    
+            // Kiểm tra category
+            if (selectedCategory && selectedCategory !== "") {
+                queryParams.set("category", selectedCategory.name);
+            } else {
+                queryParams.delete("category");
+    
+                // Xóa tất cả các spec_* nếu category rỗng
+                [...queryParams.keys()].forEach((key) => {
+                    if (key.startsWith("spec_")) {
+                        queryParams.delete(key);
+                    }
+                });
+            }
+    
+            // Kiểm tra color
+            if (selectedColor && selectedColor !== "all") {
+                queryParams.set("color", selectedColor);
+            } else {
+                queryParams.delete("color");
+            }
+    
+            // Cập nhật khoảng giá
+            queryParams.set("price_gte", priceRange[0]);
+            queryParams.set("price_lte", priceRange[1]);
+    
+            // Cập nhật spec_* nếu có category
+            if (selectedCategory && selectedCategory !== "") {
+                for (const key in productData) {
+                    if (productData[key] && productData[key] !== "all") {
+                        queryParams.set(`spec_${key}`, productData[key]);
+                    } else {
+                        queryParams.delete(`spec_${key}`);
+                    }
+                }
+            }
+    
+            navigate(`?${queryParams.toString()}`);
         } finally {
-          setLoading(false);
+            setLoading(false);
         }
-      };
-      
+    };
+    
     
     const handleSpecChange = (key, value) => {
         setProductData(prevData => ({
@@ -474,13 +535,14 @@ export default function SearchResult() {
                                     onChange={(e) => handleSpecChange(spec.key, e.target.value)}
                                     className="w-full p-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500"
                                 >
-                                    <option value="" disabled>Chọn {spec.value}</option>
+                                    <option value="all">Tất cả</option> {/* Thêm tùy chọn "Tất cả" */}
                                     {spec.options.map((option) => (
                                         <option key={option} value={option}>{option}</option>
                                     ))}
                                 </select>
                             </div>
                         ))}
+
 
                         {/* Nút lọc */}
                         <div className="col-span-1 sm:col-span-2 md:col-span-1 flex items-end">
