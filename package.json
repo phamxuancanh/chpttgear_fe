@@ -2,6 +2,7 @@
   "name": "chpttgear_fe",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://localhost:8080",
   "dependencies": {
     "@emotion/styled": "^11.14.0",
     "@loadable/component": "^5.16.4",
@@ -23,7 +24,7 @@
     "react-dom": "^19.0.0",
     "react-dropzone": "^14.3.5",
     "react-helmet": "^6.1.0",
-    "react-icons": "^5.4.0",
+    "react-icons": "^5.5.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.1.1",
     "react-scripts": "5.0.1",
