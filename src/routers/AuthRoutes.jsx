@@ -4,7 +4,7 @@
    ========================================================================== */
 import { Navigate, useLocation } from 'react-router-dom';
 import ROUTES from '../constants/Page';
-import { getFromLocalStorage, removeAllLocalStorage } from '../utils/functions';
+import { getFromLocalStorage } from '../utils/functions';
 import CryptoJS from 'crypto-js';
 
 const AuthRoute = ({ children, allowedRoles }) => {
@@ -26,8 +26,7 @@ const AuthRoute = ({ children, allowedRoles }) => {
     return <Navigate to={ROUTES.LOGIN_PAGE.path} />;
   }
 
-  else if (isAuthenticated === true) {
-    // Nếu người dùng đã đăng nhập mà vào Login hoặc Register, chuyển hướng về Home Page
+  else if (isAuthenticated === 'true') {
     if (
       location.pathname === ROUTES.LOGIN_PAGE.path ||
       location.pathname === ROUTES.REGISTER_PAGE.path ||
@@ -35,10 +34,9 @@ const AuthRoute = ({ children, allowedRoles }) => {
     ) {
       return <Navigate to={ROUTES.HOME_PAGE.path} />;
     }
-
-    const userRoleEncrypted = authen.user?.key;
+    const user = authen?.user ? JSON.parse(authen.user) : null;
+    const userRoleEncrypted = user?.key;
     let userRole;
-
     if (userRoleEncrypted) {
       try {
         const decrypted = CryptoJS.AES.decrypt(
@@ -51,13 +49,16 @@ const AuthRoute = ({ children, allowedRoles }) => {
       }
     }
 
-    if ((userRole === 'R1' || userRole === 'R2') && location.pathname !== ROUTES.DASHBOARD.path) {
-      return <Navigate to={ROUTES.DASHBOARD.path} />;
-    }
+    // if ((userRole === 'R1' || userRole === 'R2') && location.pathname !== ROUTES.DASHBOARD.path) {
+    //   console.log('auth route 1')
+    //   return <Navigate to={ROUTES.DASHBOARD.path} />;
+    // }
 
     if (userRole !== 'R1' && userRole !== 'R2' && location.pathname === ROUTES.DASHBOARD.path) {
+      console.log('auth route 2')
       return <Navigate to={ROUTES.HOME_PAGE.path} />;
     }
+
     if (allowedRoles) {
       return <Navigate to={ROUTES.NOT_FOUND.path} />
     }

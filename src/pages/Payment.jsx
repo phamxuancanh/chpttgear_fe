@@ -1,39 +1,198 @@
 import { useEffect, useState } from "react";
-import { FaPaypal, FaMoneyBillWave } from "react-icons/fa";
+import { FaPaypal, FaMoneyBillWave, FaChevronDown, FaMapMarkerAlt, FaUser, FaEnvelope, FaEdit, FaPhone } from "react-icons/fa";
 import { TbTruckDelivery } from "react-icons/tb";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import provinceData from "../assets/address/province.json";
+import { useDispatch, useSelector } from "react-redux";
+import { calculateShippingFee, createOrder, createOrderItem, editUserById } from "../routers/ApiRoutes";
+import Loading from "../utils/Loading";
+import AddressModal from "../components/Modal/AddressModal";
+import { useModal } from "../context/ModalProvider";
+import axios from "axios";
+import { XMLParser } from 'fast-xml-parser';
+import { PiApproximateEqualsThin } from "react-icons/pi";
+import { FaDongSign } from "react-icons/fa6";
+import { toast } from "react-toastify";
+import { updateUser } from "../redux/authSlice";
 
 export default function Payment() {
+
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+  const navigate = useNavigate();
+  const [selectedProvince, setSelectedProvince] = useState({ id: "", name: "" });
+  const [selectedDistrict, setSelectedDistrict] = useState({ id: "", name: "" });
+  const [selectedWard, setSelectedWard] = useState({ id: "", name: "" });
+  const selectedItems = useSelector(state => state.shoppingCart.selectItems)
+  const [provinces, setProvinces] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [wards, setWards] = useState([]);
+  const [shippingFee, setShippingFee] = useState(0);
+  const userFromRedux = useSelector((state) => state.auth.user);
+  const addresses = userFromRedux?.address?.split(";;").map((addr) => addr.split("|")[0].trim()); // Tách địa chỉ
+  const [selectedAddress, setSelectedAddress] = useState(addresses[0]);
+  const selectedCodeAddress = userFromRedux?.address?.split(";;").map((addr) => addr.split("|")[1].trim())[0]
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { openModal } = useModal();
+  const [date, setDate] = useState("");
+  const [usdRate, setUsdRate] = useState(null);
   const [formData, setFormData] = useState({
-    fullName: "",
-    phoneNumber: "",
-    deliveryAddress: "",
-    email: "",
+    fullName: userFromRedux ? userFromRedux.firstName + ' ' + userFromRedux.lastName : "",
+    phoneNumber: userFromRedux ? userFromRedux.phone : "",
+    streetAddress: "",
+    email: userFromRedux ? userFromRedux.email : "",
     paymentMethod: "",
   });
+  const dispatch = useDispatch();
 
-  const [errors, setErrors] = useState({});
+  // Khi chọn Tỉnh/Thành phố, cập nhật danh sách Quận/Huyện
+  useEffect(() => {
+    const fetchExchangeRate = async () => {
+      try {
+        const response = await axios.get(
+          "https://portal.vietcombank.com.vn/Usercontrols/TVPortal.TyGia/pXML.aspx?b=8"
+        );
+
+        const parser = new XMLParser({ ignoreAttributes: false });
+        const jsonData = parser.parse(response.data);
+
+        setDate(jsonData.ExrateList.DateTime);
+
+        if (jsonData.ExrateList && jsonData.ExrateList.Exrate) {
+          const exrateArray = Array.isArray(jsonData.ExrateList.Exrate)
+            ? jsonData.ExrateList.Exrate
+            : [jsonData.ExrateList.Exrate];
+
+          const usdRate = exrateArray.find((rate) => rate["@_CurrencyCode"] === "USD");
+
+          if (usdRate) {
+            setUsdRate(usdRate["@_Sell"]); // Lấy giá bán USD -> VND
+          }
+        }
+      } catch (error) {
+        console.error("Lỗi khi gọi API:", error);
+      }
+    };
+
+    fetchExchangeRate();
+    setProvinces(provinceData);
+    console.log(userFromRedux)
+  }, []);
 
   useEffect(() => {
-    const storedUserData = localStorage.getItem("DRAFI_USER");
-    if (storedUserData) {
-      const parsedUserData = JSON.parse(storedUserData);
-      setFormData((prevData) => ({
-        ...prevData,
-        fullName: parsedUserData.display_name || "",
-        phoneNumber: parsedUserData.phone || "",
-        email: parsedUserData.email || "",
-      }));
+    const fetchData = async () => {
+      console.log(selectedAddress)
+      if (!selectedAddress || provinces.length === 0) return;
+
+      const parts = selectedAddress.split(",").map((part) => part.trim());
+      const provinceName = parts[parts.length - 1];
+      const districtName = parts[parts.length - 2];
+      const wardName = parts[parts.length - 3];
+      const houseNumber = parts[parts.length - 4];
+
+      const [toWard, toDistrict] = selectedCodeAddress.split(',')
+      // const res = await calculateShippingFee(parseInt(toDistrict), toWard, 1000, 195800);
+      // setShippingFee(res);
+
+      const province = provinces.find((p) =>
+        p.NameExtension?.includes(provinceName) || p.ProvinceName === provinceName
+      );
+      if (!province) return;
+
+      setSelectedProvince({ id: province.ProvinceID, name: province.ProvinceName });
+
+      // Lấy danh sách quận/huyện từ tỉnh
+      const filteredDistricts = province.Districts || [];
+      setDistricts(filteredDistricts);
+
+      // Nếu đã có quận/huyện, tiếp tục set quận/huyện
+      const district = filteredDistricts.find((d) =>
+        d.NameExtension?.includes(districtName) || d.DistrictName === districtName
+      );
+      if (district) {
+        setSelectedDistrict({ id: district.DistrictID, name: district.DistrictName });
+
+        // Lấy danh sách phường/xã từ quận/huyện
+        const filteredWards = district.Wards || [];
+        setWards(filteredWards);
+
+        const ward = filteredWards.find((w) =>
+          w.NameExtension.includes(wardName) || w.WardName === wardName
+        );
+        if (ward) {
+          setSelectedWard({ id: ward.WardCode, name: ward.WardName });
+          setFormData((prev) => ({
+            ...prev,
+            streetAddress: houseNumber,
+          }));
+          console.log(district.DistrictID, ward.WardCode)
+          const res = await calculateShippingFee(parseInt(district?.DistrictID), ward?.WardCode, 1000, 195800);
+          console.log(res)
+          setShippingFee(res);
+        }
+      }
+
     }
-  }, []);
+    fetchData()
+  }, [selectedAddress, provinces]);
+
+  const handleProvinceChange = (e) => {
+    const provinceID = Number(e.target.value);
+    const province = provinces.find(p => p.ProvinceID === provinceID);
+
+    if (province) {
+      setSelectedProvince({ id: province.ProvinceID, name: province.ProvinceName });
+      setDistricts(province.Districts);
+    } else {
+      setSelectedProvince({ id: "", name: "" });
+      setDistricts([]);
+    }
+
+    setSelectedDistrict({ id: "", name: "" });
+    setWards([]);
+    setSelectedWard({ id: "", name: "" });
+  };
+
+
+  const handleDistrictChange = (e) => {
+    const districtID = Number(e.target.value);
+    const district = districts.find(d => d.DistrictID === districtID);
+
+    if (district) {
+      setSelectedDistrict({ id: district.DistrictID, name: district.DistrictName });
+      setWards(district.Wards);
+    } else {
+      setSelectedDistrict({ id: "", name: "" });
+      setWards([]);
+    }
+
+
+
+    setSelectedWard({ id: "", name: "" });
+  };
+
+
+  const handleWardChange = async (e) => {
+    const wardID = e.target.value;
+    const ward = wards.find(w => w.WardCode === wardID);
+
+    if (ward) {
+      setSelectedWard({ id: ward.WardCode, name: ward.WardName });
+    } else {
+      setSelectedWard({ id: "", name: "" });
+    }
+    const res = await calculateShippingFee(parseInt(selectedDistrict.id), wardID, 1000, 195800);
+    setShippingFee(res);
+    console.log(res)
+  };
 
   const validateForm = () => {
     const newErrors = {};
     if (!formData.fullName.trim()) newErrors.fullName = "Full name is required";
     if (!formData.phoneNumber.trim())
       newErrors.phoneNumber = "Phone number is required";
-    if (!formData.deliveryAddress.trim())
-      newErrors.deliveryAddress = "Delivery address is required";
+    // if (!formData.deliveryAddress.trim())
+    //   newErrors.deliveryAddress = "Delivery address is required";
     if (!formData.email.trim()) newErrors.email = "Email is required";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Invalid email format";
@@ -53,29 +212,173 @@ export default function Payment() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      console.log("Form submitted:", formData);
-      // Handle form submission here
+    setLoading(true);
+
+    if (!validateForm()) {
+      alert("Vui lòng kiểm tra lại thông tin đơn hàng!");
+      setLoading(false);
+      return;
+    }
+
+    console.log("Form submitted:", formData);
+    const totalAmountVnd = cartItems.reduce((total, item) => total + item.price * item.quantity, 0) + shippingFee;
+    const payload = {
+      user_id: userFromRedux.id,
+      status: "PENDING",
+      payment_method: formData.paymentMethod,
+      total_amount: totalAmountVnd,
+      shipping_amount: shippingFee,
+      provinceCode: String(selectedProvince.id),
+      districtCode: String(selectedDistrict.id),
+      wardCode: String(selectedWard.id),
+      houseNumber: `${formData.streetAddress}, ${selectedWard.name}, ${selectedDistrict.name}, ${selectedProvince.name}`,
+      email: userFromRedux.email,
+    };
+
+    console.log(payload);
+
+
+    let isConfirmed = false;
+
+    if (!addresses.includes(payload.houseNumber)) {
+      isConfirmed = window.confirm("Có vẻ bạn đang sử dụng một địa chỉ mới. Bạn có muốn lưu địa chỉ này không?");
+    }
+
+    try {
+      if (isConfirmed) {
+        const currentUserAddresses = userFromRedux?.address ? userFromRedux.address.split(";;") : [];
+        const newAddressToAdd = payload.houseNumber + '|' + selectedWard.id + ',' + selectedDistrict.id + ',' + selectedProvince.id;
+        currentUserAddresses.push(newAddressToAdd);
+        const updatedAddresses = currentUserAddresses.join(";;");
+        console.log(updatedAddresses);
+        const response = await editUserById(userFromRedux.id, { address: updatedAddresses });
+        if (response.status === 200) {
+          toast.success("Set default address successfully");
+          dispatch(updateUser(response.data));
+        } else {
+          toast.error("Set default address failed");
+        }
+      }
+      const resOrder = await createOrder(payload);
+
+      if (resOrder.status === 201) {
+        let orderData = resOrder.data;
+        let orderId;
+        let approvalUrl;
+
+        if (formData.paymentMethod === "PAYPAL") {
+          orderId = orderData.order.order_id;
+          approvalUrl = orderData.approvalUrl;
+        } else {
+          orderId = orderData.order_id;
+        }
+
+        console.log("Order ID:", orderId);
+
+        const orderItemPromises = cartItems.map(item =>
+          createOrderItem({
+            order_id: orderId,
+            product_id: item.productId,
+            quantity: item.quantity,
+            price: item.price,
+            profit: 0,
+          })
+        );
+
+        console.log("Tạo sản phẩm trong đơn hàng:", orderItemPromises);
+        await Promise.all(orderItemPromises);
+        console.log("Order items đã được tạo thành công!");
+
+        if (formData.paymentMethod === "PAYPAL") {
+          if (approvalUrl) {
+            window.location.href = approvalUrl;
+            return;
+          } else {
+            throw new Error("Không tìm thấy approvalUrl từ PayPal");
+          }
+        }
+        openModal("Tạo đơn hàng thành công")
+        navigate("/orders");
+      }
+    } catch (error) {
+      console.error("Lỗi khi tạo đơn hàng:", error);
+      alert("Đã xảy ra lỗi khi đặt hàng. Vui lòng thử lại!");
+    } finally {
+      setLoading(false);
     }
   };
 
+  const cartItems = selectedItems;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
+      {loading && <Loading />}
+      <div className="bg-white p-6 rounded-lg shadow-lg flex items-center justify-between w-full max-w-4xl mx-auto mb-5">
+        {/* Phần bên trái - Thông tin cá nhân */}
+        <div className="flex items-center gap-4">
+          {/* <img
+            src={userFromRedux.avatar}
+            alt="Avatar"
+            className="w-16 h-16 rounded-full border shadow"
+          /> */}
+          <div>
+            <div className="flex items-center gap-2 text-gray-700">
+              <FaUser className="text-blue-500" />
+              <span className="font-semibold">{userFromRedux.firstName + ' ' + userFromRedux.lastName}</span>
+            </div>
+            <div className="flex items-center gap-2 text-gray-500 mt-1">
+              <FaEnvelope className="text-green-500" />
+              <span>{userFromRedux.email}</span>
+            </div>
+            <div className="flex items-center gap-2 text-gray-500 mt-1">
+              <FaPhone className="text-green-500" />
+              <span>{userFromRedux.phone}</span>
+            </div>
+            <div className="flex items-center gap-2 text-gray-600 mt-1">
+              <FaMapMarkerAlt className="text-red-500" />
+              <span>{selectedAddress}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Phần bên phải - Nút chọn địa chỉ */}
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition"
+        >
+          <FaEdit />
+          Thay đổi địa chỉ
+        </button>
+        <AddressModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          user={userFromRedux}
+          onSelect={(newAddress) => {
+            setSelectedAddress(newAddress);
+            // handleSelectAddress(newAddress);
+            setIsModalOpen(false);
+          }}
+          setShippingFee={setShippingFee}
+        />
+      </div>
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-xl p-8">
         <h1 className="text-2xl font-bold text-gray-800 mb-8 text-center">
-          Payment Details
+          Hoàn tất đơn hàng
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <h2 className="text-xl font-semibold text-gray-800">
+            Thông tin giao hàng
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 rounded-md bg-gray-200 p-4">
             <div>
               <label
                 className="block text-sm font-medium text-gray-700 mb-2"
                 htmlFor="fullName"
               >
-                Full Name
+                Họ tên người nhận:
               </label>
               <input
                 type="text"
@@ -96,7 +399,7 @@ export default function Payment() {
                 className="block text-sm font-medium text-gray-700 mb-2"
                 htmlFor="phoneNumber"
               >
-                Phone Number
+                Số điện thoại
               </label>
               <input
                 type="tel"
@@ -114,27 +417,85 @@ export default function Payment() {
               )}
             </div>
 
-            <div className="md:col-span-2">
-              <label
-                className="block text-sm font-medium text-gray-700 mb-2"
-                htmlFor="deliveryAddress"
-              >
-                Delivery Address
+            {/* Tỉnh/Thành phố */}
+            <div>
+              <label htmlFor="province" className="block text-sm font-medium text-gray-700 mb-2">
+                Tỉnh/Thành phố:
               </label>
-              <textarea
-                id="deliveryAddress"
-                name="deliveryAddress"
-                value={formData.deliveryAddress}
+              <select
+                id="province"
+                name="province"
+                value={selectedProvince.id}
+                onChange={handleProvinceChange}
+                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 
+        ${errors.province ? "border-red-500" : "border-gray-300"}`}
+              >
+                <option value="">Chọn Tỉnh/Thành phố</option>
+                {provinces.map((province) => (
+                  <option key={province.ProvinceID} value={province.ProvinceID}>{province.ProvinceName}</option>
+                ))}
+              </select>
+              {errors.province && <p className="text-red-500 mt-1 text-sm">{errors.province}</p>}
+            </div>
+
+            {/* Quận/Huyện */}
+            <div>
+              <label htmlFor="district" className="block text-sm font-medium text-gray-700 mb-2">
+                Quận/Huyện:
+              </label>
+              <select
+                id="district"
+                name="district"
+                value={selectedDistrict.id}
+                onChange={handleDistrictChange}
+                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 
+        ${errors.district ? "border-red-500" : "border-gray-300"}`}
+                disabled={!selectedProvince.id}
+              >
+                <option value="">Chọn Quận/Huyện</option>
+                {districts.map((district) => (
+                  <option key={district.DistrictID} value={district.DistrictID}>{district.DistrictName}</option>
+                ))}
+              </select>
+              {errors.district && <p className="text-red-500 mt-1 text-sm">{errors.district}</p>}
+            </div>
+
+            {/* Phường/Xã */}
+            <div className="md:col-span-2">
+              <label htmlFor="ward" className="block text-sm font-medium text-gray-700 mb-2">
+                Phường/Xã:
+              </label>
+              <select
+                id="ward"
+                name="ward"
+                value={selectedWard.id}
+                onChange={handleWardChange}
+                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 
+        ${errors.ward ? "border-red-500" : "border-gray-300"}`}
+                disabled={!selectedDistrict.id}
+              >
+                <option value="">Chọn Phường/Xã</option>
+                {wards.map((ward) => (
+                  <option key={ward.WardCode} value={ward.WardCode}>{ward.WardName}</option>
+                ))}
+              </select>
+              {errors.ward && <p className="text-red-500 mt-1 text-sm">{errors.ward}</p>}
+            </div>
+
+            <div className="md:col-span-2">
+              <label htmlFor="streetAddress" className="block text-sm font-medium text-gray-700 mb-2">
+                Số nhà, Tên đường:
+              </label>
+              <input
+                type="text"
+                id="streetAddress"
+                name="streetAddress"
+                value={formData.streetAddress}
                 onChange={handleInputChange}
-                rows="3"
-                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${errors.deliveryAddress ? "border-red-500" : "border-gray-300"
-                  }`}
+                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 
+    ${errors.streetAddress ? "border-red-500" : "border-gray-300"}`}
               />
-              {errors.deliveryAddress && (
-                <p className="text-red-500 mt-1 text-sm">
-                  {errors.deliveryAddress}
-                </p>
-              )}
+              {errors.streetAddress && <p className="text-red-500 mt-1 text-sm">{errors.streetAddress}</p>}
             </div>
 
             <div className="md:col-span-2">
@@ -142,7 +503,7 @@ export default function Payment() {
                 className="block text-sm font-medium text-gray-700 mb-2"
                 htmlFor="email"
               >
-                Email Address
+                Email liên hệ:
               </label>
               <input
                 type="email"
@@ -159,45 +520,96 @@ export default function Payment() {
             </div>
           </div>
 
+          <h2 className="text-xl font-semibold text-gray-800">
+            Giỏ hàng
+          </h2>
+          <div className="md:col-span-2 bg-gray-200 p-4 rounded-md shadow-md">
+            <div className="flex flex-col gap-4">
+              {cartItems.map((item) => (
+                <div key={item.itemId} className="p-4 bg-white rounded-lg shadow flex items-center gap-4">
+                  <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-md" />
+                  <div className="flex-1">
+                    <h3 className="text-md font-medium text-gray-900">{item.name}</h3>
+                    <p className="text-gray-700">Đơn giá: {item.price.toLocaleString("en-US")}</p>
+                  </div>
+                  <p className="text-gray-700">Số lượng: {item.quantity}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="md:col-span-2 bg-gray-200 p-4 mt-6 rounded-md shadow-md">
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">Thanh toán</h2>
+              <div className="p-4 bg-white rounded-lg shadow">
+                {/* Tổng tiền hàng */}
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-md text-gray-900">Tổng tiền hàng:</span>
+                  <span className="text-md font-semibold text-gray-700 flex justify-start items-center">{cartItems.reduce((total, item) => total + item.price * item.quantity, 0).toLocaleString('en-US')} <FaDongSign /></span>
+                </div>
+
+                {/* Phí ship */}
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-md text-gray-900">Phí vận chuyển:</span>
+                  <span className="text-md font-semibold text-gray-700 flex justify-start items-center">{shippingFee.toLocaleString('en-US')}<FaDongSign /></span>
+                </div>
+
+                <hr className="my-2" />
+
+                {/* Tổng thanh toán cuối cùng */}
+                <div className="flex justify-between items-center text-lg font-bold text-red-600 ">
+                  <span>Tổng cộng:</span>
+                  <span className="flex justify-start items-center">{(cartItems.reduce((total, item) => total + item.price * item.quantity, 0) + shippingFee).toLocaleString('en-US')}<FaDongSign /></span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
           <div>
             <h2 className="text-xl font-semibold text-gray-800 mb-4">
-              Payment Method
+              Phương thức thanh toán
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-200 rounded-md p-4">
               <label
-                className={`flex items-center p-4 rounded-lg border shadow-sm ${formData.paymentMethod === "paypal"
-                  ? "border-indigo-500 bg-indigo-50"
+                className={`flex items-center p-4 rounded-lg border shadow-sm bg-white ${formData.paymentMethod === "PAYPAL"
+                  ? "border-indigo-500 bg-indigo-200"
                   : "border-gray-300"
                   } cursor-pointer hover:shadow-md`}
               >
                 <input
                   type="radio"
                   name="paymentMethod"
-                  value="paypal"
-                  checked={formData.paymentMethod === "paypal"}
+                  value="PAYPAL"
+                  checked={formData.paymentMethod === "PAYPAL"}
                   onChange={handleInputChange}
                   className="hidden"
                 />
-                <FaPaypal className="text-indigo-500 text-2xl mr-3" />
-                <span className="text-gray-800">PayPal</span>
+                <div className="flex flex-col items-start">
+                  <div className="flex items-center">
+                    <FaPaypal className="text-indigo-500 text-2xl mr-3" />
+                    <span className="text-gray-800 font-semibold">PayPal</span>
+                  </div>
+                  <span className="text-red-600 text-sm mt-1 flex justify-start items-center">1 USD <PiApproximateEqualsThin className="mx-1" /> {usdRate} VNĐ {date}</span>
+
+                </div>
+
               </label>
 
               <label
-                className={`flex items-center p-4 rounded-lg border shadow-sm ${formData.paymentMethod === "cod"
-                  ? "border-indigo-500 bg-indigo-50"
+                className={`flex items-center p-4 rounded-lg border shadow-sm bg-white ${formData.paymentMethod === "COD"
+                  ? "border-indigo-500 bg-indigo-200"
                   : "border-gray-300"
                   } cursor-pointer hover:shadow-md`}
               >
                 <input
                   type="radio"
                   name="paymentMethod"
-                  value="cod"
-                  checked={formData.paymentMethod === "cod"}
+                  value="COD"
+                  checked={formData.paymentMethod === "COD"}
                   onChange={handleInputChange}
                   className="hidden"
                 />
                 <FaMoneyBillWave className="text-indigo-500 text-2xl mr-3" />
-                <span className="text-gray-800">Cash on Delivery (COD)</span>
+                <span className="text-gray-800">Thanh toán khi nhận hàng (COD)</span>
               </label>
             </div>
             {errors.paymentMethod && (
@@ -211,23 +623,23 @@ export default function Payment() {
             <div className="flex items-center mb-3">
               <TbTruckDelivery className="text-2xl text-indigo-500 mr-3" />
               <h3 className="text-lg font-semibold text-gray-800">
-                Shipping Partner - GHN
+                Đơn vị vận chuyển - GHN
               </h3>
             </div>
             <p className="text-gray-600 text-sm">
-              Your order will be delivered by GHN Express, ensuring fast and
-              reliable delivery service across the country.
+              Đơn hàng của bạn sẽ được giao bởi GHN Express, đảm bảo dịch vụ giao hàng nhanh chóng và đáng tin cậy trên toàn quốc.
             </p>
           </div>
 
-          <Link to="/confirm-checkout">
-            <button
-              type="submit"
-              className="w-full bg-indigo-500 text-white py-3 rounded-lg font-semibold hover:bg-indigo-600 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-            >
-              Continue
-            </button>
-          </Link>
+          {/* <Link to="/confirm-checkout"> */}
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            className="w-full bg-indigo-500 text-white py-3 rounded-lg font-semibold hover:bg-indigo-600 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 mt-4"
+          >
+            Tiếp tục
+          </button>
+          {/* </Link> */}
         </form>
       </div>
     </div>

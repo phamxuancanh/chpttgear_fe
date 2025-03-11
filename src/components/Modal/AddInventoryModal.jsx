@@ -14,6 +14,7 @@ export default function AddInventoryModal({ setShowCreateInventory }) {
     const [listWard, setListWard] = useState([])
     const [formData, setFormData] = useState()
     const [name, setName] = useState(null)
+    const [loading, setLoading] = useState(false)
 
     useEffect(() => {
         const provinces = provinceData.map((province) => ({
@@ -93,11 +94,7 @@ export default function AddInventoryModal({ setShowCreateInventory }) {
     };
 
     const handleCreateInventory = async (e) => {
-        console.log(name)
-        console.log(formData)
-        console.log(selectedProvince)
-        console.log(selectedDistrict)
-        console.log(selectedWard)
+        setLoading(true)
         e.preventDefault();
 
         try {
@@ -129,11 +126,16 @@ export default function AddInventoryModal({ setShowCreateInventory }) {
 
                 })
             console.log('Stock-in successful:', res.data);
+            toast.success("Tạo kho mới thành công")
+            setLoading(false)
             setShowCreateInventory(false)
+
         } catch (error) {
             console.error("Error while creating inventory:", error);
             toast.error("Có lỗi xảy ra khi tạo kho");
             return;
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -141,7 +143,7 @@ export default function AddInventoryModal({ setShowCreateInventory }) {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
             <div className="bg-white rounded-lg p-8 max-w-2xl w-full">
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold">Product Details</h2>
+                    <h2 className="text-2xl font-bold">Tạo kho</h2>
                     <button onClick={() => setShowCreateInventory(false)} className="text-gray-500 hover:text-gray-700">
                         <FaTimes />
                     </button>
@@ -153,7 +155,7 @@ export default function AddInventoryModal({ setShowCreateInventory }) {
                         <input
                             type="text"
                             value={name}
-                            placeholder="Enter your inventory name"
+                            placeholder="Nhập tên kho"
                             onChange={(e) => setName(e.target.value)}
                             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
@@ -174,7 +176,7 @@ export default function AddInventoryModal({ setShowCreateInventory }) {
                                     value: province.id,
                                     label: province.name,
                                 }))}
-                                placeholder="Select Province"
+                                placeholder="Chọn tỉnh / thành phố"
                             />
                         </div>
 
@@ -191,7 +193,7 @@ export default function AddInventoryModal({ setShowCreateInventory }) {
                                     value: district.id,
                                     label: district.name,
                                 }))}
-                                placeholder="Select District"
+                                placeholder="Chọn quận / huyện"
                                 isDisabled={!selectedProvince.id}
                             />
 
@@ -209,7 +211,7 @@ export default function AddInventoryModal({ setShowCreateInventory }) {
                                     value: ward.id,
                                     label: ward.name,
                                 }))}
-                                placeholder="Select Ward"
+                                placeholder="Chọn xã / phường / thị trấn"
                                 isDisabled={!selectedDistrict.id}
                             />
                         </div>
@@ -220,7 +222,7 @@ export default function AddInventoryModal({ setShowCreateInventory }) {
                                 type="text"
                                 id="address"
                                 name="address"
-                                placeholder="Enter your new address"
+                                placeholder="Nhập số nhà / hẻm"
                                 onChange={handleInputChange}
                                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required
@@ -234,7 +236,7 @@ export default function AddInventoryModal({ setShowCreateInventory }) {
                     >Hủy</button>
                     <button className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md text-white font-semibold"
                         onClick={(e) => handleCreateInventory(e)}
-                    >Tạo kho</button>
+                    >{loading ? 'Đang tạo kho ...' : 'Tạo kho'}</button>
                 </div>
             </div>
         </div>

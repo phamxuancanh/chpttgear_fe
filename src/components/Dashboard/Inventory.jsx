@@ -7,6 +7,8 @@ import { getAllInventory, getAllProduct, getProductsByInventoryId, getProductsBy
 import CreatePurchaseOrderModal from './../Modal/CreatePurchaseOrderModal';
 import { toast } from "react-toastify";
 import AddInventoryModal from "../Modal/AddInventoryModal";
+import { FaDongSign } from "react-icons/fa6";
+import axios from "axios";
 
 export default function Inventory() {
 
@@ -22,12 +24,15 @@ export default function Inventory() {
     const [showDetails, setShowDetails] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
 
+
     useEffect(() => {
         const fetchData = async () => {
             try {
+
                 const res = await getAllInventory();
                 console.log(res.data)
                 setInventorys(res.data)
+
             } catch (error) {
                 console.error("Error fetching inventory:", error);
             }
@@ -59,7 +64,7 @@ export default function Inventory() {
             product.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const handleCreateOrder = () => {
+    const handleCreateOrder = async () => {
         if (selectedInventory == null) {
             toast.error("Hãy chọn kho để nhập hàng")
             return
@@ -67,6 +72,8 @@ export default function Inventory() {
 
 
         setShowCreateOrder(true);
+
+
     };
 
 
@@ -107,19 +114,19 @@ export default function Inventory() {
         <div className="min-h-screen bg-gray-100 p-8">
             <div className="max-w-7xl mx-auto">
                 <div className="flex justify-between items-center">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-8 mt-3">Product Inventory Management</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-8 mt-3">Quản lý kho</h1>
                     <div>
                         <button
                             onClick={() => handleInventory()}
                             className="text-gray-50 hover:text-indigo-900 mr-4 bg-green-500 p-3 rounded-lg"
                         >
-                            <FaPlus className="inline mr-1" /> Create Inventory
+                            <FaPlus className="inline mr-1" /> Tạo kho
                         </button>
                         <button
                             onClick={() => handleCreateOrder()}
                             className="text-gray-50 hover:text-indigo-900 mr-4 bg-green-500 p-3 rounded-lg"
                         >
-                            <FaPlus className="inline mr-1" /> Create Order
+                            <FaPlus className="inline mr-1" /> Nhập hàng mới
                         </button>
                     </div>
 
@@ -128,7 +135,7 @@ export default function Inventory() {
                     <FaSearch className="text-gray-400 mr-3" />
                     <input
                         type="text"
-                        placeholder="Search products by name or code..."
+                        placeholder="Tìm kiếm sản phẩm bằng tên"
                         className="flex-1 outline-none"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -148,7 +155,7 @@ export default function Inventory() {
                                         Tên kho: {selectedInventory.name} - Địa chỉ: {selectedInventory.address.split('|')[0].trim()} - Tồn kho: {selectedInventory.quantity_in_stock}
                                     </>
                                 ) : (
-                                    "Select inventory..."
+                                    "Chọn kho..."
                                 )}
                             </span>
                             <FiChevronDown className={`transition-transform duration-200 ${isOpen ? "transform rotate-180" : ""}`} />
@@ -196,14 +203,14 @@ export default function Inventory() {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${getProductCost(product.id)}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getProductStock(product.id)}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex justify-start">{getProductCost(product.id)} <FaDongSign className="ml-1" /></td>
+
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <button
                                             onClick={() => handleViewDetails(product)}
                                             className="text-green-600 hover:text-green-900"
                                         >
-                                            <FaEye className="inline mr-1" /> View Order Details
+                                            <FaEye className="inline mr-1" /> Xem chi tiết nhập hàng
                                         </button>
                                     </td>
                                 </tr>
@@ -224,7 +231,6 @@ export default function Inventory() {
                     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
                         <div className="bg-white rounded-lg p-8 max-w-2xl w-full">
                             <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-2xl font-bold">Product Details</h2>
                                 <button onClick={() => setShowDetails(false)} className="text-gray-500 hover:text-gray-700">
                                     <FaTimes />
                                 </button>
@@ -236,17 +242,20 @@ export default function Inventory() {
                                     className="w-full h-48 object-cover rounded-lg mb-4"
                                 />
                                 <h3 className="text-xl font-bold mb-2">{selectedProduct.name}</h3>
-                                <p className="text-gray-600 mb-4">Current Price: ${selectedProduct.price}</p>
+                                <div className="flex justify-start">
+                                    <p className="text-gray-600 mb-4 font-bold">Giá hiện tại: {getProductCost(selectedProduct.id)} </p>
+                                    <FaDongSign className="ml-1" />
+                                </div>
                             </div>
                             <div>
-                                <h4 className="text-lg font-bold mb-3">Purchase History</h4>
+                                <h4 className="text-lg font-bold mb-3">Lịch sử nhập hàng</h4>
                                 <div className="overflow-x-auto overflow-y-auto max-h-[30vh]"> {/* Added max height for vertical scrolling */}
                                     <table className="min-w-full divide-y divide-gray-200">
                                         <thead className="bg-gray-50">
                                             <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ngày</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Số lượng</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Đơn giá</th>
                                             </tr>
                                         </thead>
                                         <tbody className="bg-white divide-y divide-gray-200">
@@ -258,13 +267,13 @@ export default function Inventory() {
                                                         <tr key={index} className="hover:bg-gray-100">
                                                             <td className="px-6 py-4 text-sm text-gray-900">{DateConverter(stock_in.createdAt)}</td>
                                                             <td className="px-6 py-4 text-sm text-gray-900">{stock_in.quantity}</td>
-                                                            <td className="px-6 py-4 text-sm text-gray-900">{stock_in.price}</td>
+                                                            <td className="px-6 py-4 text-sm text-gray-900 flex justify-start">{stock_in.price} <FaDongSign className="ml-1" /></td>
                                                         </tr>
                                                     ))
                                             ) : (
                                                 <tr>
                                                     <td colSpan="3" className="px-6 py-4 text-center text-gray-500">
-                                                        No data available
+                                                        Không có dữ liệu ...
                                                     </td>
                                                 </tr>
                                             )}

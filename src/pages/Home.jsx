@@ -1,274 +1,265 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { FiSearch, FiShoppingCart } from "react-icons/fi";
 import ProductCard from "../components/ProductCard";
 import { useEffect } from "react";
-import { findAllCategory, getSuggestions } from "../routers/ApiRoutes";
+import { findAllCategory, getAllProduct, getSuggestions } from "../routers/ApiRoutes";
 import { Pagination } from '@mui/material'
 import { styled } from '@mui/system'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import ROUTES from '../constants/Page';
-import { debounce } from 'lodash'
+import { debounce, set } from 'lodash'
+import Loading from "../utils/Loading";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+
+
+import { motion, AnimatePresence } from "framer-motion";
+import { GrPrevious, GrNext } from "react-icons/gr";
+import SLIDE1 from "../assets/slide1.webp"
+import SLIDE2 from "../assets/slide2.webp"
+import SLIDE3 from "../assets/slide3.webp"
+import SLIDE5 from "../assets/slide5.webp"
+import SLIDE6 from "../assets/slide6.webp"
+import BANNER2 from "../assets/banner2.webp"
+import BANNER3 from "../assets/banner3.webp"
+import BANNER4 from "../assets/banner4.webp"
+import BANNER5 from "../assets/banner5.webp"
+import BANNER6 from "../assets/banner6.webp"
+import BANNER7 from "../assets/banner7.webp"
+import BANNER8 from "../assets/banner8.webp"
+import BANNER9 from "../assets/banner9.webp"
+import BANNER10 from "../assets/banner10.webp"
+import BANNER11 from "../assets/banner11.webp"
+import TYPE1 from "../assets/type1.webp"
+import TYPE2 from "../assets/type2.webp"
+import TYPE3 from "../assets/type3.webp"
+import TYPE4 from "../assets/type4.webp"
+import TYPE5 from "../assets/type5.webp"
+import TYPE6 from "../assets/type6.webp"
+import TYPE7 from "../assets/type7.webp"
+import TYPE8 from "../assets/type8.webp"
+import TYPE9 from "../assets/type9.webp"
+import TYPE10 from "../assets/type10.webp"
+import TYPE11 from "../assets/type11.webp"
+import TYPE12 from "../assets/type12.webp"
+import TYPE13 from "../assets/type13.jpg"
+import TYPE14 from "../assets/type14.webp"
+import TYPE15 from "../assets/type15.webp"
+import TYPE16 from "../assets/type16.webp"
+import TYPE17 from "../assets/type17.webp"
+import TYPE18 from "../assets/type18.webp"
+import TYPE19 from "../assets/type19.webp"
+import TYPE20 from "../assets/type20.webp"
+import ProductCarousel from "../components/ProductCarousel";
+import { useCategory } from "../context/CategoryContext";
+import SubMenuModal from "../components/Modal/SubMenuModal";
+import MenuModal from "../components/Modal/MenuModal";
+
+
 
 export default function Home() {
-    const navigate = useNavigate()
-    const CustomPagination = styled(Pagination)({
-        '.MuiPagination-ul': {
-            display: 'inline-flex',
-            fontSize: 'large',
-            listStyle: 'none',
-            margin: '10px',
-            '@media (max-width: 600px)': {
-                margin: '5px'
+    const { isCategoryOpen, setIsCategoryOpen } = useCategory();
+
+    const categories = [
+        { name: "Laptop", img: TYPE1 },
+        { name: "PC", img: TYPE2 },
+        { name: "Màn hình", img: TYPE3 },
+        { name: "Mainboard", img: TYPE4 },
+        { name: "CPU", img: TYPE5 },
+        { name: "VGA", img: TYPE6 },
+        { name: "RAM", img: TYPE7 },
+        { name: "Ổ cứng", img: TYPE8 },
+        { name: "Case", img: TYPE9 },
+        { name: "Tản nhiệt", img: TYPE10 },
+        { name: "Nguồn", img: TYPE11 },
+        { name: "Bàn phím", img: TYPE12 },
+        { name: "Chuột", img: TYPE13 },
+        { name: "Ghế", img: TYPE14 },
+        { name: "Tai nghe", img: TYPE15 },
+        { name: "Loa", img: TYPE16 },
+        { name: "Console", img: TYPE17 },
+        { name: "Phụ kiện", img: TYPE18 },
+        { name: "Thiết bị VP", img: TYPE19 },
+        { name: "Apple", img: TYPE20 },
+    ];
+    const [products, setProducts] = useState([])
+    const [loading, setLoading] = useState(false)
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const images = [
+        SLIDE1,
+        SLIDE2,
+        SLIDE3,
+        SLIDE5,
+        SLIDE6,
+    ];
+
+    const handleImageNavigation = (direction) => {
+        setCurrentImageIndex((prevIndex) => {
+            if (direction === "next") {
+                return (prevIndex + 1) % images.length;
+            } else {
+                return (prevIndex - 1 + images.length) % images.length;
             }
-        },
-        '.MuiPaginationItem-root': {
-            fontSize: 'large',
-            fontWeight: 'bold',
-            borderRadius: '4px',
-            margin: '2px',
-            border: '1px solid #cbd5e0',
-            backgroundColor: 'white',
-            color: '#718096',
-            '&:hover': {
-                backgroundColor: '#667eea',
-                color: 'white'
-            },
-            '@media (max-width: 600px)': {
-                margin: '0px'
-            }
-        },
-        '.MuiPaginationItem-firstLast': {
-            borderRadius: '4px'
-        },
-        '.MuiPaginationItem-previousNext': {
-            borderRadius: '4px',
-            margin: '10px',
-            '@media (min-width: 600px)': {
-                margin: '20px'
-            },
-            '@media (max-width: 600px)': {
-                fontSize: 'medium',
-                margin: '0px'
-            }
-        },
-        '.MuiPaginationItem-page.Mui-selected': {
-            color: '#667eea',
-            fontWeight: 'bold',
-            border: '2px solid #667eea',
-            backgroundColor: 'white',
-            '&:hover': {
-                backgroundColor: '#667eea',
-                color: 'white'
-            }
-        },
-        '.MuiPaginationItem-ellipsis': {
-            color: '#a0aec0',
-            border: '1px solid #cbd5e0',
-            backgroundColor: 'white',
-            padding: '2px',
-            margin: '0',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-        }
-    })
-    const [selectedCategories, setSelectedCategories] = useState([]);
-    const [categories, setCategories] = useState([]);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [suggestions, setSuggestions] = useState([]);
-    const fetchSuggestions = debounce(async (value) => {
-        try {
-            const response = await getSuggestions(value);
-            console.log(response);
-            setSuggestions(response.data);
-        } catch (error) {
-            console.error('Error fetching suggestions:', error);
-        }
-    }, 300);
-    console.log(suggestions);
+        });
+    };
+
     useEffect(() => {
-        const fetchCategories = async () => {
-            const response = await findAllCategory();
-            console.log(response.data);
-            const data = response.data;
-            setCategories(data);
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const res1 = await getAllProduct();
+                setProducts(res1.data);
+            } catch (error) {
+                console.error("Error fetching inventory:", error);
+            } finally {
+                setLoading(false);
+            }
         };
-        fetchCategories();
-    }, []);
 
-    const handleCategoryChange = (categoryName) => {
-        setSelectedCategories((prev) =>
-            prev.includes(categoryName)
-                ? prev.filter((name) => name !== categoryName)
-                : [...prev, categoryName]
-        );
-    };
+        fetchData();
 
-    const handleSearchClick = async () => {
-        // const response = await searchProducts({ params: { search: searchTerm } });
-        // console.log(response.data);
-        setSuggestions([])
-        const encodedSearchTerm = encodeURIComponent(searchTerm);
-        navigate(`${ROUTES.SEARCH_RESULTS.path}?name=${encodedSearchTerm}`);
-    };
+        const interval = setInterval(() => {
+            handleImageNavigation("next");
+        }, 5000); // Chuyển ảnh sau mỗi 5 giây
 
-    const handleSearch = (e) => {
-        const value = e.target.value;
-        setSearchTerm(value);
+        return () => clearInterval(interval); // Dọn dẹp interval khi component unmount
+    }, []); // Dependency array rỗng, chạy 1 lần sau khi component mount
 
-        if (value.length > 1) {
-            fetchSuggestions(value);
-        } else {
-            setSuggestions([]);
-        }
-    };
 
-    const handleKeyPress = (e) => {
-        if (e.key === 'Enter') {
-            handleSearchClick();
-        }
-    };
-    const recommendedProducts = [
-        {
-            id: 1,
-            name: "AMD Ryzen 9 5950X",
-            price: "$699",
-            // image: "https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?ixlib=rb-4.0.3",
-        },
-        {
-            id: 2,
-            name: "NVIDIA RTX 4080",
-            price: "$1199",
-            // image: "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3",
-        },
-        {
-            id: 3,
-            name: "ASUS ROG Maximus",
-            price: "$599",
-            // image: "https://images.unsplash.com/photo-1592664474505-51c764ec6666?ixlib=rb-4.0.3",
-        },
-        {
-            id: 4,
-            name: "Corsair Vengeance 32GB",
-            price: "$159",
-            // image: "https://images.unsplash.com/photo-1562976540-1502c2145186?ixlib=rb-4.0.3",
-        },
-    ];
-
-    const hotProducts = [
-        {
-            id: 5,
-            name: "Samsung 2TB NVMe SSD",
-            price: "$229",
-            // image: "https://images.unsplash.com/photo-1628557044797-f21654f9008b?ixlib=rb-4.0.3",
-        },
-        {
-            id: 6,
-            name: "Intel Core i9-13900K",
-            price: "$589",
-            // image: "https://images.unsplash.com/photo-1555680202-c86f0e12f086?ixlib=rb-4.0.3",
-        },
-        {
-            id: 7,
-            name: "MSI Gaming X Trio",
-            price: "$799",
-            // image: "https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?ixlib=rb-4.0.3",
-        },
-        {
-            id: 8,
-            name: "G.Skill Trident Z5",
-            price: "$189",
-            // image: "https://images.unsplash.com/photo-1591488320449-011701bb6704?ixlib=rb-4.0.3",
-        },
-    ];
-
-    const bestSellers = [
-        {
-            id: 9,
-            name: "WD Black SN850X 1TB",
-            price: "$149",
-            // image: "https://images.unsplash.com/photo-1597872200928-9c0974483413?ixlib=rb-4.0.3",
-        },
-        {
-            id: 10,
-            name: "AMD Ryzen 7 7800X3D",
-            price: "$449",
-            // image: "https://images.unsplash.com/photo-1592664474504-8afb0e869925?ixlib=rb-4.0.3",
-        },
-        {
-            id: 11,
-            name: "ASUS TUF Gaming B650",
-            price: "$219",
-            // image: "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?ixlib=rb-4.0.3",
-        },
-        {
-            id: 12,
-            name: "Crucial RAM 64GB",
-            price: "$259",
-            // image: "https://images.unsplash.com/photo-1591799264319-96c15fdb541c?ixlib=rb-4.0.3",
-        },
-    ];
 
 
 
     return (
-        <div className="min-h-screen bg-background">
-            <main className="container mx-auto px-4 py-8">
-                <section className="mb-12">
-                    <h2 className="text-2xl font-bold text-foreground mb-6">Categories</h2>
-                    <div className="flex flex-wrap gap-4">
-                        {categories.map((category) => (
-                            <label
-                                key={category.id}
-                                className="flex items-center space-x-2 bg-card p-3 rounded-md cursor-pointer hover:bg-muted transition-colors"
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={selectedCategories.includes(category.name)}
-                                    onChange={() => handleCategoryChange(category.name)}
-                                    className="form-checkbox h-5 w-5 text-primary rounded border-input"
-                                />
-                                <span className="text-foreground">{category.name}</span>
-                            </label>
-                        ))}
-                    </div>
-                </section>
+        <div className="min-h-screen bg-gray-100 py-10">
+            {isCategoryOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 z-10 transition-opacity duration-500"></div>
+            )}
 
-                <section className="mb-12">
-                    <h2 className="text-2xl font-bold text-foreground mb-6">Recommended Products</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {recommendedProducts.map((product) => (
-                            <ProductCard key={product.id} product={product} />
-                        ))}
+            {loading ? <Loading /> :
+                <div className="container mx-auto bg-white  w-11/12 rounded-lg  px-4 py-1">
+                    <div className="w-full flex justify-center px-5 py-2 relative">
+                        <div className="w-2/12 flex relative z-50 mr-5">
+                            <MenuModal />
+                        </div>
+                        <div className="w-8/12 relative z-10">
+                            <div className="relative w-full h-[40vh] flex items-center justify-center rounded-lg overflow-hidden shadow-lg bg-black">
+                                {isCategoryOpen && (
+                                    <div className="fixed inset-0 bg-black bg-opacity-50 z-10 transition-opacity duration-500"></div>
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-black opacity-60"></div>
+                                <AnimatePresence mode="wait">
+                                    <motion.img
+                                        key={currentImageIndex}
+                                        src={images[currentImageIndex]}
+                                        alt={`Product view ${currentImageIndex + 1}`}
+                                        className="w-auto h-full object-contain"
+                                        initial={{ opacity: 0, x: 100 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -100 }}
+                                        transition={{ duration: 0.7 }}
+                                    />
+                                </AnimatePresence>
+                                <button
+                                    onClick={() => handleImageNavigation("prev")}
+                                    className="absolute left-4 text-white p-3 bg-gray-900/50 rounded-full hover:bg-gray-800 transition"
+                                >
+                                    <GrPrevious size={24} />
+                                </button>
+                                <button
+                                    onClick={() => handleImageNavigation("next")}
+                                    className="absolute right-4 text-white p-3 bg-gray-900/50 rounded-full hover:bg-gray-800 transition"
+                                >
+                                    <GrNext size={24} />
+                                </button>
+                            </div>
+                            <div className="w-full">
+                                <img src={BANNER3} alt="" className="w-full h-fit rounded-lg mt-10" />
+                            </div>
+                        </div>
+                        <div className="w-2/12 flex justify-center ml-5 relative z-10">
+                            {isCategoryOpen && (
+                                <div className="fixed inset-0 bg-black bg-opacity-50 z-10 transition-opacity duration-500"></div>
+                            )}
+                            <img src={BANNER2} alt="" className="w-fit h-[80vh] rounded-lg mr-4" />
+                        </div>
                     </div>
-                </section>
-                <section className="mb-12">
-                    <h2 className="text-2xl font-bold text-foreground mb-6">Hot Products</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {hotProducts.map((product) => (
-                            <ProductCard key={product.id} product={product} />
-                        ))}
-                    </div>
-                </section>
-                <section className="mb-12">
-                    <h2 className="text-2xl font-bold text-foreground mb-6">Best Sellers</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {bestSellers.map((product) => (
-                            <ProductCard key={product.id} product={product} />
-                        ))}
-                    </div>
-                </section>
-                <div className="flex justify-center">
-                    <CustomPagination
-                        count={10}
-                        page={1}
-                        // onChange={(_, page) => handleChangePaginationNew(page)}
-                        boundaryCount={1}
-                        siblingCount={1}
-                    />
-                </div>
-            </main>
+                    <section className="mb-12">
 
+                        <div className="bg-gray-100 p-6 rounded-lg shadow-lg mt-5">
+                            <h2 className="text-2xl font-bold text-foreground mb-6">Danh mục sản phẩm</h2>
+                            <div className="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-10 gap-6 text-center">
+                                {categories.map((item, index) => (
+                                    <Link to={"/products"}>
+                                        <div key={index} className="flex flex-col items-center space-y-2 cursor-pointer">
+                                            <img
+                                                src={item.img}
+                                                alt={item.name}
+                                                className="w-16 h-16 object-contain rounded-lg "
+                                            />
+                                            <span className="text-sm font-medium">{item.name}</span>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="mb-12">
+                        <img src={BANNER4} alt="" />
+                        <ProductCarousel products={products} />
+                        <div className="w-full  flex justify-center items-center py-2">
+                            <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white">Xem thêm</button>
+                        </div>
+                    </section>
+                    <section className="mb-12">
+                        <img src={BANNER5} alt="" />
+                        <ProductCarousel products={products} />
+                        <div className="w-full  flex justify-center items-center py-2">
+                            <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white">Xem thêm</button>
+                        </div>
+                    </section>
+                    <section className="mb-12">
+                        <img src={BANNER6} alt="" className="mb-10" />
+                        <ProductCarousel products={products} />
+                        <div className="w-full  flex justify-center items-center py-2">
+                            <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white">Xem thêm</button>
+                        </div>
+                    </section>
+                    <section className="mb-12">
+                        <img src={BANNER7} alt="" className="mb-10" />
+                        <ProductCarousel products={products} />
+                        <div className="w-full  flex justify-center items-center py-2">
+                            <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white">Xem thêm</button>
+                        </div>
+                    </section>
+                    <section className="mb-12">
+                        <img src={BANNER8} alt="" className="mb-10" />
+                        <ProductCarousel products={products} />
+                        <div className="w-full  flex justify-center items-center py-2">
+                            <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white">Xem thêm</button>
+                        </div>
+                    </section>
+                    <section className="mb-12">
+                        <img src={BANNER9} alt="" className="mb-10" />
+                        <ProductCarousel products={products} />
+                        <div className="w-full  flex justify-center items-center py-2">
+                            <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white">Xem thêm</button>
+                        </div>
+                    </section>
+                    <section className="mb-12">
+                        <img src={BANNER10} alt="" className="mb-10" />
+                        <ProductCarousel products={products} />
+                        <div className="w-full  flex justify-center items-center py-2">
+                            <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white">Xem thêm</button>
+                        </div>
+                    </section>
+                    <section className="mb-12">
+                        <img src={BANNER11} alt="" className="mb-10" />
+                        <ProductCarousel products={products} />
+                        <div className="w-full  flex justify-center items-center py-2">
+                            <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white">Xem thêm</button>
+                        </div>
+                    </section>
+                </div>}
 
         </div>
     );

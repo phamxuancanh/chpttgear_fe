@@ -11,20 +11,28 @@
     "@reduxjs/toolkit": "^2.5.0",
     "@tanstack/react-query": "^5.64.0",
     "axios": "^1.7.9",
+    "buffer": "^6.0.3",
     "chpttgear_fe": "file:",
     "cra-template": "1.2.0",
     "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
     "env-cmd": "^10.1.0",
+    "fast-xml-parser": "^5.0.8",
     "firebase": "^10.13.1",
+    "framer-motion": "^12.4.7",
     "jwt-decode": "^4.0.0",
+    "lightgallery": "^2.8.2",
+    "lightgallery.js": "^1.4.0",
     "react": "^19.0.0",
     "react-avatar-editor": "^13.0.2",
     "react-dom": "^19.0.0",
     "react-dropzone": "^14.3.5",
     "react-helmet": "^6.1.0",
-    "react-icons": "^5.5.0",
+    "react-icons": "^5.4.0",
+    "react-image-gallery": "^1.4.0",
+    "react-intersection-observer": "^9.15.1",
+    "react-lightgallery": "^0.9.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.1.1",
     "react-scripts": "5.0.1",
@@ -35,7 +43,11 @@
     "react-window": "^1.8.11",
     "redux-devtools-extension": "^2.13.9",
     "redux-persist": "^6.0.0",
-    "sweetalert2": "^11.12.4"
+    "stream-browserify": "^3.0.0",
+    "sweetalert2": "^11.12.4",
+    "swiper": "^11.2.4",
+    "timers-browserify": "^2.0.12",
+    "xml2js": "^0.6.2"
   },
   "scripts": {
     "start": "env-cmd -f .env react-scripts start",
@@ -63,8 +75,14 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.20",
+    "buffer": "^6.0.3",
     "env-cmd": "^10.1.0",
     "postcss": "^8.4.49",
-    "tailwindcss": "^3.4.17"
+    "stream-browserify": "^3.0.0",
+    "tailwindcss": "^3.4.17",
+    "timers-browserify": "^2.0.12"
+  },
+  "browser": {
+    "timers": "timers-browserify"
   }
 }

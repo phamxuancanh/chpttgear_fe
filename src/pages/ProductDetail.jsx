@@ -7,8 +7,25 @@ import { BiSolidCommentEdit } from "react-icons/bi";
 import { useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { login } from "../redux/authSlice";
-import { findProductById, getQuantityInStock, getStockInByProductId, getStockOutByProductId } from "../routers/ApiRoutes";
+import { findProductById, findSpecificationsByProductId, getQuantityInStock, getStockInByProductId, getStockOutByProductId } from "../routers/ApiRoutes";
+import { FaDongSign, FaCashRegister } from "react-icons/fa6";
+import Loading from "../utils/Loading";
+import { FiShoppingCart } from "react-icons/fi";
+import ImageGallery from "react-image-gallery";
+import "react-image-gallery/styles/css/image-gallery.css";
 
+import LightGallery from "lightgallery/react";
+import "lightgallery/css/lightgallery.css";
+import "lightgallery/css/lg-zoom.css";
+import "lightgallery/css/lg-thumbnail.css";
+
+import lgThumbnail from "lightgallery/plugins/thumbnail"
+import lgZoom from "lightgallery/plugins/zoom";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import { Navigation } from "swiper/modules";
 
 export default function ProductDetail() {
     const [userRating, setUserRating] = useState(0);
@@ -32,6 +49,9 @@ export default function ProductDetail() {
         console.log("Redux state:", state);
         return state.auth.user.id;
       });
+    const [images, setImages] = useState([])
+    const [loading, setLoading] = useState(false)
+    const [specs, setspecs] = useState([])
 
     const scrollToReviews = () => {
         console.log("a")
@@ -62,7 +82,12 @@ export default function ProductDetail() {
     //     if (id) fetchData();
     // }, [id]); // Gọi lại khi id thay đổi
 
-    const fetchData = async () => {
+
+
+        
+    useEffect(() => {
+      
+    const fetchData1 = async () => {
         try {
             fetch(`${process.env.REACT_APP_REVIEW_BASE_URL}/review/${id}`)
             .then(response => response.json()) // Chuyển đổi JSON
@@ -86,10 +111,36 @@ export default function ProductDetail() {
             console.error("Error fetching product data:", error);
         }
     };
+      const fetchData = async () => {
+            try {
+                setLoading(true)
+                const [productRes, quantityInStockRes, specRes] = await Promise.all([
+                    findProductById(id),
+                    getQuantityInStock(id),
+                    findSpecificationsByProductId(id)
+                ]);
+                if (productRes?.data) {
+                    setProduct(productRes.data);
+                    console.log(productRes.data.image.split(','))
+                    setImages(productRes.data.image.split(','))
+                    setspecs(specRes.data)
+                }
 
-    if (id) fetchData();
-    useEffect(() => {
-        fetchData() 
+                if (quantityInStockRes) setQuantityInStock(quantityInStockRes.quantityInStock);
+                setLoading(false)
+            } catch (error) {
+                console.error("Error fetching product data:", error);
+            } finally {
+                setLoading(false)
+            }
+        };
+
+
+    if (id){
+     fetchData()
+        fetchData1() 
+    }
+     
     }, [id]); // Gọi lại khi id thay đổi
     useEffect(() => {
         console.log("Updated rating:", rating);
@@ -146,7 +197,6 @@ export default function ProductDetail() {
             image: "https://images.unsplash.com/photo-1587202372599-36e756f1a00e"
         }
     ];
-
     const ratings = [
         { product_id: 4090, user: "John Doe", score: 2, comment: "được tặng 2 thanh ram là có lắp vô máy chưa ad, nếu mua thêm ổ cứng ssd thì có gắn vô dùm không? hay phải tự mình gắn, còn cài win nữa?", date: "2024-01-15" },
         { product_id: 4090, user: "Jane Smith", score: 2.5, comment: "Lên tảng nước aio thì sao admin nhỉ", date: "2024-01-10" },
@@ -154,12 +204,6 @@ export default function ProductDetail() {
         { product_id: 4090, user: "Bob Williams", score: 2.2, comment: "Good but a bit pricey.", date: "2024-02-01" },
         { product_id: 4090, user: "Charlie Brown", score: 2, comment: "Worth every penny!", date: "2024-02-08" }
     ];
-
-    const images = [
-        "https://images.unsplash.com/photo-1587202372634-32705e3bf49c",
-        "https://images.unsplash.com/photo-1591488320449-011701bb6704",
-        "https://images.unsplash.com/photo-1592664474505-51c549ad15c5"
-    ]
 
     const handleImageNavigation = (direction) => {
         if (direction === "next") {
@@ -220,33 +264,69 @@ export default function ProductDetail() {
 
 
     return (
-        <div className="min-h-screen bg-gray-50 -mt-20">
 
-            <main className="container mx-auto px-4 pt-24 pb-12">
+        <div className="min-h-screen bg-gray-50 -mt-20">
+            {loading ? <Loading /> : <main className="container mx-auto px-4 pt-24 pb-12 w-10/12">
                 {/* Product Information */}
                 <div className="grid md:grid-cols-2 gap-8 mb-12">
-                    {/* Image Carousel */}
-                    <div className="relative">
-                        <img
-                            src={images[currentImageIndex]}
-                            alt={`Product view ${currentImageIndex + 1}`}
-                            className="w-full h-[400px] object-cover rounded-lg"
-                        />
-                        <button
-                            onClick={() => handleImageNavigation("prev")}
-                            className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-lg"
-                        >
-                            <FaArrowLeft />
-                        </button>
-                        <button
-                            onClick={() => handleImageNavigation("next")}
-                            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white p-2 rounded-full shadow-lg"
-                        >
-                            <FaArrowRight />
-                        </button>
-                    </div>
+                    {/* <ImageGallery items={images} /> */}
+                    <div className="w-full max-w-3xl mx-auto">
+                        {/* Hình ảnh lớn */}
+                        <div className="relative w-full h-[50vh] flex items-center justify-center rounded-xl overflow-hidden shadow-xl mb-6 bg-gray-100">
+                            <button
+                                onClick={() => setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length)}
+                                className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-white p-3 rounded-full shadow-md hover:scale-110 transition-all duration-200 z-10"
+                            >
+                                <FaArrowLeft className="text-gray-600 text-xl" />
+                            </button>
 
-                    {/* Product Details */}
+                            <LightGallery plugins={[lgThumbnail, lgZoom]}>
+                                {images.map((src, index) => (
+                                    <a key={index} href={src} className={index === currentImageIndex ? "block" : "hidden"}>
+                                        <img
+                                            src={src}
+                                            alt={`Ảnh ${index + 1}`}
+                                            className="w-full h-[50vh] object-contain rounded-xl transition-all duration-300 flex items-center justify-center"
+                                        />
+                                    </a>
+                                ))}
+                            </LightGallery>
+
+                            <button
+                                onClick={() => setCurrentImageIndex((prev) => (prev + 1) % images.length)}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-white p-3 rounded-full shadow-md hover:scale-110 transition-all duration-200 z-10"
+                            >
+                                <FaArrowRight className="text-gray-600 text-xl" />
+                            </button>
+                        </div>
+
+                        {/* Slider Thumbnail */}
+                        <Swiper
+                            spaceBetween={10} // Giữ khoảng cách hợp lý
+                            slidesPerView={4}
+                            navigation
+                            modules={[Navigation]}
+                            className="mt-3 px-4"
+                        >
+                            {images.map((src, index) => (
+                                <SwiperSlide key={index} className="flex items-center justify-center">
+                                    <div className="flex items-center justify-center w-full h-24">
+                                        <img
+                                            src={src}
+                                            className={`max-w-24 max-h-24 object-cover rounded-md cursor-pointer border-2 transition-all duration-200 ${index === currentImageIndex
+                                                ? "border-blue-500"
+                                                : "border-gray-300 hover:border-gray-400"
+                                                }`}
+                                            onClick={() => setCurrentImageIndex(index)}
+                                            alt={`Thumbnail ${index + 1}`}
+                                        />
+                                    </div>
+                                </SwiperSlide>
+                            ))}
+                        </Swiper>
+
+
+                    </div>
                     <div>
                         <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
                         <div className="flex items-center mb-4 text-lg text-orange-400">
@@ -259,11 +339,17 @@ export default function ProductDetail() {
                                 Xem đánh giá
                             </p>
                         </div>
-                        <p className="text-3xl font-bold text-blue-600 mb-4">${product.price}</p>
+                        <div className="text-3xl font-bold text-blue-600 mb-4 flex justify-start">
+                            {/* <p className="">{product.price.toLocaleString('en-US')}</p> */}
+                            <p className="">{parseFloat(product.price).toLocaleString('en-US')}</p>
+
+                            < FaDongSign />
+                        </div>
+
                         <p className="text-gray-600 mb-6 ">{product.description}</p>
                         <p className={`text-gray-600 mb-6 text-lg`}>Tình trạng: <span className={`font-semibold text-base ${quantityInStock > 0 ? "text-green-500" : "text-red-500"}`}>{quantityInStock > 0 ? "Còn hàng" : "Hết hàng"}</span></p>
 
-                        {/* Add to Cart Section */}
+                        {/* Thêm vào giỏ hàng Section */}
                         <div className="flex items-center space-x-4 mb-6">
                             <div className="flex items-center border rounded-md">
                                 <button
@@ -277,7 +363,7 @@ export default function ProductDetail() {
                                     value={quantity}
                                     onChange={(e) => {
                                         let val = Number(e.target.value);
-                                        if (val >= 1 && val <= 5) setQuantity(val);
+                                        setQuantity(val);
                                     }}
                                     className="w-12 text-center border-none outline-none"
                                 />
@@ -288,35 +374,37 @@ export default function ProductDetail() {
                                     +
                                 </button>
                             </div>
-                            <button className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">
-                                Add to Cart
+                            <button className=" gap-2 flex items-center justify-center bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                                <FiShoppingCart />
+                                Thêm vào giỏ hàng
                             </button>
-                            <button className="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition-colors">
-                                Buy Now
+                            <button className="gap-2 flex items-center justify-center bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition-colors">
+                                <FaCashRegister />
+                                Mua ngay
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <div className="mb-12">
-                    <h2 className="text-2xl font-bold mb-4">Technical Specifications</h2>
+                    <h2 className="text-2xl font-bold mb-4">Thông số kỹ thuật</h2>
                     <div className="overflow-x-auto">
                         <table className="table-auto w-full border-collapse border border-gray-300">
-                            {/* <tbody>
-                                {product.specs.map((spec, index) => (
+                            <tbody>
+                                {specs.map((spec, index) => (
                                     <tr key={index} className="even:bg-gray-100">
-                                        <td className="border border-gray-300 px-4 py-2 font-semibold">{spec.label}</td>
+                                        <td className="border border-gray-300 px-4 py-2 font-semibold">{spec.name_vi}</td>
                                         <td className="border border-gray-300 px-4 py-2">{spec.value}</td>
                                     </tr>
                                 ))}
-                            </tbody> */}
+                            </tbody>
                         </table>
                     </div>
                 </div>
 
                 {/* Similar Products Section */}
                 <div className="mb-12">
-                    <h2 className="text-2xl font-bold mb-6">Similar Products</h2>
+                    <h2 className="text-2xl font-bold mb-6">Sản phẩm tương tự</h2>
                     <div className="grid md:grid-cols-5 gap-6">
                         {similarProducts.map((similarProduct) => (
                             <ProductCard key={similarProduct.id} product={similarProduct} />
@@ -439,9 +527,7 @@ export default function ProductDetail() {
                         </div>
                     </div>
                 </div>
-            </main>
-
-
+            </main>}
         </div>
     );
 };

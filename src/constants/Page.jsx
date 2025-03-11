@@ -17,6 +17,8 @@ import Profile from "../pages/Profile";
 import SearchResult from "../pages/SearchResult";
 import NotFound from "../pages/NotFound";
 import ConfirmCheckout from "../pages/ConfirmCheckout";
+import PaypalSuccess from "../pages/PaypalSuccess";
+import PaypalCancel from "../pages/PaypalCancel";
 const HOME_PAGE = {
     name: "HOME_PAGE",
     displayName: "Trang chủ",
@@ -91,10 +93,24 @@ const PAYMENT_PAGE = {
     element: <Payment />,
 };
 
+const PAYMENT_SUCCESS_PAGE = {
+    name: "PAYMENT_SUCCESS_PAGE",
+    displayName: "Thanh toán paypal thành công",
+    path: "/paypal/success",
+    element: <PaypalSuccess />,
+};
+
+const PAYMENT_CANCEL_PAGE = {
+    name: "PAYMENT_CANCEL_PAGE",
+    displayName: "Thanh toán paypal thất bại",
+    path: "/paypal/cancel",
+    element: <PaypalCancel />,
+};
+
 const ORDER_TRACKING_PAGE = {
     name: "ORDER_TRACKING_PAGE",
     displayName: "Trang chủ",
-    path: "/order_tracking",
+    path: "/order_tracking/:orderId",
     element: <OrderTracking />,
 };
 
@@ -149,6 +165,8 @@ const Page = {
     PRODUCT_DETAILS,
     CART_PAGE,
     PAYMENT_PAGE,
+    PAYMENT_SUCCESS_PAGE,
+    PAYMENT_CANCEL_PAGE,
     ORDER_TRACKING_PAGE,
     ORDER_PAGE,
     DASHBOARD,

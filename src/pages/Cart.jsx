@@ -1,51 +1,151 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, use } from "react";
 import { FiTrash2, FiPlus, FiMinus } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
+import { useSelector, useDispatch } from "react-redux";
+import {
+    findCartItemsByCartId, findAllProduct,
+    updateQuantityCartItem, deleteCartItem
+} from "../routers/ApiRoutes";
+import {
+    setCartRedux, setCartItemsRedux, setSelectedItemsRedux, addItemToCart, removeItemFromCart,
+    increaseQuantityItem, decrementQuantityItem, clearCart
+} from "../redux/cartSlice";
+import { FaDongSign } from "react-icons/fa6";
+import Loading from './../utils/Loading';
 
 export default function Cart() {
 
-    const [cartItems, setCartItems] = useState([
-        {
-            id: 1,
-            name: "High-Performance Gaming GPU",
-            price: 699.99,
-            quantity: 1,
-            image: "https://images.unsplash.com/photo-1591488320449-011701bb6704"
-        },
-        {
-            id: 2,
-            name: "RGB Mechanical Keyboard",
-            price: 159.99,
-            quantity: 2,
-            image: "https://images.unsplash.com/photo-1595044426077-d36d9236d54a"
-        },
-        {
-            id: 3,
-            name: "Gaming Mouse",
-            price: 79.99,
-            quantity: 1,
-            image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46"
-        }
-    ]);
+    const dispatch = useDispatch();
+    const selectedItemFromRedux = useSelector(state => state.shoppingCart.selectItems);
+    const cartFromRedux = useSelector((state) => state.shoppingCart.cart);
+    const [cartItems, setCartItems] = useState([]);
+    const [selectedItems, setSelectedItems] = useState(selectedItemFromRedux);
+    const [loading, setLoading] = useState(false)
 
-    const updateQuantity = (id, newQuantity) => {
-        if (newQuantity < 1) return;
+    useEffect(() => {
+        const fetchCart = async () => {
+            setLoading(true)
+            try {
+                console.log("cartFromRedux", cartFromRedux);
+                const [cartItemResponse, productsResponse] = await Promise.all([
+                    findCartItemsByCartId(cartFromRedux.id),
+                    findAllProduct()
+                ]);
+                const cartItemsMapped = cartItemResponse.data.map(item => {
+                    const product = productsResponse.data.find(p => p.id === item.productId);
+                    return {
+                        itemId: item.id,
+                        productId: item.productId,
+                        name: product?.name,
+                        price: parseFloat(product?.price),
+                        quantity: parseInt(item.quantity),
+                        image: product?.image
+                    };
+                });
+                setCartItems(cartItemsMapped);
+                dispatch(setCartItemsRedux({ items: cartItemsMapped }));
+                setLoading(false)
+            } catch (error) {
+                console.log(error)
+                toast.error("Lỗi load dữ liệu giỏ hàng");
+            } finally {
+                setLoading(false)
+            }
+        };
+        if (cartFromRedux?.id) {
+            fetchCart();
+        }
+    }, [cartFromRedux?.id]);
+
+
+    // useEffect(() => {
+    //     setSelectedItems(selectedItemFromRedux); // lấy selectedItems từ redux
+    // }, []);
+
+    const increateseQuantity = async (itemId, newQuantity) => {
         setCartItems(cartItems.map(item =>
-            item.id === id ? { ...item, quantity: newQuantity } : item
+            item.itemId === itemId ? { ...item, quantity: newQuantity } : item
         ));
+        dispatch(increaseQuantityItem({ itemId }));
+        try {
+            const updateResponse = await updateQuantityCartItem(itemId, newQuantity);
+            if (updateResponse.data.quantity === 0) {
+                const deleteResponse = await deleteCartItem(itemId);
+                if (deleteResponse.data) {
+                    setCartItems(cartItems.filter(item => item.itemId !== itemId));
+                    dispatch(removeItemFromCart({ itemId }));
+                }
+            };
+            toast.success("Cập nhật số lượng sản phẩm thành công");
+        } catch (error) {
+            toast.error("Lỗi cập nhật số lượng sản phẩm");
+        };
     };
 
-    const removeItem = (id) => {
-        setCartItems(cartItems.filter(item => item.id !== id));
+    const decrementQuantity = async (itemId, newQuantity) => {
+        setCartItems(cartItems.map(item =>
+            item.itemId === itemId ? { ...item, quantity: newQuantity } : item
+        ));
+        dispatch(decrementQuantityItem({ itemId }));
+        try {
+            const updateResponse = await updateQuantityCartItem(itemId, newQuantity);
+            if (updateResponse.data.quantity === 0) {
+                const deleteResponse = await deleteCartItem(itemId);
+                if (deleteResponse.data) {
+                    setCartItems(cartItems.filter(item => item.itemId !== itemId));
+                    dispatch(removeItemFromCart({ itemId }));
+                    console.log("length", cartItems.length);
+                };
+            };
+            toast.success("Cập nhật số lượng sản phẩm thành công");
+        } catch (error) {
+            toast.error("Lỗi cập nhật số lượng sản phẩm");
+        };
+    };
+
+    const removeItem = async (itemId) => {
+        console.log(itemId)
+        const deleteResponse = await deleteCartItem(itemId);
+        if (deleteResponse.data) {
+            dispatch(removeItemFromCart({ itemId }));
+            toast.success("Xóa sản phẩm khỏi giỏ hàng thành công");
+        }
+        setCartItems(cartItems.filter(item => item.itemId !== itemId));
     };
 
     const calculateTotal = () => {
-        return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+        return selectedItems.length > 0
+            ? selectedItems.reduce((total, item) => total + (item.price * item.quantity), 0)
+            : 0;
+    };
+    
+    const calculateNumberItem = () => {
+        return selectedItems.length > 0
+            ? selectedItems.reduce((total, item) => total + item.quantity, 0)
+            : 0;
+    };
+
+    const handlerSelectItem = (e, item) => {
+        console.log(item)
+        if (e.target.checked) {
+            setSelectedItems([...selectedItems, item]);
+            dispatch(setSelectedItemsRedux({ selectItems: [...selectedItems, item] }));
+        } else {
+            setSelectedItems(selectedItems.filter(i => i.itemId !== item.itemId));
+            dispatch(setSelectedItemsRedux({ selectItems: selectedItems.filter(i => i.itemId !== item.itemId) }));
+        }
     };
 
     const CartItem = ({ item }) => (
         <div className="flex items-center justify-between p-4 mb-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
             <div className="flex items-center space-x-4 flex-1">
+                <input
+                    className="accent-red-400 w-5 h-5 m-2"
+                    type="checkbox"
+                    checked={selectedItems.some(i => i.itemId === item.itemId)}
+                    onChange={(e) => handlerSelectItem(e, item)}
+                />
                 <img
                     src={item.image}
                     alt={item.name}
@@ -56,17 +156,17 @@ export default function Cart() {
                 />
                 <div className="flex-1">
                     <h3 className="text-lg font-semibold text-gray-800">{item.name}</h3>
-                    <p className="text-gray-600">${item.price.toFixed(2)}</p>
-                    <div className="flex items-center space-x-2 mt-2">
+                    <p className="text-gray-600">{item.price.toFixed(2)}</p>
+                    <div className="flex items-center space-x- mt-2">
                         <button
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            onClick={() => decrementQuantity(item.itemId, item.quantity - 1)}
                             className="p-1 rounded-full hover:bg-gray-100"
                         >
                             <FiMinus className="text-gray-600" />
                         </button>
                         <span className="px-4 py-1 border rounded-md">{item.quantity}</span>
                         <button
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            onClick={() => increateseQuantity(item.itemId, item.quantity + 1)}
                             className="p-1 rounded-full hover:bg-gray-100"
                         >
                             <FiPlus className="text-gray-600" />
@@ -75,7 +175,7 @@ export default function Cart() {
                 </div>
             </div>
             <button
-                onClick={() => removeItem(item.id)}
+                onClick={() => removeItem(item.itemId)}
                 className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors duration-200"
             >
                 <FiTrash2 size={20} />
@@ -83,46 +183,49 @@ export default function Cart() {
         </div>
     );
 
-    return (
-        <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-            <div className="w-10/12 mx-auto">
-                <h1 className="text-3xl font-bold text-gray-900 mb-8">Shopping Cart</h1>
 
+    return (
+
+        <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+            {loading ? <Loading /> : <div className="w-10/12 mx-auto">
+                <h1 className="text-3xl font-bold text-gray-900 mb-8">Giỏ hàng</h1>
                 {cartItems.length === 0 ? (
                     <div className="text-center py-12 bg-white rounded-lg shadow">
-                        <p className="text-gray-500 text-lg">Your cart is empty</p>
+                        <p className="text-gray-500 text-lg">Giỏ hàng trống</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div className="lg:col-span-2 space-y-4">
                             {cartItems.map(item => (
-                                <CartItem key={item.id} item={item} />
+                                <CartItem key={item.itemId} item={item} />
                             ))}
                         </div>
-
                         <div className="lg:col-span-1">
-                            <div className="bg-white p-6 rounded-lg shadow-md">
-                                <h2 className="text-xl font-semibold mb-4">Cart Summary</h2>
+                            <div className="bg-white p-6 rounded-lg shadow-md sticky top-4">
+                                <h2 className="text-xl font-semibold mb-4">Tóm tắt giỏ hàng</h2>
                                 <div className="space-y-2 mb-4">
                                     <div className="flex justify-between text-gray-600">
-                                        <span>Items:</span>
-                                        <span>{cartItems.reduce((acc, item) => acc + item.quantity, 0)}</span>
+                                        <span>Sản phẩm:</span>
+                                        <span>{calculateNumberItem()}</span>
                                     </div>
                                     <div className="flex justify-between text-xl font-bold">
-                                        <span>Total:</span>
-                                        <span>${calculateTotal().toFixed(2)}</span>
+                                        <span>Tổng tiền:</span>
+                                        <div className="flex items-center space-x-2">
+                                            <span>{calculateTotal().toLocaleString('en-US')}</span>
+                                            <span><FaDongSign /></span>
+                                        </div>
                                     </div>
                                 </div>
                                 <Link to='/payment'>
                                     <button className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200">
-                                        Proceed to Checkout
+                                        Đến trang thanh toán
                                     </button>
                                 </Link>
                             </div>
                         </div>
                     </div>
                 )}
-            </div>
+            </div>}
         </div>
     );
 };
