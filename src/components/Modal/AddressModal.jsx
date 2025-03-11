@@ -4,11 +4,13 @@ import { FaEnvelope, FaMapMarkerAlt, FaPhone, FaUser } from "react-icons/fa";
 import { FiX, FiMapPin } from "react-icons/fi";
 import { calculateShippingFee } from "../../routers/ApiRoutes";
 import Loading from "../loading";
+import { useSelector } from "react-redux";
 
 const AddressModal = ({ isOpen, onClose, user, onSelect, setShippingFee }) => {
     const addresses = user.address.split(";;") // Tách địa chỉ
     const [selectedAddress, setSelectedAddress] = useState(addresses[0]);
     const [loading, setLoading] = useState(false)
+    const selectedItems = useSelector(state => state.shoppingCart.selectItems)
     if (!isOpen) return null; // Ẩn modal khi không mở
 
 
@@ -20,7 +22,9 @@ const AddressModal = ({ isOpen, onClose, user, onSelect, setShippingFee }) => {
 
         onSelect(address);
         try {
-            const res = await calculateShippingFee(parseInt(toDistrict), toWard, 1000, 195800);
+
+            const totalWeight = selectedItems.reduce((sum, item) => sum + item.weight * item.quantity, 1);
+            const res = await calculateShippingFee(parseInt(toDistrict), toWard, totalWeight, 195800);
             setShippingFee(res);
         } catch (error) {
             console.error("Error calculating shipping fee:", error);

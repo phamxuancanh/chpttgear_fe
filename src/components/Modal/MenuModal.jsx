@@ -66,7 +66,7 @@ export default function MenuModal() {
             { key: "usb_ports", value: "Cổng USB", options: ["USB 2.0", "USB 3.0", "USB 3.1", "USB-C"] },
             { key: "network", value: "Kết nối mạng", options: ["Ethernet", "Wi-Fi 6", "Bluetooth"] },
         ],
-      HEATSINK: [
+        HEATSINK: [
             { key: "warranty", value: "BẢO HÀNH", options: ["12 THÁNG", "24 THÁNG", "36 THÁNG"] },
             { key: "type", value: "LOẠI", options: ["TẢN NHIỆT KHÍ", "TẢN NHIỆT NƯỚC"] },
             { key: "fan_size", value: "KÍCH THƯỚC QUẠT", options: ["92MM", "120MM", "140MM"] },
@@ -80,12 +80,6 @@ export default function MenuModal() {
             { key: "latency", value: "ĐỘ TRỄ CAS", options: ["CL14", "CL16", "CL18", "CL20"] },
             { key: "voltage", value: "ĐIỆN ÁP", options: ["1.2V", "1.35V", "1.5V"] },
             { key: "type", value: "LOẠI RAM", options: ["DDR3", "DDR4", "DDR5", "LPDDR5"] }
-        ],
-        SPEAKER: [
-            { key: "warranty", value: "BẢO HÀNH", options: ["6 THÁNG", "12 THÁNG", "24 THÁNG"] },
-            { key: "type", value: "LOẠI", options: ["2.0", "2.1", "5.1", "7.1", "SOUNDBAR"] },
-            { key: "connection", value: "KẾT NỐI", options: ["BLUETOOTH", "AUX", "USB", "HDMI", "OPTICAL"] },
-            { key: "power", value: "CÔNG SUẤT", options: ["5W", "10W", "20W", "50W", "100W+"] }
         ],
         CASE: [
             { key: "warranty", value: "BẢO HÀNH", options: ["12 THÁNG", "24 THÁNG"] },
@@ -130,7 +124,7 @@ export default function MenuModal() {
             { key: "panel_type", value: "LOẠI TẤM NỀN", options: ["IPS", "VA", "TN", "OLED"] }
         ]
     };
-    
+
     const [categoriesFromDB, setCategoriesFromDB] = useState([]);
 
     useEffect(() => {

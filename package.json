@@ -2,7 +2,6 @@
   "name": "chpttgear_fe",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://localhost:8080",
   "dependencies": {
     "@emotion/styled": "^11.14.0",
     "@loadable/component": "^5.16.4",

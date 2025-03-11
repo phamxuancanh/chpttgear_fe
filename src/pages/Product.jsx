@@ -1,48 +1,86 @@
 import React, { useState, useEffect } from "react";
 import { FiSearch, FiSliders, FiStar, FiShoppingCart, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import ProductCard from './../components/ProductCard';
-import { Link, useLocation } from "react-router-dom";
-import { getAllProduct } from "../routers/ApiRoutes";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { findAllCategory, getAllProduct, getAllProductWithCategory } from "../routers/ApiRoutes";
 import { FaDongSign } from "react-icons/fa6";
 import BANNER1 from "../assets/banner1.webp"
+import Loading from "../utils/Loading";
 
 export default function Product() {
+    const [searchParams] = useSearchParams();
+    const categoryParams = searchParams.get("category");
+    const categoriesFromURL = categoryParams ? categoryParams.split(",") : [];
 
     const [searchQuery, setSearchQuery] = useState("");
-    const [priceRange, setPriceRange] = useState(1000);
     const [selectedCategories, setSelectedCategories] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [filteredProducts, setFilteredProducts] = useState([]);
     const [products, setProducts] = useState([])
-    const [maxPrice, setMaxPrice] = useState(0)
     const productsPerPage = 6;
     const location = useLocation();
+    const [categories, setCategories] = useState([])
+    const [maxPrice, setMaxPrice] = useState(0);
+    const [priceRange, setPriceRange] = useState(0); // Đặt 0 ban đầu để tránh lỗi
+    const [loading, setLoading] = useState(false)
+
+    useEffect(() => {
+        const updateCategories = async () => {
+            if (categoriesFromURL.length > 0) {
+                setLoading(true)
+                console.log("Params từ URL:", categoryParams);
+                console.log("Mảng categoriesFromURL:", categoriesFromURL);
+
+                await new Promise(resolve => setTimeout(resolve, 700)); // Chờ 500ms
+
+                setSelectedCategories(categoriesFromURL);
+                console.log("Đã cập nhật selectedCategories:", categoriesFromURL);
+                setLoading(false)
+            } else {
+                setSelectedCategories([]);
+            }
+        };
+
+        updateCategories();
+    }, [categoryParams]);
+
+
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res1 = await getAllProduct();
+                const res = await findAllCategory();
+                setCategories(res.data);
 
-                setProducts(res1.data)
-                setMaxPrice(Math.max(...res1.data.map(product => product.price)))
-                setSearchQuery("")
-                setPriceRange(1000)
-                setSelectedCategories([])
+                const res1 = await getAllProductWithCategory();
+                setProducts(res1.data);
+
+                // Tìm giá lớn nhất trong danh sách sản phẩm
+                const highestPrice = Math.max(...res1.data.map(product => product.price), 0);
+
+                // Cập nhật maxPrice và priceRange
+                setMaxPrice(highestPrice);
+                setPriceRange(highestPrice); // Đặt mặc định bằng giá lớn nhất
+
+                setSearchQuery("");
+                setSelectedCategories([]);
             } catch (error) {
                 console.error("Error fetching inventory:", error);
             }
         };
+
         fetchData();
     }, []);
 
-    const categories = [
-        "Card đồ họa",
-        "Bộ vi xử lý",
-        "Bo mạch chủ",
-        "RAM",
-        "Lưu trữ",
-        "Nguồn máy tính",
-    ];
+    // Khi maxPrice thay đổi, cập nhật lại priceRange
+    useEffect(() => {
+        if (maxPrice > 0) {
+            setPriceRange(maxPrice);
+        }
+    }, [maxPrice]);
+
+
+
 
     useEffect(() => {
         let filtered = [...products];
@@ -55,17 +93,18 @@ export default function Product() {
 
         if (selectedCategories.length > 0) {
             filtered = filtered.filter(product =>
-                selectedCategories.includes(product.category)
+                selectedCategories.includes(product.category_type)
             );
         }
 
         filtered = filtered.filter(product => product.price <= priceRange);
-
+        console.log(filtered)
         setFilteredProducts(filtered);
         setCurrentPage(1);
     }, [searchQuery, selectedCategories, priceRange]);
 
     const handleCategoryToggle = (category) => {
+        console.log(category)
         setSelectedCategories((prev) =>
             prev.includes(category)
                 ? prev.filter((c) => c !== category)
@@ -86,7 +125,7 @@ export default function Product() {
 
     return (
         <div className="min-h-screen bg-background p-6 bg-gray-100">
-            <div className="max-w-7xl mx-auto">
+            {loading ? <Loading /> : <div className="max-w-7xl mx-auto">
                 <div className="mb-8 ">
                     <img src={BANNER1} alt="" className="rounded-lg" />
                 </div>
@@ -123,11 +162,11 @@ export default function Product() {
                                     >
                                         <input
                                             type="checkbox"
-                                            checked={selectedCategories.includes(category)}
-                                            onChange={() => handleCategoryToggle(category)}
+                                            checked={selectedCategories.includes(category.name)}
+                                            onChange={() => handleCategoryToggle(category.name)}
                                             className="rounded border-input text-primary focus:ring-ring"
                                         />
-                                        <span className="text-foreground">{category}</span>
+                                        <span className="text-foreground">{category.name_Vi}</span>
                                     </label>
                                 ))}
                             </div>
@@ -198,7 +237,7 @@ export default function Product() {
                         </section>
                     </div>
                 </div>
-            </div>
+            </div>}
         </div>
     );
 };

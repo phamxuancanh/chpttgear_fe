@@ -111,12 +111,6 @@ export default function Products() {
             { key: "voltage", value: "ĐIỆN ÁP", options: ["1.2V", "1.35V", "1.5V"] },
             { key: "type", value: "LOẠI RAM", options: ["DDR3", "DDR4", "DDR5", "LPDDR5"] }
         ],
-        SPEAKER: [
-            { key: "warranty", value: "BẢO HÀNH", options: ["6 THÁNG", "12 THÁNG", "24 THÁNG"] },
-            { key: "type", value: "LOẠI", options: ["2.0", "2.1", "5.1", "7.1", "SOUNDBAR"] },
-            { key: "connection", value: "KẾT NỐI", options: ["BLUETOOTH", "AUX", "USB", "HDMI", "OPTICAL"] },
-            { key: "power", value: "CÔNG SUẤT", options: ["5W", "10W", "20W", "50W", "100W+"] }
-        ],
         CASE: [
             { key: "warranty", value: "BẢO HÀNH", options: ["12 THÁNG", "24 THÁNG"] },
             { key: "form_factor", value: "KÍCH THƯỚC", options: ["MINI ITX", "MICRO ATX", "MID TOWER", "FULL TOWER"] },

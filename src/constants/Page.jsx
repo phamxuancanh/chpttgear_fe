@@ -23,13 +23,13 @@ const HOME_PAGE = {
     name: "HOME_PAGE",
     displayName: "Trang chủ",
     path: "/",
-    element: <Product />,
+    element: <Home />,
 };
 const PRODUCT_PAGE = {
     name: "PRODUCT_PAGE",
     displayName: "Danh sách sản phẩm",
     path: "/products",
-    element: <Home />,
+    element: <Product />,
 };
 const PRODUCT_DETAILS = {
     name: "PRODUCT_DETAILS",
