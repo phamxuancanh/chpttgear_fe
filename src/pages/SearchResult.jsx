@@ -6,8 +6,7 @@ import { Pagination, Slider } from '@mui/material'
 import { findAllCategory, findAllSpecification, searchProducts } from "../routers/ApiRoutes";
 import ProductCard from "../components/ProductCard";
 import { ClockLoader } from "react-spinners"
-import { set } from "date-fns";
-import { all } from "axios";
+
 
 const useQuery = () => {
     return new URLSearchParams(useLocation().search);
@@ -387,7 +386,7 @@ export default function SearchResult() {
             }
     
             // Kiểm tra category
-            if (selectedCategory && selectedCategory !== "") {
+            if (selectedCategory && selectedCategory.name !== "") {
                 queryParams.set("category", selectedCategory.name);
             } else {
                 queryParams.delete("category");
