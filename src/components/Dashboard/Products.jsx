@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { use, useState, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FiEdit } from "react-icons/fi";
@@ -8,6 +9,9 @@ import { findAllCategory, getProductsManagementPage, searchProducts } from "../.
 import AddCategoryModal from "../Modal/AddCategoryModal";
 import { FaDongSign } from "react-icons/fa6";
 import Loading from "../../utils/Loading";
+import { MaterialReactTable } from "material-react-table"
+import { Box, Button, Avatar } from "@mui/material";
+import { Tooltip } from "@mui/material";
 
 const useQuery = () => {
     return new URLSearchParams(useLocation().search);
@@ -102,14 +106,6 @@ export default function Products() {
             { key: "fan_size", value: "KÍCH THƯỚC QUẠT", options: ["92MM", "120MM", "140MM"] },
             { key: "heat_pipes", value: "SỐ ỐNG DẪN NHIỆT", options: ["2", "4", "6"] },
             { key: "compatibility", value: "TƯƠNG THÍCH CPU", options: ["INTEL", "AMD", "CẢ HAI"] }
-        ],
-        RAM: [
-            { key: "warranty", value: "BẢO HÀNH", options: ["36 THÁNG", "60 THÁNG", "TRỌN ĐỜI"] },
-            { key: "capacity", value: "DUNG LƯỢNG", options: ["4GB", "8GB", "16GB", "32GB", "64GB", "128GB"] },
-            { key: "speed", value: "TỐC ĐỘ BUS", options: ["2133MHZ", "2666MHZ", "3200MHZ", "3600MHZ", "4000MHZ+"] },
-            { key: "latency", value: "ĐỘ TRỄ CAS", options: ["CL14", "CL16", "CL18", "CL20"] },
-            { key: "voltage", value: "ĐIỆN ÁP", options: ["1.2V", "1.35V", "1.5V"] },
-            { key: "type", value: "LOẠI RAM", options: ["DDR3", "DDR4", "DDR5", "LPDDR5"] }
         ],
         SPEAKER: [
             { key: "warranty", value: "BẢO HÀNH", options: ["6 THÁNG", "12 THÁNG", "24 THÁNG"] },
@@ -418,13 +414,6 @@ export default function Products() {
         }
     });
 
-    // useEffect(() => {
-    //     const queryParams = new URLSearchParams(location.search);
-    //     const currentPage = parseInt(queryParams.get('page') || '1', 10);
-    //     setPage(currentPage);
-    //     fetchProducts({ page: currentPage });
-    // }, [location.search]);
-
     const totalPage = useMemo(() => {
         const size = (results?.data != null) ? results?.size : 5;
         const totalRecord = (results?.data != null) ? results?.totalRecords : 5;
@@ -450,7 +439,116 @@ export default function Products() {
         console.log(product_id);
         setShowProductModal({ show: true, productId: product_id });
     }
+    const columns = useMemo(
+        () => [
+            {
+                header: "STT",
+                size: 50,
+                Cell: ({ row }) => row.index + 1,
+                grow: true,
 
+            },
+            {
+                accessorKey: "image",
+                header: "Hình ảnh",
+                Cell: ({ cell }) => (
+                    <img
+                        src={cell.getValue()?.split(",")[0] || "/placeholder.png"}
+                        alt="Product"
+                        className="w-16 h-16 object-cover rounded-md"
+                    />
+                ),
+                size: 80,
+                grow: true,
+            },
+            {
+                accessorKey: "name",
+                header: "Tên sản phẩm",
+                size: 250,
+                Cell: ({ cell }) => (
+                    <Tooltip title={cell.getValue()} arrow>
+                        <Box sx={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {cell.getValue()}
+                        </Box>
+                    </Tooltip>
+                ),
+                grow: true,
+
+            },
+            {
+                accessorKey: "brand",
+                header: "Thương hiệu",
+                size: 120,
+                grow: true,
+
+            },
+            {
+                accessorKey: "category.name_Vi",
+                header: "Danh mục",
+                size: 150,
+                grow: true,
+
+            },
+            {
+                accessorKey: "color",
+                header: "Màu sắc",
+                size: 100,
+                grow: true,
+
+            },
+            {
+                accessorKey: "price",
+                header: "Giá",
+                Cell: ({ cell }) => (
+                    <Box sx={{ color: "green", fontWeight: "bold", display: "flex", alignItems: "center" }}>
+                        {cell.getValue()?.toLocaleString("en-US")} <FaDongSign />
+                    </Box>
+                ),
+                size: 120,
+                grow: true,
+
+            },
+            {
+                accessorKey: "size",
+                header: "Kích thước",
+                size: 100,
+                grow: true,
+
+            },
+            {
+                accessorKey: "weight",
+                header: "Trọng lượng (g)",
+                size: 120,
+                grow: true,
+
+            },
+            {
+                accessorKey: "guaranteePeriod",
+                header: "Bảo hành (tháng)",
+                size: 120,
+                grow: true,
+
+            },
+            {
+                accessorKey: "actions",
+                header: "Hành động",
+                enableSorting: false,
+                enableColumnFilter: false,
+                Cell: ({ row }) => (
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<FiEdit />}
+                        onClick={() => handleActionButton(row.original.id)}
+                    >
+                        Sửa
+                    </Button>
+                ),
+                size: 150,
+            },
+        ],
+        [results]
+    );
     return (
         <div className="flex-1 p-8">
             {loading ? <Loading /> : <div>
@@ -573,13 +671,13 @@ export default function Products() {
                         </div>
                     </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {results?.data
-                        ?.slice() // Tạo bản sao để tránh thay đổi mảng gốc
+                        ?.slice()
                         .sort((a, b) => {
                             const dateA = a.modifiedDate ? Date.parse(a.modifiedDate) : 0;
                             const dateB = b.modifiedDate ? Date.parse(b.modifiedDate) : 0;
-                            return dateB - dateA; // Sắp xếp giảm dần (mới nhất trước)
+                            return dateB - dateA;
                         })
                         .map((product) => (
                             <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -618,11 +716,39 @@ export default function Products() {
                         boundaryCount={1}
                         siblingCount={1}
                     />
-                </div>
+                </div> */}
             </div>}
-
+            <Box sx={{ overflowX: "auto"}}>
+                <MaterialReactTable
+                    columns={columns}
+                    data={results?.data || []}
+                    enablePagination={false}
+                    enableColumnResizing={true}
+                    enableSorting={true}
+                    enableStickyHeader={true}
+                    muiTableProps={{
+                        sx: {
+                            backgroundColor: "#fafafa",
+                            borderRadius: "8px",
+                        }
+                    }}
+                    muiTableHeadCellProps={{
+                        sx: {
+                            fontWeight: "bold",
+                            backgroundColor: "#f1f5f9"
+                        }
+                    }}
+                />
+            </Box>
+            <div className="flex justify-center">
+                <CustomPagination
+                    count={totalPage}
+                    page={page}
+                    onChange={(_, page) => handleChangeResultPagination(page)}
+                    boundaryCount={1}
+                    siblingCount={1}
+                />
+            </div>
         </div>
     );
 };
-
-
