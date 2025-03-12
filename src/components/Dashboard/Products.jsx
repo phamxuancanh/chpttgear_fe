@@ -68,11 +68,11 @@ export default function Products() {
     const handleCategoryChange = (e) => {
         const selectedIndex = e.target.selectedIndex;
         const selectedId = e.target.value;
-        const selectedName = e.target.options[selectedIndex].text;
+        const selectedCategory = categories.find(cat => cat.id === selectedId);
         if (selectedId === "") {
             setSelectedCategory("");
         } else {
-            setSelectedCategory({ id: selectedId, name: selectedName });
+            setSelectedCategory({ id: selectedId, name: selectedCategory.name });
         }
     };
     useEffect(() => {
@@ -427,7 +427,7 @@ export default function Products() {
                         {/* Thông số kỹ thuật */}
                         {specsFields.length > 0 && specsFields.map((spec) => (
                             <div key={spec.key}>
-                                <label htmlFor={spec.key} className="block text-sm font-medium text-gray-700">{translate(spec.value)}</label>
+                                <label htmlFor={spec.key} className="block text-sm font-medium text-gray-700">{translate(spec.key)}</label>
                                 <select
                                     id={spec.key}
                                     name={spec.key}
