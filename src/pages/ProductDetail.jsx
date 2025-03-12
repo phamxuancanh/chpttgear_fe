@@ -48,7 +48,7 @@ export default function ProductDetail() {
     const user_id = useSelector((state) => {
         console.log("Redux state:", state);
         return state.auth.user.id;
-      });
+    });
     const [images, setImages] = useState([])
     const [loading, setLoading] = useState(false)
     const [specs, setspecs] = useState([])
@@ -84,34 +84,34 @@ export default function ProductDetail() {
 
 
 
-        
+
     useEffect(() => {
-      
-    const fetchData1 = async () => {
-        try {
-            fetch(`${process.env.REACT_APP_REVIEW_BASE_URL}/review/${id}`)
-            .then(response => response.json()) // Chuyển đổi JSON
-            .then(data => {
-                setReview(data); // Lưu vào state
-                const total = data.reduce((sum, r) => sum + (r.rating ?? 0), 0);
-                const average = total / data.length;
-                setRating(Math.round(average)); 
-                console.log("Fetched data:", data);
-            })
-            .catch(error => console.error("Error:", error));
 
-            const [productRes, quantityInStockRes] = await Promise.all([
-                findProductById(id),
-                getQuantityInStock(id)
-            ]);
+        // const fetchData1 = async () => {
+        //     try {
+        //         fetch(`${process.env.REACT_APP_REVIEW_BASE_URL}/review/${id}`)
+        //             .then(response => response.json()) // Chuyển đổi JSON
+        //             .then(data => {
+        //                 setReview(data); // Lưu vào state
+        //                 const total = data.reduce((sum, r) => sum + (r.rating ?? 0), 0);
+        //                 const average = total / data.length;
+        //                 setRating(Math.round(average));
+        //                 console.log("Fetched data:", data);
+        //             })
+        //             .catch(error => console.error("Error:", error));
 
-            if (productRes?.data) setProduct(productRes.data);
-            if (quantityInStockRes) setQuantityInStock(quantityInStockRes.quantityInStock);            
-        } catch (error) {
-            console.error("Error fetching product data:", error);
-        }
-    };
-      const fetchData = async () => {
+        //         const [productRes, quantityInStockRes] = await Promise.all([
+        //             findProductById(id),
+        //             getQuantityInStock(id)
+        //         ]);
+
+        //         if (productRes?.data) setProduct(productRes.data);
+        //         if (quantityInStockRes) setQuantityInStock(quantityInStockRes.quantityInStock);
+        //     } catch (error) {
+        //         console.error("Error fetching product data:", error);
+        //     }
+        // };
+        const fetchData = async () => {
             try {
                 setLoading(true)
                 const [productRes, quantityInStockRes, specRes] = await Promise.all([
@@ -136,11 +136,11 @@ export default function ProductDetail() {
         };
 
 
-    if (id){
-     fetchData()
-        fetchData1() 
-    }
-     
+        if (id) {
+            fetchData()
+            // fetchData1()
+        }
+
     }, [id]); // Gọi lại khi id thay đổi
     useEffect(() => {
         console.log("Updated rating:", rating);
@@ -414,7 +414,7 @@ export default function ProductDetail() {
 
                 {/* overall review */}
                 <div className="w-full  shadow-lg bg-gray-50 rounded-sm py-10 px-7 " >
-                    <h2 className="text-2xl font-bold mb-6 ">Đánh giá & Nhận xét PC GVN Intel i5-12400F/ VGA RTX 4060</h2>
+                    <h2 className="text-2xl font-bold mb-6 ">Đánh giá & Nhận xét {product.name}</h2>
                     <div className="w-full flex flex-col  items-center border-b border-gray-200 ">
                         <div className="w-full  p-6 shadow-sm text-center ">
                             <h2 className="text-2xl font-bold mb-6">Đánh giá & Nhận xét</h2>
@@ -496,22 +496,22 @@ export default function ProductDetail() {
                                 value={comment}
                                 onChange={(e) => setComment(e.target.value)}
                             ></textarea>
-                            <div className="flex justify-end">
+                            {/* <div className="flex justify-end">
                                 <button
                                     className="bg-blue-500 text-white text-sm font-semibold rounded-md flex justify-center items-center px-3 py-1"
                                     onClick={() => fetch(`${process.env.REACT_APP_REVIEW_BASE_URL}/review`, {
-                                            method: "POST",
-                                            headers: {
+                                        method: "POST",
+                                        headers: {
                                             "Content-Type": "application/json",
-                                            },
-                                            body: JSON.stringify({
+                                        },
+                                        body: JSON.stringify({
                                             productId: id,
                                             userId: user_id,
                                             rating: rating,
                                             review: comment,
                                             createDate: new Date()
-                                            }),
-                                        })
+                                        }),
+                                    })
                                         .then(response => response.text())
                                         .then(data => {
                                             alert(`Bạn đã đánh giá ${rating} sao với nội dung: ${comment}`);
@@ -523,7 +523,7 @@ export default function ProductDetail() {
                                 >
                                     <BiSolidCommentEdit className="text-xl mr-2" />Gửi đánh giá của bạn.
                                 </button>
-                            </div>
+                            </div> */}
                         </div>
                     </div>
                 </div>

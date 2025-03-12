@@ -32,6 +32,7 @@ export default function Cart() {
                     findCartItemsByCartId(cartFromRedux.id),
                     findAllProduct()
                 ]);
+                console.log(productsResponse.data)
                 const cartItemsMapped = cartItemResponse.data.map(item => {
                     const product = productsResponse.data.find(p => p.id === item.productId);
                     return {
@@ -40,7 +41,10 @@ export default function Cart() {
                         name: product?.name,
                         price: parseFloat(product?.price),
                         quantity: parseInt(item.quantity),
-                        image: product?.image
+                        image: product?.image,
+                        weight: product?.weight,
+                        size: product?.size
+
                     };
                 });
                 setCartItems(cartItemsMapped);
@@ -77,7 +81,18 @@ export default function Cart() {
                     dispatch(removeItemFromCart({ itemId }));
                 }
             };
-            toast.success("Cập nhật số lượng sản phẩm thành công");
+            const item = cartItems.find(item => item.itemId === itemId);
+            if (item) {
+                const updatedItems = selectedItems.map(i =>
+                    i.itemId === item.itemId ? { ...i, quantity: i.quantity + 1 } : i
+                );
+                if (!selectedItems.some(i => i.itemId === item.itemId)) {
+                    updatedItems.push({ ...item, quantity: 1 });
+                }
+                dispatch(setSelectedItemsRedux({ selectItems: updatedItems }));
+                setSelectedItems(updatedItems)
+            }
+
         } catch (error) {
             toast.error("Lỗi cập nhật số lượng sản phẩm");
         };
@@ -98,7 +113,18 @@ export default function Cart() {
                     console.log("length", cartItems.length);
                 };
             };
-            toast.success("Cập nhật số lượng sản phẩm thành công");
+            const item = cartItems.find(item => item.itemId === itemId);
+            if (item) {
+                const updatedItems = selectedItems.map(i =>
+                    i.itemId === item.itemId ? { ...i, quantity: i.quantity - 1 } : i
+                );
+                if (!selectedItems.some(i => i.itemId === item.itemId)) {
+                    updatedItems.push({ ...item, quantity: 1 });
+                }
+                dispatch(setSelectedItemsRedux({ selectItems: updatedItems }));
+                setSelectedItems(updatedItems)
+            }
+
         } catch (error) {
             toast.error("Lỗi cập nhật số lượng sản phẩm");
         };
@@ -109,7 +135,7 @@ export default function Cart() {
         const deleteResponse = await deleteCartItem(itemId);
         if (deleteResponse.data) {
             dispatch(removeItemFromCart({ itemId }));
-            toast.success("Xóa sản phẩm khỏi giỏ hàng thành công");
+
         }
         setCartItems(cartItems.filter(item => item.itemId !== itemId));
     };
@@ -119,7 +145,7 @@ export default function Cart() {
             ? selectedItems.reduce((total, item) => total + (item.price * item.quantity), 0)
             : 0;
     };
-    
+
     const calculateNumberItem = () => {
         return selectedItems.length > 0
             ? selectedItems.reduce((total, item) => total + item.quantity, 0)
@@ -147,7 +173,7 @@ export default function Cart() {
                     onChange={(e) => handlerSelectItem(e, item)}
                 />
                 <img
-                    src={item.image}
+                    src={item.image ? item.image.split(',')[0] : "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9"}
                     alt={item.name}
                     className="w-24 h-24 object-cover rounded-md"
                     onError={(e) => {
@@ -156,7 +182,7 @@ export default function Cart() {
                 />
                 <div className="flex-1">
                     <h3 className="text-lg font-semibold text-gray-800">{item.name}</h3>
-                    <p className="text-gray-600">{item.price.toFixed(2)}</p>
+                    <p className="text-gray-600 flex justify-start items-center">{item.price.toLocaleString('en-US')} <FaDongSign /></p>
                     <div className="flex items-center space-x- mt-2">
                         <button
                             onClick={() => decrementQuantity(item.itemId, item.quantity - 1)}

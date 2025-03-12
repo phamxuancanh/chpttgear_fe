@@ -114,8 +114,8 @@ export default function SearchResult() {
         { key: "brown", value: "Nâu" },
         { key: "pink", value: "Hồng" },
         { key: "orange", value: "Cam" }
-      ];
-      const specDefinitions = {
+    ];
+    const specDefinitions = {
         HEADPHONE: [
             { key: "warranty", value: "Bảo hành", options: ["6 tháng", "12 tháng", "24 tháng"] },
             { key: "type", value: "Kiểu", options: ["Over-ear", "On-ear", "In-ear", "True Wireless"] },
@@ -173,7 +173,7 @@ export default function SearchResult() {
             { key: "usb_ports", value: "Cổng USB", options: ["USB 2.0", "USB 3.0", "USB 3.1", "USB-C"] },
             { key: "network", value: "Kết nối mạng", options: ["Ethernet", "Wi-Fi 6", "Bluetooth"] },
         ],
-      HEATSINK: [
+        HEATSINK: [
             { key: "warranty", value: "BẢO HÀNH", options: ["12 THÁNG", "24 THÁNG", "36 THÁNG"] },
             { key: "type", value: "LOẠI", options: ["TẢN NHIỆT KHÍ", "TẢN NHIỆT NƯỚC"] },
             { key: "fan_size", value: "KÍCH THƯỚC QUẠT", options: ["92MM", "120MM", "140MM"] },
@@ -187,12 +187,6 @@ export default function SearchResult() {
             { key: "latency", value: "ĐỘ TRỄ CAS", options: ["CL14", "CL16", "CL18", "CL20"] },
             { key: "voltage", value: "ĐIỆN ÁP", options: ["1.2V", "1.35V", "1.5V"] },
             { key: "type", value: "LOẠI RAM", options: ["DDR3", "DDR4", "DDR5", "LPDDR5"] }
-        ],
-        SPEAKER: [
-            { key: "warranty", value: "BẢO HÀNH", options: ["6 THÁNG", "12 THÁNG", "24 THÁNG"] },
-            { key: "type", value: "LOẠI", options: ["2.0", "2.1", "5.1", "7.1", "SOUNDBAR"] },
-            { key: "connection", value: "KẾT NỐI", options: ["BLUETOOTH", "AUX", "USB", "HDMI", "OPTICAL"] },
-            { key: "power", value: "CÔNG SUẤT", options: ["5W", "10W", "20W", "50W", "100W+"] }
         ],
         CASE: [
             { key: "warranty", value: "BẢO HÀNH", options: ["12 THÁNG", "24 THÁNG"] },
@@ -280,14 +274,14 @@ export default function SearchResult() {
     }, [name]);
     const fetchResults = async (params) => {
         try {
-          const response = await searchProducts({ params });
-          setResults(response.data);
-          console.log(response.data);
+            const response = await searchProducts({ params });
+            setResults(response.data);
+            console.log(response.data);
         } catch (error) {
-          console.error("Error fetching results:", error);
+            console.error("Error fetching results:", error);
         }
-      };
-      useEffect(() => {
+    };
+    useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
         const categoryParam = queryParams.get("category") || "";
         if (categoryParam !== "" && categories.length > 0) {
@@ -303,7 +297,7 @@ export default function SearchResult() {
             setSelectedCategory({ id: "", name: "" });
         }
     }, [location.search, categories]);
-      useEffect(() => {
+    useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
         const allParams = {};
         const initialData = {};
@@ -349,7 +343,7 @@ export default function SearchResult() {
             queryParams.delete("color");
         }
         setPriceRange([allParams.price_gte, allParams.price_lte]);
-    
+
         // Lấy thông tin specsFields
         specsFields.forEach((spec) => {
             if (allParams[`spec_${spec.key}`] && allParams[`spec_${spec.key}`] !== "all") {
@@ -357,7 +351,7 @@ export default function SearchResult() {
             }
         });
         setProductData(initialData);
-    
+
         console.log("All params:", allParams);
         fetchResults(allParams);
     }, [location.search]);
@@ -378,19 +372,19 @@ export default function SearchResult() {
         console.log("Filtering...");
         try {
             const queryParams = new URLSearchParams(location.search);
-    
+
             // Cập nhật/Thêm các param thông thường
             queryParams.set("page", 1);
             if (name) {
                 queryParams.set("search", name);
             }
-    
+
             // Kiểm tra category
             if (selectedCategory && selectedCategory.name !== "") {
                 queryParams.set("category", selectedCategory.name);
             } else {
                 queryParams.delete("category");
-    
+
                 // Xóa tất cả các spec_* nếu category rỗng
                 [...queryParams.keys()].forEach((key) => {
                     if (key.startsWith("spec_")) {
@@ -398,18 +392,18 @@ export default function SearchResult() {
                     }
                 });
             }
-    
+
             // Kiểm tra color
             if (selectedColor && selectedColor !== "all") {
                 queryParams.set("color", selectedColor);
             } else {
                 queryParams.delete("color");
             }
-    
+
             // Cập nhật khoảng giá
             queryParams.set("price_gte", priceRange[0]);
             queryParams.set("price_lte", priceRange[1]);
-    
+
             // Cập nhật spec_* nếu có category
             if (selectedCategory && selectedCategory !== "") {
                 for (const key in productData) {
@@ -420,14 +414,14 @@ export default function SearchResult() {
                     }
                 }
             }
-    
+
             navigate(`?${queryParams.toString()}`);
         } finally {
             setLoading(false);
         }
     };
-    
-    
+
+
     const handleSpecChange = (key, value) => {
         setProductData(prevData => ({
             ...prevData,

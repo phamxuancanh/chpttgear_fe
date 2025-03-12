@@ -91,8 +91,9 @@ export default function Payment() {
       const houseNumber = parts[parts.length - 4];
 
       const [toWard, toDistrict] = selectedCodeAddress.split(',')
-      // const res = await calculateShippingFee(parseInt(toDistrict), toWard, 1000, 195800);
-      // setShippingFee(res);
+      const totalWeight = selectedItems.reduce((sum, item) => sum + item.weight * item.quantity, 1);
+      const res = await calculateShippingFee(parseInt(toDistrict), toWard, totalWeight, 195800);
+      setShippingFee(res);
 
       const province = provinces.find((p) =>
         p.NameExtension?.includes(provinceName) || p.ProvinceName === provinceName
@@ -126,7 +127,8 @@ export default function Payment() {
             streetAddress: houseNumber,
           }));
           console.log(district.DistrictID, ward.WardCode)
-          const res = await calculateShippingFee(parseInt(district?.DistrictID), ward?.WardCode, 1000, 195800);
+          const totalWeight = selectedItems.reduce((sum, item) => sum + item.weight * item.quantity, 1);
+          const res = await calculateShippingFee(parseInt(district?.DistrictID), ward?.WardCode, totalWeight, 195800);
           console.log(res)
           setShippingFee(res);
         }
@@ -181,7 +183,8 @@ export default function Payment() {
     } else {
       setSelectedWard({ id: "", name: "" });
     }
-    const res = await calculateShippingFee(parseInt(selectedDistrict.id), wardID, 1000, 195800);
+    const totalWeight = selectedItems.reduce((sum, item) => sum + item.weight * item.quantity, 1);
+    const res = await calculateShippingFee(parseInt(selectedDistrict.id), wardID, totalWeight, 195800);
     setShippingFee(res);
     console.log(res)
   };

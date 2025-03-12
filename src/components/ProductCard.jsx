@@ -22,7 +22,7 @@ export default function ProductCard({ product }) {
         console.log(cartItems)
         const item = cartItems.find(item => item.productId === product.id);
         if (item) {
-            const updatedItems = selectedItems.map(i => 
+            const updatedItems = selectedItems.map(i =>
                 i.itemId === item.itemId ? { ...i, quantity: i.quantity + 1 } : i
             );
             if (!selectedItems.some(i => i.itemId === item.itemId)) {
@@ -82,14 +82,15 @@ export default function ProductCard({ product }) {
     };
 
     return (
-        <div className="bg-card rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105 flex flex-col h-[65vh] mb-4">
+        <div className="bg-card rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105 flex flex-col h-[60vh] mb-4">
             <Link to={`/product/${product.id}`}>
-                <div className="flex justify-center items-center h-[30vh]">
+                <div className="flex justify-center items-center h-[20vh]">
                     <img
                         src={product.image ? product.image.split(',')[0] : "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3"}
                         alt={product.name || "Product Image"}
                         loading="lazy"
-                        className="w-[30vh] h-[30vh] object-cover rounded-lg"
+
+                        className="w-[20vh] h-[20vh] object-cover rounded-lg"
                         onError={(e) => {
                             e.target.src = "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3";
                         }}
@@ -100,21 +101,27 @@ export default function ProductCard({ product }) {
 
             {/* Nội dung sản phẩm */}
             <div className="p-4 flex flex-col flex-grow">
-                <Link to={`/product/${product.id}`}>
-                    <h3 className="text-lg font-semibold text-foreground mb-2 h-[5vh]">{product.name}</h3>
+                <Link to={`/product/${product.id}`} className="flex items-center justify-center">
+                    <h3 className="font-semibold text-foreground mb-2 h-[10vh] text-base line-clamp-2 flex ">
+                        {product.name}
+                    </h3>
                 </Link>
 
                 {/* Giá sản phẩm */}
-                <div className="flex items-center mb-2 h-[4vh]">
-                    <p className="text-accent text-xl font-bold mr-1">{product.price.toLocaleString('en-US')}</p>
+                <div className="flex items-center mb-2 h-[3.5vh]">
+                    <p className="text-accent text-xl font-bold mr-1">
+                        {product.price.toLocaleString('en-US')}
+                    </p>
                     <FaDongSign />
                 </div>
 
                 {/* Danh mục sản phẩm */}
-                <p className="text-accent text-sm font-medium mb-2 h-[3vh]">{product?.category?.name}</p>
+                <p className="text-accent text-sm font-medium mb-2 h-[4vh] line-clamp-1">
+                    {product?.category?.name}
+                </p>
 
                 {/* Màu sắc sản phẩm */}
-                <div className="h-[4vh] flex items-center">
+                <div className="h-[5vh] flex items-center">
                     <div
                         className={`w-[3vh] h-[3vh] rounded-lg shadow-xl ${["black", "white"].includes(product.color)
                             ? `bg-${product.color}`
@@ -123,6 +130,7 @@ export default function ProductCard({ product }) {
                     ></div>
                 </div>
             </div>
+
 
             {/* Nút Thêm vào giỏ hàng - luôn nằm dưới */}
             <div className="p-4">
@@ -134,6 +142,6 @@ export default function ProductCard({ product }) {
                 </button>
             </div>
 
-        </div>
+        </div >
     );
 }

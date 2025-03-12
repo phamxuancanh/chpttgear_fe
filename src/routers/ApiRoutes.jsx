@@ -221,6 +221,9 @@ export const getProductsByListId = async (productIds) => {
 export const getAllProduct = async () => {
     return await requestWithJwt.get('/products/products');
 };
+export const getAllProductWithCategory = async () => {
+    return await requestWithJwt.get('/products/products/getAllProductWithCategory');
+};
 
 
 // inventoryService
@@ -503,10 +506,10 @@ export const calculateShippingFee = async (toDistrict, toWard, weight, ShopId) =
         const res = await requestWithJwt.post("/shipping/calculate-fee", {
             "toDistrict": toDistrict,
             "toWard": toWard,
-            "weight": weight,
+            "total_weight": weight,
             "ShopId": ShopId
         })
-
+        console.log(res.data.shippingFee)
         return res.data.shippingFee || 0
     } catch (error) {
         console.error("Lỗi khi gọi API GHN:", error);
