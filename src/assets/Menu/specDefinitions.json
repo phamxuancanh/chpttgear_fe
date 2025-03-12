@@ -296,7 +296,7 @@
     {
       "key": "core_count",
       "value": "Core_Count",
-      "options": ["2", "4", "6", "8", "12", "16", "32+"]
+      "options": ["2", "4", "6", "8", "12", "16", "24", "32+"]
     },
     {
       "key": "thread_count",

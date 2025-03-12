@@ -26,6 +26,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Navigation } from "swiper/modules";
+import translationMap from "../assets/Menu/translate.json";
 
 export default function ProductDetail() {
     const [userRating, setUserRating] = useState(0);
@@ -59,6 +60,8 @@ export default function ProductDetail() {
             reviewsRef.current.scrollIntoView({ behavior: "smooth" });
         }
     };
+
+    const translate = (key) => translationMap[key] || key;
 
     // useEffect(() => {
     //     const fetchData = async () => {
@@ -394,7 +397,7 @@ export default function ProductDetail() {
                                 {specs.map((spec, index) => (
                                     <tr key={index} className="even:bg-gray-100">
                                         <td className="border border-gray-300 px-4 py-2 font-semibold">{spec.name_vi}</td>
-                                        <td className="border border-gray-300 px-4 py-2">{spec.value}</td>
+                                        <td className="border border-gray-300 px-4 py-2">{translate(spec.value)}</td>
                                     </tr>
                                 ))}
                             </tbody>

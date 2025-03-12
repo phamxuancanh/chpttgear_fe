@@ -363,7 +363,7 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
         return {
           id: existingSpec?.id || null,
           name: spec.key,
-          name_vi: spec.value,
+          name_vi: translate(spec.key),
           value: productData[spec.key] || "",
         };
       }).filter((spec) => spec.value.trim() !== "");
