@@ -20,14 +20,15 @@ const AuthRoute = ({ children, allowedRoles }) => {
     ROUTES.EMAIL_VERIFY_SUCCESS_PAGE.path,
     ROUTES.HOME_PAGE.path,
     ROUTES.FORGOT_PASSWORD_PAGE.path,
-    ROUTES.RESET_PASSWORD.path
+    ROUTES.RESET_PASSWORD.path,
+    ROUTES.PRODUCT_PAGE.path,
+    ROUTES.SEARCH_RESULTS.path
   ];
   if (isAuthenticated === "false" && !publicRoutes.includes(location.pathname)) {
     return <Navigate to={ROUTES.LOGIN_PAGE.path} />;
   }
 
   else if (isAuthenticated === 'true') {
-    console.log('authen true')
     if (
       location.pathname === ROUTES.LOGIN_PAGE.path ||
       location.pathname === ROUTES.REGISTER_PAGE.path ||
@@ -39,14 +40,12 @@ const AuthRoute = ({ children, allowedRoles }) => {
     const userRoleEncrypted = user?.key;
     let userRole;
     if (userRoleEncrypted) {
-      console.log('chuyen trang thai');
       try {
         const decrypted = CryptoJS.AES.decrypt(
           userRoleEncrypted,
           process.env.REACT_APP_CRYPTO
         );
         userRole = decrypted.toString(CryptoJS.enc.Utf8);
-        console.log('Decrypted userRole:', userRole);
       } catch (error) {
         console.error('Decryption error:', error);
       }

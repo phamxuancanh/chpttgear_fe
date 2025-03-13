@@ -221,6 +221,9 @@ export const getProductsByListId = async (productIds) => {
 export const getAllProduct = async () => {
     return await requestWithJwt.get('/products/products');
 };
+export const getAllProductWithCategory = async () => {
+    return await requestWithJwt.get('/products/products/getAllProductWithCategory');
+};
 
 
 // inventoryService
@@ -277,6 +280,35 @@ export const getStockInByInventoryId = async (inventory_id) => {
         throw error; // Ném lỗi nếu không phải lỗi 404
     }
 };
+
+export const getAllStockIn = async () => {
+    try {
+        const response = await requestWithJwt.get(`/inventory/stock-in/getAll`);
+        return response.data; // Trả về dữ liệu từ phản hồi của API
+    } catch (error) {
+        console.log(error)
+        if (error && error.status === 404) {
+            return []; // Trả về mảng rỗng nếu API trả về 404
+        }
+        console.error('Error get stock-in: ', error);
+        throw error; // Ném lỗi nếu không phải lỗi 404
+    }
+};
+
+export const getAllStockOut = async () => {
+    try {
+        const response = await requestWithJwt.get(`/inventory/stock-out/getAll`);
+        return response.data; // Trả về dữ liệu từ phản hồi của API
+    } catch (error) {
+        console.log(error)
+        if (error && error.status === 404) {
+            return []; // Trả về mảng rỗng nếu API trả về 404
+        }
+        console.error('Error get stock-out: ', error);
+        throw error; // Ném lỗi nếu không phải lỗi 404
+    }
+};
+
 
 export const getStockInByProductId = async (product_id) => {
     try {
@@ -499,14 +531,15 @@ export const updateRefundStatus = async (refundId, statusData) => {
 
 // shippingService
 export const calculateShippingFee = async (toDistrict, toWard, weight, ShopId) => {
+    console.log(toDistrict, toWard, weight, ShopId)
     try {
         const res = await requestWithJwt.post("/shipping/calculate-fee", {
             "toDistrict": toDistrict,
             "toWard": toWard,
-            "weight": weight,
+            "total_weight": weight,
             "ShopId": ShopId
         })
-
+        console.log(res.data.shippingFee)
         return res.data.shippingFee || 0
     } catch (error) {
         console.error("Lỗi khi gọi API GHN:", error);

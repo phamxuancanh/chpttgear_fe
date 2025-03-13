@@ -5,11 +5,14 @@ import { toast } from "react-toastify";
 import { useSelector, useDispatch } from "react-redux";
 import {
     findCartItemsByCartId, findAllProduct,
-    updateQuantityCartItem, deleteCartItem
+    updateQuantityCartItem, deleteCartItem,
+    getAllStockIn,
+    getAllStockOut
 } from "../routers/ApiRoutes";
 import {
     setCartRedux, setCartItemsRedux, setSelectedItemsRedux, addItemToCart, removeItemFromCart,
-    increaseQuantityItem, decrementQuantityItem, clearCart
+    increaseQuantityItem,
+    decrementQuantityItem,
 } from "../redux/cartSlice";
 import { FaDongSign } from "react-icons/fa6";
 import Loading from './../utils/Loading';
@@ -22,16 +25,22 @@ export default function Cart() {
     const [cartItems, setCartItems] = useState([]);
     const [selectedItems, setSelectedItems] = useState(selectedItemFromRedux);
     const [loading, setLoading] = useState(false)
+    const [stockIns, setStockIns] = useState([])
+    const [stockOuts, setStockOuts] = useState([])
 
     useEffect(() => {
         const fetchCart = async () => {
             setLoading(true)
             try {
                 console.log("cartFromRedux", cartFromRedux);
-                const [cartItemResponse, productsResponse] = await Promise.all([
+                const [cartItemResponse, productsResponse, stockIns, stockOuts] = await Promise.all([
                     findCartItemsByCartId(cartFromRedux.id),
-                    findAllProduct()
+                    findAllProduct(),
+                    getAllStockIn(),
+                    getAllStockOut()
+
                 ]);
+                console.log(productsResponse.data)
                 const cartItemsMapped = cartItemResponse.data.map(item => {
                     const product = productsResponse.data.find(p => p.id === item.productId);
                     return {
@@ -40,9 +49,14 @@ export default function Cart() {
                         name: product?.name,
                         price: parseFloat(product?.price),
                         quantity: parseInt(item.quantity),
-                        image: product?.image
+                        image: product?.image,
+                        weight: product?.weight,
+                        size: product?.size
+
                     };
                 });
+                setStockOuts(stockOuts)
+                setStockIns(stockIns)
                 setCartItems(cartItemsMapped);
                 dispatch(setCartItemsRedux({ items: cartItemsMapped }));
                 setLoading(false)
@@ -59,67 +73,126 @@ export default function Cart() {
     }, [cartFromRedux?.id]);
 
 
-    // useEffect(() => {
-    //     setSelectedItems(selectedItemFromRedux); // lấy selectedItems từ redux
-    // }, []);
+    const increateseQuantity = async (item, newQuantity) => {
+        const itemId = item.itemId;
+        console.log(item, newQuantity);
 
-    const increateseQuantity = async (itemId, newQuantity) => {
-        setCartItems(cartItems.map(item =>
-            item.itemId === itemId ? { ...item, quantity: newQuantity } : item
+        const quantityInStock = getProductStock(item.productId);
+        if (newQuantity > quantityInStock) {
+            toast.error("Số lượng không đủ");
+            return;
+        }
+
+        // Cập nhật số lượng trong giỏ hàng
+        setCartItems(cartItems.map(i =>
+            i.itemId === itemId ? { ...i, quantity: newQuantity } : i
         ));
         dispatch(increaseQuantityItem({ itemId }));
+
         try {
-            const updateResponse = await updateQuantityCartItem(itemId, newQuantity);
-            if (updateResponse.data.quantity === 0) {
-                const deleteResponse = await deleteCartItem(itemId);
-                if (deleteResponse.data) {
-                    setCartItems(cartItems.filter(item => item.itemId !== itemId));
-                    dispatch(removeItemFromCart({ itemId }));
-                }
-            };
-            toast.success("Cập nhật số lượng sản phẩm thành công");
+            await updateQuantityCartItem(itemId, newQuantity);
+
+            // Kiểm tra sản phẩm có trong selectedItems chưa
+            let updatedItems = [...selectedItems];
+            const existingItemIndex = updatedItems.findIndex(i => i.itemId === itemId);
+
+            if (existingItemIndex !== -1) {
+                // Nếu đã có trong selectedItems, tăng số lượng
+                updatedItems[existingItemIndex] = {
+                    ...updatedItems[existingItemIndex],
+                    quantity: updatedItems[existingItemIndex].quantity + 1
+                };
+            } else {
+                // Nếu chưa có, thêm mới với số lượng = 1
+                updatedItems.push({ ...item, quantity: newQuantity });
+            }
+
+            // Cập nhật Redux & state
+            dispatch(setSelectedItemsRedux({ selectItems: updatedItems }));
+            setSelectedItems(updatedItems);
+
         } catch (error) {
             toast.error("Lỗi cập nhật số lượng sản phẩm");
-        };
+        }
     };
 
-    const decrementQuantity = async (itemId, newQuantity) => {
-        setCartItems(cartItems.map(item =>
-            item.itemId === itemId ? { ...item, quantity: newQuantity } : item
-        ));
-        dispatch(decrementQuantityItem({ itemId }));
+
+    const getProductStock = (productId) => {
+        const stockIn = stockIns
+            .filter(item => item.product_id === productId)
+            .reduce((acc, item) => acc + item.quantity, 0);
+
+        const stockOut = stockOuts
+            .filter(item => item.product_id === productId)
+            .reduce((acc, item) => acc + item.quantity, 0);
+
+        return stockIn - stockOut;
+    };
+
+    const decrementQuantity = async (item) => {
+        const itemId = item.itemId;
+        const newQuantity = item.quantity - 1; // Giảm 1 mỗi lần click
+
         try {
-            const updateResponse = await updateQuantityCartItem(itemId, newQuantity);
-            if (updateResponse.data.quantity === 0) {
-                const deleteResponse = await deleteCartItem(itemId);
-                if (deleteResponse.data) {
-                    setCartItems(cartItems.filter(item => item.itemId !== itemId));
-                    dispatch(removeItemFromCart({ itemId }));
-                    console.log("length", cartItems.length);
-                };
-            };
-            toast.success("Cập nhật số lượng sản phẩm thành công");
+            if (newQuantity === 0) {
+                // Nếu số lượng về 0, xóa item khỏi giỏ hàng & Redux
+                await deleteCartItem(itemId);
+                setCartItems(cartItems.filter(i => i.itemId !== itemId));
+                dispatch(removeItemFromCart({ itemId }));
+
+                // Xóa luôn khỏi selectedItems
+                const updatedItems = selectedItems.filter(i => i.itemId !== itemId);
+                dispatch(setSelectedItemsRedux({ selectItems: updatedItems }));
+                setSelectedItems(updatedItems);
+            } else {
+                // Nếu còn số lượng, cập nhật vào Redux
+                dispatch(decrementQuantityItem({ itemId })); // Gọi Redux để cập nhật số lượng
+                await updateQuantityCartItem(itemId, newQuantity);
+
+                // Cập nhật state giỏ hàng
+                setCartItems(cartItems.map(i =>
+                    i.itemId === itemId ? { ...i, quantity: newQuantity } : i
+                ));
+
+                // Cập nhật selectedItems nếu item có trong danh sách
+                const updatedItems = selectedItems.map(i =>
+                    i.itemId === itemId ? { ...i, quantity: newQuantity } : i
+                );
+                dispatch(setSelectedItemsRedux({ selectItems: updatedItems }));
+                setSelectedItems(updatedItems);
+            }
         } catch (error) {
             toast.error("Lỗi cập nhật số lượng sản phẩm");
-        };
+        }
     };
 
     const removeItem = async (itemId) => {
-        console.log(itemId)
-        const deleteResponse = await deleteCartItem(itemId);
-        if (deleteResponse.data) {
-            dispatch(removeItemFromCart({ itemId }));
-            toast.success("Xóa sản phẩm khỏi giỏ hàng thành công");
+        try {
+            const deleteResponse = await deleteCartItem(itemId);
+            if (deleteResponse.data) {
+                // Xóa khỏi giỏ hàng trong Redux & State
+                dispatch(removeItemFromCart({ itemId }));
+                setCartItems(prevCartItems => prevCartItems.filter(item => item.itemId !== itemId));
+
+                // Xóa khỏi selectedItems trong Redux & State
+                setSelectedItems(prevSelectedItems => {
+                    const updatedItems = prevSelectedItems.filter(i => i.itemId !== itemId);
+                    dispatch(setSelectedItemsRedux({ selectItems: updatedItems }));
+                    return updatedItems;
+                });
+            }
+        } catch (error) {
+            toast.error("Lỗi khi xóa sản phẩm khỏi giỏ hàng");
         }
-        setCartItems(cartItems.filter(item => item.itemId !== itemId));
     };
+
 
     const calculateTotal = () => {
         return selectedItems.length > 0
             ? selectedItems.reduce((total, item) => total + (item.price * item.quantity), 0)
             : 0;
     };
-    
+
     const calculateNumberItem = () => {
         return selectedItems.length > 0
             ? selectedItems.reduce((total, item) => total + item.quantity, 0)
@@ -147,7 +220,7 @@ export default function Cart() {
                     onChange={(e) => handlerSelectItem(e, item)}
                 />
                 <img
-                    src={item.image}
+                    src={item.image ? item.image.split(',')[0] : "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9"}
                     alt={item.name}
                     className="w-24 h-24 object-cover rounded-md"
                     onError={(e) => {
@@ -156,17 +229,17 @@ export default function Cart() {
                 />
                 <div className="flex-1">
                     <h3 className="text-lg font-semibold text-gray-800">{item.name}</h3>
-                    <p className="text-gray-600">{item.price.toFixed(2)}</p>
+                    <p className="text-gray-600 flex justify-start items-center">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price)}</p>
                     <div className="flex items-center space-x- mt-2">
                         <button
-                            onClick={() => decrementQuantity(item.itemId, item.quantity - 1)}
+                            onClick={() => decrementQuantity(item, item.quantity - 1)}
                             className="p-1 rounded-full hover:bg-gray-100"
                         >
                             <FiMinus className="text-gray-600" />
                         </button>
                         <span className="px-4 py-1 border rounded-md">{item.quantity}</span>
                         <button
-                            onClick={() => increateseQuantity(item.itemId, item.quantity + 1)}
+                            onClick={() => increateseQuantity(item, item.quantity + 1)}
                             className="p-1 rounded-full hover:bg-gray-100"
                         >
                             <FiPlus className="text-gray-600" />

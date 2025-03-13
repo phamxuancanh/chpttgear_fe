@@ -5,7 +5,7 @@ import { FaPlus, FaMinus } from "react-icons/fa";
 import { IoMdArrowDropdown } from "react-icons/io";
 import LOGO from "../assets/logo.png"
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { calculateShippingFee, getSuggestions, signOut } from "../routers/ApiRoutes";
+import { getSuggestions, signOut } from "../routers/ApiRoutes";
 import { IoMenu } from "react-icons/io5";
 import ROUTES from '../constants/Page';
 import { toast } from "react-toastify";
@@ -38,18 +38,18 @@ export default function Header() {
     const [showBellDropdown, setShowBellDropdown] = useState(false);
     const user = useSelector((state) => state.auth.user);
     const userRoleEncrypted = user?.key;
-     let userRole;
-        if (userRoleEncrypted) {
-          try {
+    let userRole;
+    if (userRoleEncrypted) {
+        try {
             const decrypted = CryptoJS.AES.decrypt(
-              userRoleEncrypted,
-              process.env.REACT_APP_CRYPTO
+                userRoleEncrypted,
+                process.env.REACT_APP_CRYPTO
             );
             userRole = decrypted.toString(CryptoJS.enc.Utf8);
-          } catch (error) {
+        } catch (error) {
             console.error('Decryption error:', error);
-          }
         }
+    }
     const cartItemRedux = useSelector(state => state.shoppingCart.items);
     const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
     const [searchTerm, setSearchTerm] = useState('');
@@ -494,15 +494,15 @@ export default function Header() {
                                                     Hồ sơ
                                                 </Link>
 
-                                                    {userRole === 'R1' && (
-                                                        <Link
-                                                            onClick={handleLinkClick}
-                                                            to="/dashboard"
-                                                            className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
-                                                        >
-                                                            Vào trang quản lý
-                                                        </Link>
-                                                    )}
+                                                {userRole === 'R1' && (
+                                                    <Link
+                                                        onClick={handleLinkClick}
+                                                        to="/dashboard"
+                                                        className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
+                                                    >
+                                                        Vào trang quản lý
+                                                    </Link>
+                                                )}
 
                                                 <Link
                                                     onClick={handleLinkClick}

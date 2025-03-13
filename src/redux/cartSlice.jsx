@@ -47,16 +47,19 @@ const cartSlice = createSlice({
       });
     },
     decrementQuantityItem: (state, action) => {
-      state.items = state.items.map((item) => {
-        if (item.itemId === action.payload.itemId) {
-          item.quantity--;
-          state.totalAmout = state.items.reduce((total, item) => total + item.price * item.quantity, 0);
+      const itemIndex = state.items.findIndex(item => item.itemId === action.payload.itemId);
+
+      if (itemIndex !== -1) {
+        state.items[itemIndex].quantity--;
+
+        // Nếu số lượng về 0, xóa luôn khỏi giỏ hàng
+        if (state.items[itemIndex].quantity === 0) {
+          state.items = state.items.filter(item => item.itemId !== action.payload.itemId);
         }
-        if (item.quantity === 0) {
-          state.items = state.items.filter((item) => item.itemId !== action.payload.itemId);
-        }
-        return item;
-      });
+      }
+
+      // Cập nhật tổng tiền
+      state.totalAmout = state.items.reduce((total, item) => total + item.price * item.quantity, 0);
     },
     clearCart: (state) => {
       state.cart = null;

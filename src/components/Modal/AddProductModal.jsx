@@ -9,6 +9,8 @@ import {
 import { useDropzone } from "react-dropzone";
 import { ClockLoader } from "react-spinners";
 import { FaTimes } from "react-icons/fa";
+import specDefinitions from "../../assets/Menu/specDefinitions.json";
+import translationMap from "../../assets/Menu/translate.json";
 
 export const ToastContext = createContext();
 
@@ -35,8 +37,6 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
   const [loading, setLoading] = useState(false)
   const [isAllowUpdate, setIsAllowUpdate] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-
   const [categories, setCategories] = useState([]);
   const [specsFields, setSpecsFields] = useState([]);
   const [productData, setProductData] = useState({});
@@ -48,84 +48,8 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
       setSpecsFields([]);
     }
   }, [selectedCategory]);
-  const specDefinitions = {
-    Headphones: [
-      { key: "model", value: "Mẫu", options: [] },
-      { key: "warranty", value: "Bảo hành", options: ["6 tháng", "12 tháng", "24 tháng"] },
-      { key: "type", value: "Kiểu", options: ["Over-ear", "On-ear", "In-ear", "True Wireless"] },
-      { key: "connection", value: "Kết nối", options: ["Wired", "Wireless", "Bluetooth", "USB-C"] },
-      { key: "battery_life", value: "Thời lượng pin", options: ["4 giờ", "8 giờ", "12 giờ", "24 giờ", "40 giờ"] },
-      { key: "noise_cancellation", value: "Khử tiếng ồn chủ động", options: ["Có", "Không"] },
-      { key: "microphone", value: "Microphone", options: ["Có", "Không", "Đa hướng"] },
-      { key: "frequency_response", value: "Dải tần số", options: ["20Hz - 20kHz", "15Hz - 25kHz", "5Hz - 40kHz"] },
-    ],
-    Keyboards: [
-      { key: "model", value: "Mẫu", options: [] },
-      { key: "warranty", value: "Bảo hành", options: ["12 tháng", "24 tháng", "36 tháng"] },
-      { key: "switch_type", value: "Loại switch", options: ["Mechanical", "Membrane", "Optical", "Hybrid"] },
-      { key: "connection", value: "Kết nối", options: ["Wired", "Wireless", "Bluetooth", "USB-C"] },
-      { key: "backlight", value: "Đèn nền", options: ["Có", "Không", "RGB", "Single-color"] },
-      { key: "key_rollover", value: "Số lượng phím nhận diện cùng lúc", options: ["6-key", "N-key"] },
-    ],
-    Mice: [
-      { key: "model", value: "Mẫu", options: [] },
-      { key: "warranty", value: "Bảo hành", options: ["12 tháng", "24 tháng"] },
-      { key: "sensor_type", value: "Loại cảm biến", options: ["Optical", "Laser", "Infrared"] },
-      { key: "dpi", value: "Độ phân giải DPI", options: ["800", "1600", "3200", "6400", "12000", "16000"] },
-      { key: "connection", value: "Kết nối", options: ["Wired", "Wireless", "Bluetooth", "USB-C"] },
-      { key: "buttons", value: "Số nút", options: ["3", "5", "7", "10", "12+"] },
-      { key: "battery_life", value: "Thời lượng pin", options: ["20 giờ", "50 giờ", "100 giờ"] },
-    ],
-    RAM: [
-      { key: "model", value: "Mẫu", options: [] },
-      { key: "warranty", value: "Bảo hành", options: ["36 tháng", "60 tháng", "Trọn đời"] },
-      { key: "capacity", value: "Dung lượng", options: ["4GB", "8GB", "16GB", "32GB", "64GB", "128GB"] },
-      { key: "speed", value: "Tốc độ bus", options: ["2133MHz", "2666MHz", "3200MHz", "3600MHz", "4000MHz+"] },
-      { key: "latency", value: "Độ trễ CAS", options: ["CL14", "CL16", "CL18", "CL20"] },
-      { key: "voltage", value: "Điện áp", options: ["1.2V", "1.35V", "1.5V"] },
-      { key: "type", value: "Loại RAM", options: ["DDR3", "DDR4", "DDR5", "LPDDR5"] },
-    ],
-    Storage: [
-      { key: "model", value: "Mẫu", options: [] },
-      { key: "warranty", value: "Bảo hành", options: ["12 tháng", "24 tháng", "36 tháng", "60 tháng"] },
-      { key: "type", value: "Loại ổ", options: ["SSD", "HDD", "NVMe", "Hybrid"] },
-      { key: "capacity", value: "Dung lượng", options: ["256GB", "512GB", "1TB", "2TB", "4TB", "8TB"] },
-      { key: "interface", value: "Giao tiếp", options: ["SATA", "NVMe", "PCIe", "USB 3.2"] },
-      { key: "speed", value: "Tốc độ đọc/ghi", options: ["500MB/s", "1000MB/s", "2000MB/s", "5000MB/s"] },
-    ],
-    PowerSupply: [
-      { key: "model", value: "Mẫu", options: [] },
-      { key: "warranty", value: "Bảo hành", options: ["36 tháng", "60 tháng"] },
-      { key: "wattage", value: "Công suất", options: ["400W", "500W", "600W", "750W", "850W", "1000W", "1200W+"] },
-      { key: "efficiency", value: "Chứng nhận hiệu suất", options: ["80 Plus", "80 Plus Bronze", "80 Plus Gold", "80 Plus Platinum", "80 Plus Titanium"] },
-      { key: "modular", value: "Dây cáp rời", options: ["Có", "Không", "Semi-Modular"] },
-    ],
-    Motherboards: [
-      { key: "model", value: "Mẫu", options: [] },
-      { key: "warranty", value: "Bảo hành", options: ["12 tháng", "24 tháng", "36 tháng"] },
-      { key: "socket", value: "Socket", options: ["LGA1200", "LGA1700", "AM4", "AM5"] },
-      { key: "chipset", value: "Chipset", options: ["B460", "B560", "Z490", "Z590", "X570", "B550"] },
-      { key: "form_factor", value: "Kích thước", options: ["ATX", "Micro-ATX", "Mini-ITX"] },
-      { key: "ram_slots", value: "Số khe RAM", options: ["2", "4", "8"] },
-      { key: "max_memory", value: "Dung lượng RAM tối đa", options: ["32GB", "64GB", "128GB"] },
-      { key: "storage_interfaces", value: "Giao tiếp lưu trữ", options: ["SATA", "NVMe", "PCIe 4.0"] },
-      { key: "expansion_slots", value: "Khe mở rộng", options: ["PCIe x16", "PCIe x8", "PCIe x4"] },
-      { key: "usb_ports", value: "Cổng USB", options: ["USB 2.0", "USB 3.0", "USB 3.1", "USB-C"] },
-      { key: "network", value: "Kết nối mạng", options: ["Ethernet", "Wi-Fi 6", "Bluetooth"] },
-    ],
-    CoolingSystems: [
-      { key: "model", value: "Mẫu", options: [] },
-      { key: "warranty", value: "Bảo hành", options: ["12 tháng", "24 tháng"] },
-      { key: "type", value: "Loại", options: ["Tản nhiệt khí", "Tản nhiệt nước"] },
-      { key: "fan_size", value: "Kích thước quạt", options: ["80mm", "92mm", "120mm", "140mm", "240mm", "280mm", "360mm"] },
-      { key: "rpm", value: "Tốc độ quay (RPM)", options: ["1000 RPM", "1500 RPM", "2000 RPM", "2500 RPM"] },
-      { key: "noise_level", value: "Độ ồn", options: ["15dB", "20dB", "25dB", "30dB"] },
-      { key: "radiator_size", value: "Kích thước bộ tản nhiệt", options: ["120mm", "240mm", "360mm"] },
-      { key: "compatibility", value: "Tương thích socket", options: ["LGA1200", "LGA1700", "AM4", "AM5"] },
-      { key: "led_lighting", value: "Đèn LED", options: ["RGB", "Không"] },
-    ]
-  };
 
+  const translate = (key) => translationMap[key] || key;
 
   const colors = [
     { key: "black", value: "Đen" },
@@ -142,16 +66,27 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
   ];
 
   const brands = [
-    { key: 'intel', value: 'Intel' },
-    { key: 'corsair', value: 'Corsair' },
-    { key: 'dell', value: 'Dell' },
-    { key: 'razer', value: 'Razer' },
-    { key: 'nvidia', value: 'NVIDIA' },
-    { key: 'samsung', value: 'Samsung' },
-    { key: 'logitech', value: 'Logitech' },
-    { key: 'lg', value: 'LG' },
-    { key: 'asus', value: 'ASUS' },
-    { key: 'nzxt', value: 'NZXT' },
+    { key: 'Samsung', value: 'Samsung' },
+    { key: 'Western_Digital', value: 'Western Digital' },
+    { key: 'Kingston', value: 'Kingston' },
+    { key: 'Corsair', value: 'Corsair' },
+    { key: 'PNY', value: 'PNY' },
+    { key: 'Seagate', value: 'Seagate' },
+    { key: 'Toshiba', value: 'Toshiba' },
+    { key: 'NVIDIA', value: 'NVIDIA' },
+    { key: 'Asus', value: 'Asus' },
+    { key: 'Acer', value: 'Acer' },
+    { key: 'Msi', value: 'Msi' },
+    { key: 'Lenovo', value: 'Lenovo' },
+    { key: 'Dell', value: 'Dell' },
+    { key: 'HP-Pavilion', value: 'HP-Pavilion' },
+    { key: 'LG-Gram', value: 'LG-Gram' },
+    { key: 'LG', value: 'LG' },
+    { key: 'ViewSonic', value: 'ViewSonic' },
+    { key: 'Gigabyte', value: 'Gigabyte' },
+    { key: 'AOC', value: 'AOC' },
+    { key: 'HKC', value: 'HKC' },
+    { key: 'Edifier', value: 'Edifier' }
   ]
 
   useEffect(() => {
@@ -289,12 +224,13 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
     if (!size) {
       alert("Kích thước không được để trống");
       return false;
-    } else {
-      if (!size.match(/^[1-9]\d*(\.\d+)?x[1-9]\d*(\.\d+)?x[1-9]\d*(\.\d+)?$/)) {
-        alert("Kích thước nhập số dương theo định dạng D x R x C");
-        return false;
-      }
-    };
+    }
+    // else {
+    //   if (!size.match(/^[1-9]\d*(\.\d+)?x[1-9]\d*(\.\d+)?x[1-9]\d*(\.\d+)?$/)) {
+    //     alert("Kích thước nhập số dương theo định dạng D x R x C");
+    //     return false;
+    //   }
+    // };
     if (!weight) {
       alert("Trọng lượng không được để trống");
       return false;
@@ -312,8 +248,8 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
         alert("Thời gian bảo hành nhập số");
         return false;
       }
-      if (guaranteePeriod <= 0 || guaranteePeriod > 36) {
-        alert("Thời gian bảo hành là từ 1 đến 36 tháng");
+      if (guaranteePeriod <= 0) {
+        alert("Thời gian bảo hành phải lớn hơn 1");
         return false;
       }
     }
@@ -363,7 +299,7 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
       const updatedSpecifications = specsFields
         .map((spec) => ({
           name: spec.key,
-          name_vi: spec.value,
+          name_vi: translate(spec.key),
           value: productData[spec.key] || "",
         }))
         .filter((spec) => spec.value.trim() !== "");
@@ -413,25 +349,25 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
   const handlerUpdateProduct = async (imgString) => {
     try {
       const category = categories.find((category) => category.id === selectedCategory?.id);
-      
+
       // Đảm bảo xử lý hình ảnh đúng định dạng
       const updatedImage = imgString
         ? [...(Array.isArray(images) ? images : images?.split(",") || []), imgString]
         : images;
-  
+
       console.log("Hình ảnh cập nhật:", updatedImage);
-  
+
       // Cập nhật specifications
       const updatedSpecifications = specsFields.map((spec) => {
         const existingSpec = specifications.find((s) => s.name === spec.key);
         return {
           id: existingSpec?.id || null,
           name: spec.key,
-          name_vi: spec.value,
+          name_vi: translate(spec.key),
           value: productData[spec.key] || "",
         };
       }).filter((spec) => spec.value.trim() !== "");
-  
+
       const updatedProduct = {
         name,
         description,
@@ -445,9 +381,9 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
         category,
         modifiedDate: new Date().toISOString(),
       };
-  
+
       const responseProduct = await updateProduct(updateProductId, updatedProduct);
-  
+
       if (responseProduct.status === 200 && updatedSpecifications.length > 0) {
         for (const spec of updatedSpecifications) {
           try {
@@ -458,7 +394,7 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
                 name_vi: spec.name_vi,
                 value: spec.value,
               });
-  
+
               if (responseSpecification.status === 200) {
                 console.log(`Cập nhật thông số kỹ thuật thành công: ${spec.name}`);
               }
@@ -469,7 +405,7 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
                 name_vi: spec.name_vi,
                 value: spec.value,
               });
-  
+
               if (responseSpecification.status === 201) {
                 console.log(`Tạo mới thông số kỹ thuật thành công: ${spec.name}`);
               }
@@ -479,13 +415,13 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
           }
         }
       }
-  
+
       toast.success("Cập nhật sản phẩm thành công");
     } catch (error) {
       console.error("Lỗi khi cập nhật sản phẩm:", error.response?.data || error.message);
     }
   };
-  
+
 
   const handleReset = () => {
     setName("");
@@ -511,11 +447,13 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
   const handleCategoryChange = (e) => {
     const selectedIndex = e.target.selectedIndex;
     const selectedId = e.target.value;
-    const selectedName = e.target.options[selectedIndex].text;
+    const selectedCategory = categories.find(cat => cat.id === selectedId);
 
-    setSelectedCategory({ id: selectedId, name: selectedName });
-    setSelectedSpec("");
-    console.log("Loại sản phẩm:", selectedName);
+    if (selectedCategory) {
+      setSelectedCategory({ id: selectedId, name: selectedCategory.name });
+      setSelectedSpec("");
+      console.log("Loại sản phẩm:", selectedCategory.name);
+    }
   };
 
   const handleBrandChange = (e) => {
@@ -708,7 +646,7 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
                     <option value="" disabled>Chọn loại sản phẩm</option>
                     {categories.map((category) => (
                       <option key={category.id} value={category.id}>
-                        {category.name}
+                        {category.name_Vi}
                       </option>
                     ))}
                   </select>
@@ -782,7 +720,7 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
                       specsFields.map((spec) => (
                         <div key={spec.key} className="flex items-center justify-between">
                           <label htmlFor={spec.key} className="w-1/3 text-sm font-medium text-gray-700">
-                            {spec.value}
+                            {translate(spec.key)}
                           </label>
                           <select
                             id={spec.key}
@@ -792,11 +730,11 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
                             className="w-2/3 p-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500"
                           >
                             <option value="" disabled>
-                              Chọn {spec.value}
+                              Chọn {translate(spec.key)}
                             </option>
                             {spec.options.map((option) => (
                               <option key={option} value={option}>
-                                {option}
+                                {translate(option)}
                               </option>
                             ))}
                           </select>

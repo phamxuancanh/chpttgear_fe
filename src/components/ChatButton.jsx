@@ -96,7 +96,7 @@ export default function ChatButton() {
 
             {/* Chat Window */}
             {isChatOpen && (
-                <div className="fixed bottom-0 right-[6%] bg-gray-800 text-white w-96 h-[60vh] rounded-lg shadow-2xl flex flex-col p-4 z-10">
+                <div className="fixed bottom-0 right-[6%] bg-gray-800 text-white w-96 h-[60vh] rounded-lg shadow-2xl flex flex-col p-4 z-50">
                     <div className="flex justify-between items-center pb-2 border-b border-gray-600">
                         <h2 className="font-semibold text-xl">ChatGPT</h2>
                         <button onClick={toggleChatWindow} className="text-gray-400">

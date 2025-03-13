@@ -1,0 +1,474 @@
+{
+  "HEADPHONE": [
+    {
+      "key": "brand",
+      "value": "Brand",
+      "options": [
+        "ASUS",
+        "HyperX",
+        "Corsair",
+        "Razer",
+        "Steelseries",
+        "Rapoo",
+        "Logitech",
+        "Edifier"
+      ]
+    },
+    {
+      "key": "price",
+      "value": "Price",
+      "options": ["under_1m", "1m_2m", "2m_3m", "3m_4m", "above_4m"]
+    },
+    {
+      "key": "connection",
+      "value": "Connection",
+      "options": ["Wireless", "Bluetooth"]
+    },
+    { "key": "type", "value": "Type", "options": ["Over-ear", "Gaming In-ear"] }
+  ],
+  "KEYBOARD": [
+    {
+      "key": "warranty",
+      "value": "Warranty",
+      "options": ["12_months", "24_months", "36_months"]
+    },
+    {
+      "key": "switch_type",
+      "value": "Switch_Type",
+      "options": ["Mechanical", "Membrane", "Optical", "Hybrid"]
+    },
+    {
+      "key": "connection",
+      "value": "Connection",
+      "options": ["Wired", "Wireless", "Bluetooth", "USB-C"]
+    },
+    {
+      "key": "backlight",
+      "value": "Backlight",
+      "options": ["Yes", "No", "RGB", "Single_Color"]
+    },
+    {
+      "key": "key_rollover",
+      "value": "Key_Rollover",
+      "options": ["6_Key", "N_Key"]
+    }
+  ],
+  "MOUSE": [
+    {
+      "key": "warranty",
+      "value": "warranty",
+      "options": ["12_months", "24_months"]
+    },
+    {
+      "key": "sensor_type",
+      "value": "sensor_type",
+      "options": ["Optical", "Laser", "Infrared"]
+    },
+    {
+      "key": "dpi",
+      "value": "dpi_resolution",
+      "options": ["800", "1600", "3200", "6400", "12000", "16000"]
+    },
+    {
+      "key": "connection",
+      "value": "connection",
+      "options": ["Wired", "Wireless", "Bluetooth", "USB-C"]
+    },
+    {
+      "key": "buttons",
+      "value": "number_of_buttons",
+      "options": ["3", "5", "7", "10", "12+"]
+    },
+    {
+      "key": "battery_life",
+      "value": "battery_life",
+      "options": ["20_hours", "50_hours", "100_hours"]
+    },
+    {
+      "key": "price",
+      "value": "price",
+      "options": ["under_0.5m", "0.5m_1m", "1m_2m", "2m_3m", "above_3m"]
+    }
+  ],
+  "RAM": [
+    {
+      "key": "warranty",
+      "value": "Warranty",
+      "options": ["36_months", "60_months", "lifetime"]
+    },
+    {
+      "key": "capacity",
+      "value": "Capacity",
+      "options": ["4GB", "8GB", "16GB", "32GB", "64GB", "128GB"]
+    },
+    {
+      "key": "speed",
+      "value": "Bus Speed",
+      "options": ["2133MHz", "2666MHz", "3200MHz", "3600MHz", "4000MHz+"]
+    },
+    {
+      "key": "latency",
+      "value": "CAS Latency",
+      "options": ["CL14", "CL16", "CL18", "CL20"]
+    },
+    {
+      "key": "voltage",
+      "value": "Voltage",
+      "options": ["1.2V", "1.35V", "1.5V"]
+    },
+    {
+      "key": "type",
+      "value": "RAM Type",
+      "options": ["DDR3", "DDR4", "DDR5", "LPDDR5"]
+    }
+  ],
+  "PSU": [
+    {
+      "key": "warranty",
+      "value": "Warranty",
+      "options": ["36_Months", "60_Months"]
+    },
+    {
+      "key": "wattage",
+      "value": "Wattage",
+      "options": ["400W", "500W", "600W", "750W", "850W", "1000W", "1200W+"]
+    },
+    {
+      "key": "efficiency",
+      "value": "Efficiency_Certification",
+      "options": [
+        "80_Plus",
+        "80_Plus_Bronze",
+        "80_Plus_Gold",
+        "80_Plus_Platinum",
+        "80_Plus_Titanium"
+      ]
+    },
+    {
+      "key": "modular",
+      "value": "Modular_Cabling",
+      "options": ["Yes", "No", "Semi-Modular"]
+    }
+  ],
+  "MAINBOARD": [
+    {
+      "key": "warranty",
+      "value": "Warranty",
+      "options": ["12_months", "24_months", "36_months"]
+    },
+    {
+      "key": "socket",
+      "value": "Socket",
+      "options": ["LGA1200", "LGA1700", "AM4", "AM5"]
+    },
+    {
+      "key": "chipset",
+      "value": "Chipset",
+      "options": ["B460", "B560", "Z490", "Z590", "X570", "B550"]
+    },
+    {
+      "key": "form_factor",
+      "value": "Form Factor",
+      "options": ["ATX", "Micro-ATX", "Mini-ITX"]
+    },
+    { "key": "ram_slots", "value": "RAM Slots", "options": ["2", "4", "8"] },
+    {
+      "key": "max_memory",
+      "value": "Max Memory",
+      "options": ["32GB", "64GB", "128GB"]
+    },
+    {
+      "key": "storage_interfaces",
+      "value": "Storage Interfaces",
+      "options": ["SATA", "NVMe", "PCIe 4.0"]
+    },
+    {
+      "key": "expansion_slots",
+      "value": "Expansion Slots",
+      "options": ["PCIe x16", "PCIe x8", "PCIe x4"]
+    },
+    {
+      "key": "usb_ports",
+      "value": "USB Ports",
+      "options": ["USB 2.0", "USB 3.0", "USB 3.1", "USB-C"]
+    },
+    {
+      "key": "network",
+      "value": "Network Connectivity",
+      "options": ["Ethernet", "Wi-Fi 6", "Bluetooth"]
+    }
+  ],
+  "HEATSINK": [
+    {
+      "key": "price",
+      "value": "price",
+      "options": ["under_1m", "1m_2m", "above_2m"]
+    },
+    {
+      "key": "cooling_type",
+      "value": "cooling_type",
+      "options": [
+        "AIO_240mm",
+        "AIO_280mm",
+        "AIO_360mm",
+        "AIO_420mm",
+        "Air_Cooling",
+        "Fan_RGB"
+      ]
+    },
+    {
+      "key": "warranty",
+      "value": "warranty",
+      "options": ["12_months", "24_months", "36_months"]
+    },
+    {
+      "key": "cooling_method",
+      "value": "cooling_method",
+      "options": ["Water_Cooling", "Air_Cooling"]
+    }
+  ],
+  "SSD/HDD": [
+    {
+      "key": "warranty",
+      "value": "Warranty",
+      "options": ["12_months", "24_months", "36_months"]
+    },
+    {
+      "key": "capacity",
+      "value": "Capacity",
+      "options": [
+        "120GB - 128GB",
+        "250GB - 256GB",
+        "480GB - 512GB",
+        "960GB - 1TB",
+        "2TB",
+        "Above 2TB"
+      ]
+    },
+    {
+      "key": "brand",
+      "value": "Brand",
+      "options": [
+        "Samsung",
+        "Western_Digital",
+        "Kingston",
+        "Corsair",
+        "PNY",
+        "Seagate",
+        "Toshiba"
+      ]
+    },
+    {
+      "key": "type",
+      "value": "Type",
+      "options": ["SSD", "HDD", "Portable_Hard_Drive", "Memory_Card/USB"]
+    }
+  ],
+  "CASE": [
+    {
+      "key": "warranty",
+      "value": "Warranty",
+      "options": ["12_months", "24_months"]
+    },
+    {
+      "key": "form_factor",
+      "value": "Form Factor",
+      "options": ["Mini_ITX", "Micro_ATX", "Mid_Tower", "Full_Tower"]
+    },
+    {
+      "key": "material",
+      "value": "Material",
+      "options": ["Steel", "Aluminum", "Tempered_Glass"]
+    },
+    {
+      "key": "fan_support",
+      "value": "Fan Support",
+      "options": ["120mm", "140mm", "200mm"]
+    }
+  ],
+  "CPU": [
+    {
+      "key": "warranty",
+      "value": "Warranty",
+      "options": ["12_Months", "36_Months"]
+    },
+    { "key": "brand", "value": "Brand", "options": ["Intel", "AMD"] },
+    {
+      "key": "core_count",
+      "value": "Core_Count",
+      "options": ["2", "4", "6", "8", "12", "16", "24", "32+"]
+    },
+    {
+      "key": "thread_count",
+      "value": "Thread_Count",
+      "options": ["4", "8", "12", "16", "24", "32", "64+"]
+    },
+    {
+      "key": "base_clock",
+      "value": "Base_Clock",
+      "options": ["2.5GHz", "3.0GHz", "3.5GHz", "4.0GHz+"]
+    },
+    {
+      "key": "boost_clock",
+      "value": "Boost_Clock",
+      "options": ["3.5GHz", "4.0GHz", "4.5GHz", "5.0GHz+"]
+    }
+  ],
+  "MICRO": [
+    {
+      "key": "warranty",
+      "value": "Warranty",
+      "options": ["6_Months", "12_Months", "24_Months"]
+    },
+    {
+      "key": "type",
+      "value": "Type",
+      "options": ["Lapel_Mic", "Desktop_Mic", "Recording_Mic", "Wireless_Mic"]
+    },
+    {
+      "key": "connection",
+      "value": "Connection",
+      "options": ["USB", "Jack_3.5mm", "XLR", "Bluetooth"]
+    },
+    {
+      "key": "directionality",
+      "value": "Directionality",
+      "options": ["Omnidirectional", "Cardioid", "Bidirectional", "Shotgun"]
+    }
+  ],
+  "LAPTOP": [
+    {
+      "key": "brand",
+      "value": "Brand",
+      "options": [
+        "Asus",
+        "Acer",
+        "Msi",
+        "Lenovo",
+        "Dell",
+        "HP-Pavilion",
+        "LG-Gram"
+      ]
+    },
+    {
+      "key": "price",
+      "value": "Price",
+      "options": ["under_15m", "15m_20m", "above_20m"]
+    },
+    {
+      "key": "cpu",
+      "value": "CPU",
+      "options": [
+        "Intel Core i3",
+        "Intel Core i5",
+        "Intel Core i7",
+        "AMD Ryzen"
+      ]
+    },
+    {
+      "key": "usage",
+      "value": "Usage",
+      "options": ["design_studio", "student", "high_end_ultrabook"]
+    },
+    {
+      "key": "accessories",
+      "value": "Accessories",
+      "options": ["ram_laptop", "ssd_laptop", "external_hdd"]
+    }
+  ],
+  "VGA": [
+    {
+      "key": "warranty",
+      "value": "WARRANTY",
+      "options": ["12_Months", "36_Months"]
+    },
+    { "key": "brand", "value": "BRAND", "options": ["NVIDIA", "AMD"] },
+    {
+      "key": "model",
+      "value": "MODEL",
+      "options": ["GTX_1650", "RTX_3060", "RTX_4070", "RX_6600", "RX_7900_XTX"]
+    },
+    {
+      "key": "vram",
+      "value": "VRAM_CAPACITY",
+      "options": ["4GB", "6GB", "8GB", "12GB", "16GB"]
+    },
+    {
+      "key": "power_requirement",
+      "value": "POWER_REQUIREMENT",
+      "options": ["300W", "450W", "650W", "850W+"]
+    }
+  ],
+  "SCREEN": [
+    {
+      "key": "manufacturers",
+      "value": "MANUFACTURERS",
+      "options": [
+        "LG",
+        "Asus",
+        "ViewSonic",
+        "Dell",
+        "Gigabyte",
+        "AOC",
+        "Acer",
+        "HKC",
+        "MSI",
+        "Lenovo"
+      ]
+    },
+    {
+      "key": "price_range",
+      "value": "PRICE_RANGE",
+      "options": [
+        "under_5m",
+        "5m_to_10m",
+        "10m_to_20m",
+        "20m_to_30m",
+        "above_30m"
+      ]
+    },
+    {
+      "key": "resolution",
+      "value": "RESOLUTION",
+      "options": ["FullHD", "2K_1440p", "4K_UHD", "6K"]
+    },
+    {
+      "key": "refresh_rate",
+      "value": "REFRESH_RATE",
+      "options": ["60Hz", "75Hz", "100Hz", "144Hz", "240Hz"]
+    },
+    {
+      "key": "curved_monitors",
+      "value": "CURVED_MONITORS",
+      "options": ["24_Curved", "27_Curved", "32_Curved", "Above_32_Curved"]
+    },
+    {
+      "key": "sizes",
+      "value": "SIZES",
+      "options": [
+        "22_Monitor",
+        "24_Monitor",
+        "27_Monitor",
+        "29_Monitor",
+        "32_Monitor",
+        "Above_32_Monitor",
+        "VESA_Mount_Supported"
+      ]
+    },
+    {
+      "key": "graphic_monitors",
+      "value": "GRAPHIC_MONITORS",
+      "options": ["24_Graphic", "27_Graphic", "32_Graphic"]
+    },
+    {
+      "key": "accessories",
+      "value": "ACCESSORIES",
+      "options": ["Monitor_Mount", "HDMI_DP_LAN_Cables"]
+    },
+    {
+      "key": "portable_monitors",
+      "value": "PORTABLE_MONITORS",
+      "options": ["FullHD_1080p", "2K_1440p", "Touch_Screen"]
+    }
+  ]
+}
