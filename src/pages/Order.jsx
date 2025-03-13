@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FiSearch, FiEye, FiShoppingBag, FiCalendar, FiTruck, FiX } from "react-icons/fi";
 import { Link } from "react-router-dom";
-import { getOrdersByUserId } from "../routers/ApiRoutes";
+import { getOrdersByUserId, getProductsByListId } from "../routers/ApiRoutes";
 import { useSelector } from "react-redux";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { FaDongSign } from "react-icons/fa6";
@@ -20,6 +20,7 @@ export default function Order() {
     const [expandedOrders, setExpandedOrders] = useState({});
     const userId = userFromRedux.id;
     const [loading, setLoading] = useState(false);
+    const [products, setProducts] = useState([]);
 
     const toggleExpand = (orderId) => {
         setExpandedOrders((prev) => ({
@@ -29,21 +30,48 @@ export default function Order() {
     };
 
     useEffect(() => {
-        setLoading(true); // Bắt đầu loading
+        setLoading(true);
         fetchOrder(page)
-            .then(() => setLoading(false)) // Hoàn tất
-            .catch(() => setLoading(false)); // Xử lý lỗi
+            .then(() => setLoading(false))
+            .catch(() => setLoading(false));
     }, [page]);
 
     const fetchOrder = async (pageNumber) => {
         try {
             const res = await getOrdersByUserId(userId, pageNumber, limit);
             const data = res.data;
-            console.log(data);
-            setOrders(data.orders);
+
+            console.log("Danh sách đơn hàng:", data);
+
+            // Kiểm tra nếu data.orders không phải là mảng thì gán giá trị mặc định []
+            const orders = Array.isArray(data.orders) ? data.orders : [];
+
+            setOrders(orders);
             setTotalPages(data.totalPages);
+
+            // 📌 Lấy danh sách productIds từ `order_item`
+            const productIds = orders
+                .flatMap((order) => order.order_item?.map((item) => item.product_id) || []) // Kiểm tra order_item có tồn tại không
+                .filter((id, index, self) => self.indexOf(id) === index); // Loại bỏ ID trùng
+
+            console.log("Danh sách productIds:", productIds);
+
+            if (productIds.length > 0) {
+                fetchProducts(productIds);
+            }
         } catch (error) {
             console.error("Lỗi khi lấy đơn hàng:", error);
+        }
+    };
+
+
+    const fetchProducts = async (productIds) => {
+        try {
+            const res = await getProductsByListId(productIds.join(','));
+            setProducts(res.data);
+            console.log("Danh sách sản phẩm:", res.data);
+        } catch (error) {
+            console.error("Lỗi khi lấy danh sách sản phẩm:", error);
         }
     };
 
@@ -60,17 +88,35 @@ export default function Order() {
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     const getStatusColor = (status) => {
-        switch (status.toLowerCase()) {
-            case "CANCEL":
-                return "bg-emerald-100 text-emerald-800";
+        switch (status.toUpperCase()) {
             case "PENDING":
-                return "bg-amber-100 text-amber-800";
+                return "bg-yellow-100 text-yellow-800";
             case "PAID":
                 return "bg-blue-100 text-blue-800";
+            case "SHIPPED":
+                return "bg-purple-100 text-purple-800";
+            case "DELIVERED":
+                return "bg-green-100 text-green-800";
+            case "CANCELLED":
+                return "bg-red-100 text-red-800";
             default:
-                return "bg-slate-100 text-slate-800";
+                return "bg-gray-100 text-gray-800";
         }
     };
+
+
+    const statusMap = {
+        "PENDING": "Đặt hàng thành công",
+        "PAID": "Đã thanh toán",
+        "SHIPPED": "Đang giao hàng",
+        "DELIVERED": "Giao hàng thành công",
+        "CANCELLED": "Đã hủy"
+    };
+
+    const productMap = products.reduce((acc, product) => {
+        acc[product.id] = product; // Lưu cả object product để dễ dàng lấy các thông tin khác
+        return acc;
+    }, {});
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
@@ -119,8 +165,8 @@ export default function Order() {
                                                         Ngày đặt: {new Date(order.createdAt).toLocaleDateString()}
                                                     </span>
                                                 </div>
-                                                <span className={`px-3 py-1 text-center rounded-full text-sm ${getStatusColor(order.status)}`}>
-                                                    {order.status}
+                                                <span className={`px-3 py-1 text-center rounded-full text-sm uppercase ${getStatusColor(order.status)}`}>
+                                                    {statusMap[order.status] || "Không xác định"}
                                                 </span>
 
                                             </div>
@@ -134,17 +180,26 @@ export default function Order() {
                                             {Array.isArray(order.order_item) && order.order_item.length > 0 ? (
                                                 <div key={order.order_id} className="bg-white shadow-sm rounded-lg p-6 border border-gray-200">
                                                     {/* Sản phẩm đầu tiên */}
-                                                    <div className="flex items-center gap-5 p-4 border-b border-gray-200">
-                                                        <img
-                                                            src={order.order_item[0]?.image || "https://images.unsplash.com/photo-1560393464-5c69a73c5770"}
-                                                            alt={`Product ${order.order_item[0]?.product_id}`}
-                                                            className="w-20 h-20 object-cover rounded-md border border-gray-100"
-                                                            onError={(e) => (e.target.src = "https://images.unsplash.com/photo-1560393464-5c69a73c5770")}
-                                                        />
-                                                        <div className="flex flex-col">
-                                                            <h3 className="text-[16px] font-semibold text-gray-900">{order.order_item[0]?.name || "Sản phẩm"}</h3>
-                                                            <p className="text-gray-600 text-[14px]">{(Number(order.order_item[0]?.price.toFixed(2))).toLocaleString("vi-VN")}₫</p>
+                                                    <div className="flex items-center justify-between gap-5 p-4 border-b border-gray-200">
+                                                        <div className="flex items-center gap-5">
+                                                            <div className="w-20 h-20 flex items-center justify-center border border-gray-100 rounded-md overflow-hidden">
+                                                                <img
+                                                                    src={productMap[order.order_item[0]?.product_id]?.image.split(",")[0] || "https://via.placeholder.com/100"}
+                                                                    alt={productMap[order.order_item[0]?.product_id]?.name || "Sản phẩm"}
+                                                                    className="w-full h-full object-contain"
+                                                                    onError={(e) => (e.target.src = "https://via.placeholder.com/100")}
+                                                                />
+                                                            </div>
+                                                            <div className="flex flex-col">
+                                                                <h3 className="text-[16px] font-semibold text-gray-900">
+                                                                    {productMap[order.order_item[0]?.product_id]?.name || "Sản phẩm"}
+                                                                </h3>
+                                                                <p className="text-gray-600 text-[14px]">Số lượng: {order.order_item[0]?.quantity || 1}</p>
+                                                            </div>
                                                         </div>
+                                                        <p className="text-[16px] font-semibold text-orange-600">
+                                                            {(Number(order.order_item[0]?.price?.toFixed(2)) || 0).toLocaleString("vi-VN")}₫
+                                                        </p>
                                                     </div>
 
                                                     {/* Danh sách sản phẩm mở rộng */}
@@ -153,79 +208,82 @@ export default function Order() {
                                                             {expandedOrders[order.order_id] && (
                                                                 <div className="mt-4 space-y-3">
                                                                     {order.order_item.slice(1).map((item) => (
-                                                                        <div
-                                                                            key={item.order_item_id}
-                                                                            className="flex items-center gap-4 p-3 bg-gray-50 rounded-md border border-gray-200"
-                                                                        >
-                                                                            <img
-                                                                                src={item.image || "https://images.unsplash.com/photo-1560393464-5c69a73c5770"}
-                                                                                alt={`Product ${item.product_id}`}
-                                                                                className="w-16 h-16 object-cover rounded-md border border-gray-100"
-                                                                                onError={(e) => (e.target.src = "https://images.unsplash.com/photo-1560393464-5c69a73c5770")}
-                                                                            />
-                                                                            <div>
-                                                                                <h3 className="text-[15px] font-medium text-gray-900">{item.name || "Sản phẩm"}</h3>
-                                                                                <p className="text-gray-600 text-[13px]">{(Number(item.price.toFixed(2))).toLocaleString("vi-VN")}₫</p>
+                                                                        <div key={item.order_item_id} className="flex items-center justify-between gap-4 p-3 bg-gray-50 rounded-md border border-gray-200">
+                                                                            <div className="flex items-center gap-4">
+                                                                                <div className="w-16 h-16 flex items-center justify-center border border-gray-100 rounded-md overflow-hidden">
+                                                                                    <img
+                                                                                        src={productMap[item.product_id]?.image.split(",")[0] || "https://via.placeholder.com/100"}
+                                                                                        alt={productMap[item.product_id]?.name || "Sản phẩm"}
+                                                                                        className="w-full h-full object-contain"
+                                                                                        onError={(e) => (e.target.src = "https://via.placeholder.com/100")}
+                                                                                    />
+                                                                                </div>
+                                                                                <div>
+                                                                                    <h3 className="text-[15px] font-medium text-gray-900">
+                                                                                        {productMap[item.product_id]?.name || "Sản phẩm"}
+                                                                                    </h3>
+                                                                                    <p className="text-gray-600 text-[13px]">Số lượng: {item.quantity || 1}</p>
+                                                                                </div>
                                                                             </div>
+                                                                            <p className="text-[15px] font-semibold text-orange-600">
+                                                                                {(Number(item.price?.toFixed(2)) || 0).toLocaleString("vi-VN")}₫
+                                                                            </p>
                                                                         </div>
                                                                     ))}
                                                                 </div>
                                                             )}
-
-                                                            {/* Nút Xem Thêm */}
-                                                            <div className="flex justify-center mt-3">
-                                                                <button
-                                                                    onClick={() => toggleExpand(order.order_id)}
-                                                                    className="flex items-center gap-2 text-gray-700 hover:text-black text-[14px] font-medium transition-colors"
-                                                                >
-                                                                    <span>{expandedOrders[order.order_id] ? "Ẩn bớt" : `Xem thêm (${order.order_item.length - 1} sản phẩm)`}</span>
-                                                                    {expandedOrders[order.order_id] ? <FaChevronUp size={18} /> : <FaChevronDown size={18} />}
-                                                                </button>
-                                                            </div>
                                                         </div>
                                                     )}
+
+                                                    {/* Nút Xem Thêm */}
+                                                    <div className="flex justify-center mt-3">
+                                                        <button
+                                                            onClick={() => toggleExpand(order.order_id)}
+                                                            className="flex items-center gap-2 text-gray-700 hover:text-black text-[14px] font-medium transition-colors"
+                                                        >
+                                                            <span>{expandedOrders[order.order_id] ? "Ẩn bớt" : `Xem thêm (${order.order_item.length - 1} sản phẩm)`}</span>
+                                                            {expandedOrders[order.order_id] ? <FaChevronUp size={18} /> : <FaChevronDown size={18} />}
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             ) : (
                                                 <p className="text-gray-500 text-center text-[14px]">Không có sản phẩm nào</p>
                                             )}
                                         </div>
 
-
-
-                                        {/* Thành tiền */}
-                                        {/* <div className="mt-6 p-4 bg-gray-100 rounded-xl flex justify-between items-center">
-                                            <span className="text-lg font-semibold text-gray-800">Thành tiền:</span>
-                                            <span className="text-xl font-bold text-indigo-600">${order.total_amount}</span>
-                                            <Link to={`/order_tracking/${order.order_id}`}>
-                                                <button
-                                                    className="flex items-center space-x-2 text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-10 py-5 rounded-lg transition-colors duration-200 shadow-md"
-                                                >
-                                                    <FiEye />
-                                                    <span>Xem chi tiết</span>
-                                                </button>
-                                            </Link>
-                                        </div> */}
-                                        <div className="flex justify-between items-center pt-3 border-t">
+                                        <div className="flex justify-end gap-3 pt-3 border-t">
+                                            {/* Tổng tiền */}
                                             <div className="font-semibold text-xl">
                                                 Thành tiền: <span className="text-red-500">
                                                     {(Number(order.total_amount.toFixed(2))).toLocaleString("vi-VN")}₫
                                                 </span>
                                             </div>
+                                        </div>
 
+
+                                        {/* Nút View Details */}
+                                        <div className="flex justify-end mt-4 space-x-2">
                                             <Link to={`/order_tracking/${order.order_id}`}>
                                                 <button
-                                                    className="flex items-center space-x-2 text-white hover:text-black bg-red-500 px-10 py-5 rounded-lg transition-colors duration-200 shadow-md"
+                                                    className="text-white bg-orange-600 hover:bg-orange-700 px-6 py-3 rounded-lg transition font-medium"
                                                 >
-                                                    <FiEye />
                                                     <span>Xem chi tiết</span>
                                                 </button>
                                             </Link>
-
-                                        </div>
-
-                                        {/* Nút View Details */}
-                                        <div className="flex justify-end mt-4">
-
+                                            <Link to={`/order_tracking/${order.order_id}`}>
+                                                <button
+                                                    className="text-black bg-gray-200 hover:bg-gray-300 px-6 py-3 rounded-lg transition font-medium"
+                                                >
+                                                    <span>Đánh giá</span>
+                                                </button>
+                                            </Link>
+                                            <Link to={`/order_tracking/${order.order_id}`}>
+                                                <button
+                                                    className="text-black bg-gray-200 hover:bg-gray-300 px-6 py-3 rounded-lg transition font-medium"
+                                                >
+                                                    <span>Yêu cầu trả hàng/Hoàn tiền</span>
+                                                </button>
+                                            </Link>
                                         </div>
                                     </div>
                                 );
