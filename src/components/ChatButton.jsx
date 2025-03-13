@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import axios from "axios"; // Import Axios
-import LOGO from '../assets/a.avif'
-import { IoIosSend } from "react-icons/io";
-import { IoIosCloseCircleOutline } from "react-icons/io";
+import axios from "axios";
+import LOGO from "../assets/a.avif";
+import { IoIosSend, IoIosCloseCircleOutline } from "react-icons/io";
+import { generateChat } from "../routers/ApiRoutes";
 
 export default function ChatButton() {
     const [isChatOpen, setIsChatOpen] = useState(false);
@@ -10,129 +10,123 @@ export default function ChatButton() {
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(false);
 
+    // Toggle hiển thị chatbox
     const toggleChatWindow = () => {
         setIsChatOpen(!isChatOpen);
     };
 
+    // Gửi tin nhắn
     const handleSendMessage = async () => {
         if (!inputMessage.trim()) return;
 
+        // Thêm tin nhắn của user vào danh sách
         const userMessage = { text: inputMessage, isUser: true };
         setMessages((prevMessages) => [...prevMessages, userMessage]);
         setInputMessage("");
         setLoading(true);
 
         try {
-            await sendMessageToAPI(userMessage);
+            await sendMessageToAPI(inputMessage);
         } catch (error) {
-            console.error("Error communicating with OpenAI API", error);
+            console.error("Lỗi khi gọi API OpenAI:", error);
         } finally {
             setLoading(false);
         }
     };
 
+    // Gửi tin nhắn đến OpenAI API
     const sendMessageToAPI = async (userMessage) => {
         const maxRetries = 3;
         let retryCount = 0;
         const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
+    
         while (retryCount < maxRetries) {
             try {
-                const response = await axios.post(
-                    "https://api.openai.com/v1/chat/completions",
-                    {
-                        model: "gpt-3.5-turbo",
-                        messages: [
-                            { role: "system", content: "You are a helpful assistant." },
-                            ...messages.map((msg) =>
-                                msg.isUser
-                                    ? { role: "user", content: msg.text }
-                                    : { role: "assistant", content: msg.text }
-                            ),
-                            { role: "user", content: userMessage.text },
-                        ],
-                    },
-                    {
-                        headers: {
-                            Authorization: `Bearer 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`,
-                            "Content-Type": "application/json",
-                        },
-                    }
-                );
-
-                const assistantMessage = response.data.choices[0].message.content;
-                setMessages((prevMessages) => [
-                    ...prevMessages,
-                    { text: assistantMessage, isUser: false },
-                ]);
-                break; // Thoát khỏi vòng lặp nếu thành công
+                const response = await generateChat(userMessage);
+    
+                // 🛠 Lấy dữ liệu đúng từ API
+                if (response.data && response.data.result) {
+                    const assistantMessage = response.data.result;
+                    setMessages((prevMessages) => [
+                        ...prevMessages,
+                        { text: assistantMessage, isUser: false },
+                    ]);
+                } else {
+                    console.error("Dữ liệu API không đúng định dạng", response.data);
+                }
+                break; // Thoát vòng lặp nếu thành công
             } catch (error) {
                 if (error.response && error.response.status === 429) {
                     retryCount++;
                     console.log(`Retrying... (${retryCount}/${maxRetries})`);
                     await delay(2000); // Chờ 2 giây trước khi thử lại
                 } else {
-                    throw error;
+                    console.error("Lỗi khi gọi API OpenAI:", error);
+                    break;
                 }
             }
         }
-
+    
         if (retryCount === maxRetries) {
             alert("Quá nhiều yêu cầu được gửi đi. Vui lòng thử lại sau một lúc.");
         }
     };
-
+    
     return (
         <>
-            {/* Button */}
+            {/* Nút mở chat */}
             <div
                 onClick={toggleChatWindow}
-                className=" fixed top-[92%] right-[1%] transform translate-y-[-50%] bg-gray-500 text-white w-[74px] h-[74px] rounded-full flex items-center justify-center shadow-2xl cursor-pointer z-10"
+                className="fixed bottom-8 right-8 bg-gray-500 text-white w-16 h-16 rounded-full flex items-center justify-center shadow-2xl cursor-pointer z-10"
             >
-                <div className="shadow-lg bg-white h-[63px] w-[63px] rounded-full flex justify-center items-center">
-                    <img src={LOGO} alt="Chat" className="w-16 h-16 rounded-full" />
+                <div className="bg-white h-14 w-14 rounded-full flex justify-center items-center">
+                    <img src={LOGO} alt="Chat" className="w-12 h-12 rounded-full" />
                 </div>
             </div>
 
-            {/* Chat Window */}
+            {/* Cửa sổ chat */}
             {isChatOpen && (
-                <div className="fixed bottom-0 right-[6%] bg-gray-800 text-white w-96 h-[60vh] rounded-lg shadow-2xl flex flex-col p-4 z-50">
+                <div className="fixed bottom-16 right-8 bg-gray-800 text-white w-96 h-[60vh] rounded-lg shadow-2xl flex flex-col p-4 z-40">
                     <div className="flex justify-between items-center pb-2 border-b border-gray-600">
-                        <h2 className="font-semibold text-xl">ChatGPT</h2>
+                        <h2 className="font-semibold text-xl">ChatBox</h2>
                         <button onClick={toggleChatWindow} className="text-gray-400">
-                            <IoIosCloseCircleOutline className="text-2xl hover:text-[#ff7200]" />
+                            <IoIosCloseCircleOutline className="text-2xl hover:text-red-500" />
                         </button>
                     </div>
+
+                    {/* Nội dung tin nhắn */}
                     <div className="flex-1 mt-4 overflow-y-auto">
-                        {/* Chat content */}
                         {messages.map((msg, index) => (
                             <div
                                 key={index}
-                                className={`p-2 rounded-md mb-2 ${msg.isUser
-                                    ? "bg-[#bfed7f] text-black self-end"
-                                    : "bg-[#f7efd4] text-black self-start"
-                                    }`}
+                                className={`p-2 rounded-md mb-2 ${
+                                    msg.isUser
+                                        ? "bg-green-400 text-black self-end"
+                                        : "bg-gray-200 text-black self-start"
+                                }`}
                             >
                                 <p className="break-words">{msg.text}</p>
                             </div>
                         ))}
                         {loading && (
-                            <div className="bg-[#f7efd4] text-black p-2 rounded-md mb-2 self-start">
-                                <p className="break-words">Loading...</p>
+                            <div className="bg-gray-200 text-black p-2 rounded-md mb-2 self-start">
+                                <p className="break-words">Đang tải...</p>
                             </div>
                         )}
                     </div>
-                    <div className="pt-2 flex justify-center items-center">
+
+                    {/* Ô nhập và nút gửi */}
+                    <div className="pt-2 flex items-center">
                         <input
                             type="text"
                             value={inputMessage}
                             onChange={(e) => setInputMessage(e.target.value)}
                             placeholder="Nhập tin nhắn..."
-                            className="w-full mr-3 px-3 py-2 border border-gray-600 rounded-lg text-black"
+                            className="w-full px-3 py-2 border border-gray-600 rounded-lg text-black"
                             onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                         />
                         <IoIosSend
-                            className="text-3xl cursor-pointer"
+                            className="text-3xl cursor-pointer text-white ml-3 hover:text-blue-400"
                             onClick={handleSendMessage}
                         />
                     </div>
