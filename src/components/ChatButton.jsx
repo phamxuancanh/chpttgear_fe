@@ -103,14 +103,15 @@ export default function ChatButton() {
                                     msg.isUser
                                         ? "bg-green-400 text-black self-end"
                                         : "bg-gray-200 text-black self-start"
-                                }`}
+                                    }`}
                             >
                                 <p className="break-words">{msg.text}</p>
                             </div>
                         ))}
                         {loading && (
-                            <div className="bg-gray-200 text-black p-2 rounded-md mb-2 self-start">
-                                <p className="break-words">Đang tải...</p>
+                            <div className="flex items-center space-x-2 bg-gray-300 text-black px-4 py-2 rounded-lg mb-2 self-start shadow-md">
+                                <div className="w-4 h-4 border-2 border-t-transparent border-blue-500 rounded-full animate-spin"></div>
+                                <p className="break-words text-gray-700 animate-pulse">Đang tải...</p>
                             </div>
                         )}
                     </div>
