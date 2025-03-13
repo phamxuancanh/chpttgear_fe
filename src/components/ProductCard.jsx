@@ -28,7 +28,7 @@ export default function ProductCard({ product }) {
             if (!selectedItems.some(i => i.itemId === item.itemId)) {
                 updatedItems.push({ ...item, quantity: 1 });
             }
-            dispatch(setSelectedItemsRedux({ selectItems: updatedItems }));
+            // dispatch(setSelectedItemsRedux({ selectItems: updatedItems }));
             try {
                 const updateItemResponse = await updateQuantityCartItem(item.itemId, item.quantity + 1);
                 console.log(updateItemResponse)
@@ -110,9 +110,10 @@ export default function ProductCard({ product }) {
                 {/* Giá sản phẩm */}
                 <div className="flex items-center mb-2 h-[3.5vh]">
                     <p className="text-accent text-xl font-bold mr-1">
-                        {product.price.toLocaleString('en-US')}
+                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}
+
                     </p>
-                    <FaDongSign />
+
                 </div>
 
                 {/* Danh mục sản phẩm */}

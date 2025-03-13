@@ -98,10 +98,13 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
             return;
         }
 
+
+
         for (let product_id of selectedProducts) {
             try {
-                const quantity = quantities[product_id] || 0; // Sử dụng giá trị mặc định là 0 nếu chưa nhập
-                const price = prices[product_id] || 0;
+                const quantity = quantities[product_id] || 0;
+                const price = prices[product_id] ?? products.find(p => p.id === product_id)?.price ?? 0; // Đảm bảo có giá trị
+                console.log(price)
                 if (quantity <= 0) {
                     toast.error(`Hãy nhập số lượng sản phẩm `);
                     return;
@@ -111,9 +114,6 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
                     return;
                 }
 
-
-                // const stockInData = 
-                // Gọi API stock-in
                 const stockInRes = await createStockIn({
                     product_id: product_id,
                     quantity: quantity,
@@ -236,9 +236,9 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
                                                     id={`price-${product.id}`}
                                                     type="number"
                                                     min="0"
-                                                    value={prices[product.id] || 0}
+                                                    defaultValue={product.price}
                                                     onChange={(e) => handlePriceChange(product.id, e.target.value)}
-                                                    className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                    className="w-28 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                     aria-label={`price for ${product.name}`}
                                                 />
                                             </div>

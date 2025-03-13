@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FiSearch, FiSliders, FiStar, FiShoppingCart, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import ProductCard from './../components/ProductCard';
 import { Link, useLocation, useSearchParams } from "react-router-dom";
-import { findAllCategory, getAllProduct, getAllProductWithCategory } from "../routers/ApiRoutes";
+import { findAllCategory, getAllProduct, getAllProductWithCategory, getAllStockIn, getAllStockOut } from "../routers/ApiRoutes";
 import { FaDongSign } from "react-icons/fa6";
 import BANNER1 from "../assets/banner1.webp"
 import Loading from "../utils/Loading";
@@ -23,13 +23,13 @@ export default function Product() {
     const [maxPrice, setMaxPrice] = useState(0);
     const [priceRange, setPriceRange] = useState(0); // Đặt 0 ban đầu để tránh lỗi
     const [loading, setLoading] = useState(false)
+    const [stockIns, setStockIns] = useState([])
+    const [stockOuts, setStockOuts] = useState([])
 
     useEffect(() => {
         const updateCategories = async () => {
             if (categoriesFromURL.length > 0) {
                 setLoading(true)
-                console.log("Params từ URL:", categoryParams);
-                console.log("Mảng categoriesFromURL:", categoriesFromURL);
 
                 await new Promise(resolve => setTimeout(resolve, 700)); // Chờ 500ms
 
@@ -49,15 +49,20 @@ export default function Product() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await findAllCategory();
-                setCategories(res.data);
+                const [allCategory, allProductWithCategory, stockIns, stockOuts] = await Promise.all([
+                    findAllCategory(),
+                    getAllProductWithCategory(),
+                    getAllStockIn(),
+                    getAllStockOut()
 
-                const res1 = await getAllProductWithCategory();
-                setProducts(res1.data);
+                ]);
 
+                setCategories(allCategory.data);
+                setProducts(allProductWithCategory.data);
+                setStockOuts(stockOuts)
+                setStockIns(stockIns)
                 // Tìm giá lớn nhất trong danh sách sản phẩm
-                const highestPrice = Math.max(...res1.data.map(product => product.price), 0);
-
+                const highestPrice = Math.max(...allProductWithCategory.data.map(product => product.price), 0);
                 // Cập nhật maxPrice và priceRange
                 setMaxPrice(highestPrice);
                 setPriceRange(highestPrice); // Đặt mặc định bằng giá lớn nhất
@@ -79,8 +84,17 @@ export default function Product() {
         }
     }, [maxPrice]);
 
+    const getProductStock = (productId) => {
+        const stockIn = stockIns
+            .filter(item => item.product_id === productId)
+            .reduce((acc, item) => acc + item.quantity, 0);
 
+        const stockOut = stockOuts
+            .filter(item => item.product_id === productId)
+            .reduce((acc, item) => acc + item.quantity, 0);
 
+        return stockIn - stockOut;
+    };
 
     useEffect(() => {
         let filtered = [...products];
@@ -91,6 +105,9 @@ export default function Product() {
             );
         }
 
+        // Lọc sản phẩm có quantityInStock > 0
+        filtered = filtered.filter(product => getProductStock(product.id) > 0);
+
         if (selectedCategories.length > 0) {
             filtered = filtered.filter(product =>
                 selectedCategories.includes(product.category_type)
@@ -98,10 +115,14 @@ export default function Product() {
         }
 
         filtered = filtered.filter(product => product.price <= priceRange);
-        console.log(filtered)
+
+
+
+        console.log(filtered);
         setFilteredProducts(filtered);
         setCurrentPage(1);
     }, [searchQuery, selectedCategories, priceRange]);
+
 
     const handleCategoryToggle = (category) => {
         console.log(category)
