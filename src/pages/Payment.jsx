@@ -4,7 +4,7 @@ import { TbTruckDelivery } from "react-icons/tb";
 import { Link, useNavigate } from "react-router-dom";
 import provinceData from "../assets/address/province.json";
 import { useDispatch, useSelector } from "react-redux";
-import { calculateShippingFee, createOrder, createOrderItem, editUserById } from "../routers/ApiRoutes";
+import { calculateShippingFee, createOrder, createOrderItem, createPayment, editUserById } from "../routers/ApiRoutes";
 import Loading from "../utils/Loading";
 import AddressModal from "../components/Modal/AddressModal";
 import { useModal } from "../context/ModalProvider";
@@ -299,6 +299,15 @@ export default function Payment() {
             throw new Error("Không tìm thấy approvalUrl từ PayPal");
           }
         }
+        const paymentData = {
+          order_id: orderId,
+          user_id: userFromRedux.id,
+          payment_method: "COD",
+          amount: totalAmountVnd
+        }
+        console.log(paymentData)
+        const res = await createPayment(paymentData);
+        console.log(res.data)
         openModal("Tạo đơn hàng thành công")
         navigate("/orders");
       }
