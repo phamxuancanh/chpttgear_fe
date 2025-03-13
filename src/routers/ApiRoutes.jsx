@@ -522,3 +522,8 @@ export const calculateShippingFee = async (toDistrict, toWard, weight, ShopId) =
 // notificationService
 
 // recommendationService
+export const generateChat = async (prompt) => {
+    return await requestWithoutJwt.post('/recommendations/recommendations/generate', {
+        prompt,
+    });
+};
