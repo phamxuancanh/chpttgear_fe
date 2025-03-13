@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { useEffect } from "react";
-import { findAllCategory, getAllProduct, getAllProductWithCategory, getSuggestions } from "../routers/ApiRoutes";
+import { findAllCategory, getAllProduct, getAllProductWithCategory, getAllStockIn, getAllStockOut, getSuggestions } from "../routers/ApiRoutes";
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Loading from "../utils/Loading";
 import { motion, AnimatePresence } from "framer-motion";
@@ -43,6 +43,8 @@ import MenuModal from "../components/Modal/MenuModal";
 export default function Home() {
     const { isCategoryOpen, setIsCategoryOpen } = useCategory();
     const navigate = useNavigate();
+    const [stockIns, setStockIns] = useState([])
+    const [stockOuts, setStockOuts] = useState([])
     const categories = [
         { name: "LAPTOP", name_vi: "Laptop", img: TYPE1 },
         { name: "SCREEN", name_vi: "Màn hình", img: TYPE3 },
@@ -89,8 +91,15 @@ export default function Home() {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const res1 = await getAllProductWithCategory();
-                setProducts(res1.data);
+                const [allProductWithCategory, stockIns, stockOuts] = await Promise.all([
+                    getAllProductWithCategory(),
+                    getAllStockIn(),
+                    getAllStockOut()
+
+                ]);
+                setProducts(allProductWithCategory.data);
+                setStockOuts(stockOuts)
+                setStockIns(stockIns)
             } catch (error) {
                 console.error("Error fetching inventory:", error);
             } finally {
@@ -108,7 +117,17 @@ export default function Home() {
     }, []); // Dependency array rỗng, chạy 1 lần sau khi component mount
 
 
+    const getProductStock = (productId) => {
+        const stockIn = stockIns
+            .filter(item => item.product_id === productId)
+            .reduce((acc, item) => acc + item.quantity, 0);
 
+        const stockOut = stockOuts
+            .filter(item => item.product_id === productId)
+            .reduce((acc, item) => acc + item.quantity, 0);
+
+        return stockIn - stockOut;
+    };
 
 
     return (
@@ -188,7 +207,7 @@ export default function Home() {
 
                     <section className="mb-12">
                         <img src={BANNER4} alt="" />
-                        <ProductCarousel products={products.filter(p => p.category_type == 'VGA')} />
+                        <ProductCarousel products={products.filter(p => p.category_type == 'VGA' && getProductStock(p.id) > 0)} />
                         <div className="w-full  flex justify-center items-center py-2">
                             <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white"
                                 onClick={() => handleProductClick('VGA')}
@@ -197,7 +216,7 @@ export default function Home() {
                     </section>
                     <section className="mb-12">
                         <img src={BANNER5} alt="" />
-                        <ProductCarousel products={products.filter(p => p.category_type == 'CPU')} />
+                        <ProductCarousel products={products.filter(p => p.category_type == 'CPU' && getProductStock(p.id) > 0)} />
                         <div className="w-full  flex justify-center items-center py-2">
                             <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white"
                                 onClick={() => handleProductClick('CPU')}
@@ -206,7 +225,7 @@ export default function Home() {
                     </section>
                     <section className="mb-12">
                         <img src={BANNER6} alt="" className="mb-10" />
-                        <ProductCarousel products={products.filter(p => p.category_type == 'MAINBOARD')} />
+                        <ProductCarousel products={products.filter(p => p.category_type == 'MAINBOARD' && getProductStock(p.id) > 0)} />
                         <div className="w-full  flex justify-center items-center py-2">
                             <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white"
                                 onClick={() => handleProductClick('MAINBOARD')}
@@ -215,7 +234,7 @@ export default function Home() {
                     </section>
                     <section className="mb-12">
                         <img src={BANNER7} alt="" className="mb-10" />
-                        <ProductCarousel products={products.filter(p => p.category_type == 'RAM')} />
+                        <ProductCarousel products={products.filter(p => p.category_type == 'RAM' && getProductStock(p.id) > 0)} />
                         <div className="w-full  flex justify-center items-center py-2">
                             <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white"
                                 onClick={() => handleProductClick('RAM')}
@@ -224,7 +243,7 @@ export default function Home() {
                     </section>
                     <section className="mb-12">
                         <img src={BANNER8} alt="" className="mb-10" />
-                        <ProductCarousel products={products.filter(p => p.category_type == 'SSD/HDD')} />
+                        <ProductCarousel products={products.filter(p => p.category_type == 'SSD/HDD' && getProductStock(p.id) > 0)} />
                         <div className="w-full  flex justify-center items-center py-2">
                             <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white"
                                 onClick={() => handleProductClick('SSD/HDD')}
@@ -234,7 +253,7 @@ export default function Home() {
 
                     <section className="mb-12">
                         <img src={BANNER10} alt="" className="mb-10" />
-                        <ProductCarousel products={products.filter(p => p.category_type == 'CASE')} />
+                        <ProductCarousel products={products.filter(p => p.category_type == 'CASE' && getProductStock(p.id) > 0)} />
                         <div className="w-full  flex justify-center items-center py-2">
                             <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white"
                                 onClick={() => handleProductClick('CASE')}
@@ -243,7 +262,7 @@ export default function Home() {
                     </section>
                     <section className="mb-12">
                         <img src={BANNER11} alt="" className="mb-10" />
-                        <ProductCarousel products={products.filter(p => p.category_type == 'PSU')} />
+                        <ProductCarousel products={products.filter(p => p.category_type == 'PSU' && getProductStock(p.id) > 0)} />
                         <div className="w-full  flex justify-center items-center py-2">
                             <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white"
                                 onClick={() => handleProductClick('PSU')}

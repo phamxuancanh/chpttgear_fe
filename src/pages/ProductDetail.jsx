@@ -208,13 +208,6 @@ export default function ProductDetail() {
         { product_id: 4090, user: "Charlie Brown", score: 2, comment: "Worth every penny!", date: "2024-02-08" }
     ];
 
-    const handleImageNavigation = (direction) => {
-        if (direction === "next") {
-            setCurrentImageIndex((prev) => (prev + 1) % images.length);
-        } else {
-            setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
-        }
-    };
 
     const renderStars = (rating) => {
         const stars = [];
@@ -248,12 +241,6 @@ export default function ProductDetail() {
         return stars;
     };
 
-    const calculateAverageScore = (ratings) => {
-        if (!ratings || ratings.length === 0) return 0;
-        const totalScore = ratings.reduce((sum, { score }) => sum + score, 0);
-        return totalScore / ratings.length;
-    };
-
     const calculateStarDistribution = (ratings) => {
         const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
         ratings.forEach(({ rating }) => {
@@ -261,10 +248,6 @@ export default function ProductDetail() {
         });
         return distribution;
     };
-
-    const handleIncrease = () => setQuantity((prev) => Math.min(prev + 1, quantityInStock));
-    const handleDecrease = () => setQuantity((prev) => Math.max(prev - 1, 1));
-
 
     return (
 
@@ -344,9 +327,7 @@ export default function ProductDetail() {
                         </div>
                         <div className="text-3xl font-bold text-blue-600 mb-4 flex justify-start">
                             {/* <p className="">{product.price.toLocaleString('en-US')}</p> */}
-                            <p className="">{parseFloat(product.price).toLocaleString('en-US')}</p>
-
-                            < FaDongSign />
+                            <p className="">  {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}</p>
                         </div>
 
                         <p className="text-gray-600 mb-6 ">{product.description}</p>
@@ -354,34 +335,12 @@ export default function ProductDetail() {
 
                         {/* Thêm vào giỏ hàng Section */}
                         <div className="flex items-center space-x-4 mb-6">
-                            <div className="flex items-center border rounded-md">
-                                <button
-                                    onClick={handleDecrease}
-                                    className="px-3 py-2 bg-gray-200 hover:bg-gray-300"
-                                >
-                                    -
-                                </button>
-                                <input
-                                    type="number"
-                                    value={quantity}
-                                    onChange={(e) => {
-                                        let val = Number(e.target.value);
-                                        setQuantity(val);
-                                    }}
-                                    className="w-12 text-center border-none outline-none"
-                                />
-                                <button
-                                    onClick={handleIncrease}
-                                    className="px-3 py-2 bg-gray-200 hover:bg-gray-300"
-                                >
-                                    +
-                                </button>
-                            </div>
-                            <button className=" gap-2 flex items-center justify-center bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">
+
+                            <button className={`gap-2 flex items-center justify-center ${quantityInStock == 0 ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"} text-white px-6 py-2 rounded-md  transition-colors`} disabled={quantityInStock == 0}>
                                 <FiShoppingCart />
                                 Thêm vào giỏ hàng
                             </button>
-                            <button className="gap-2 flex items-center justify-center bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition-colors">
+                            <button className={`gap-2 flex items-center justify-center ${quantityInStock == 0 ? "bg-gray-400" : "bg-red-600 hover:bg-red-700"} text-white px-6 py-2 rounded-md  transition-colors`} disabled={quantityInStock == 0}>
                                 <FaCashRegister />
                                 Mua ngay
                             </button>

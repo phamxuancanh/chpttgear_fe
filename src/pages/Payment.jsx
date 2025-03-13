@@ -4,7 +4,7 @@ import { TbTruckDelivery } from "react-icons/tb";
 import { Link, useNavigate } from "react-router-dom";
 import provinceData from "../assets/address/province.json";
 import { useDispatch, useSelector } from "react-redux";
-import { calculateShippingFee, createOrder, createOrderItem, editUserById } from "../routers/ApiRoutes";
+import { calculateShippingFee, createOrder, createOrderItem, createPayment, editUserById } from "../routers/ApiRoutes";
 import Loading from "../utils/Loading";
 import AddressModal from "../components/Modal/AddressModal";
 import { useModal } from "../context/ModalProvider";
@@ -91,6 +91,7 @@ export default function Payment() {
       const houseNumber = parts[parts.length - 4];
 
       const [toWard, toDistrict] = selectedCodeAddress.split(',')
+      console.log(selectedItems)
       const totalWeight = selectedItems.reduce((sum, item) => sum + item.weight * item.quantity, 1);
       const res = await calculateShippingFee(parseInt(toDistrict), toWard, totalWeight, 195800);
       setShippingFee(res);
@@ -302,6 +303,15 @@ export default function Payment() {
             throw new Error("Không tìm thấy approvalUrl từ PayPal");
           }
         }
+        const paymentData = {
+          order_id: orderId,
+          user_id: userFromRedux.id,
+          payment_method: "COD",
+          amount: totalAmountVnd
+        }
+        console.log(paymentData)
+        const res = await createPayment(paymentData);
+        console.log(res.data)
         openModal("Tạo đơn hàng thành công")
         navigate("/orders");
       }
@@ -533,7 +543,7 @@ export default function Payment() {
                   <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-md" />
                   <div className="flex-1">
                     <h3 className="text-md font-medium text-gray-900">{item.name}</h3>
-                    <p className="text-gray-700">Đơn giá: {item.price.toLocaleString("en-US")}</p>
+                    <p className="text-gray-700">Đơn giá: {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price)}</p>
                   </div>
                   <p className="text-gray-700">Số lượng: {item.quantity}</p>
                 </div>
@@ -546,13 +556,13 @@ export default function Payment() {
                 {/* Tổng tiền hàng */}
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-md text-gray-900">Tổng tiền hàng:</span>
-                  <span className="text-md font-semibold text-gray-700 flex justify-start items-center">{cartItems.reduce((total, item) => total + item.price * item.quantity, 0).toLocaleString('en-US')} <FaDongSign /></span>
+                  <span className="text-md font-semibold text-gray-700 flex justify-start items-center">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(cartItems.reduce((total, item) => total + item.price * item.quantity, 0))}  </span>
                 </div>
 
                 {/* Phí ship */}
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-md text-gray-900">Phí vận chuyển:</span>
-                  <span className="text-md font-semibold text-gray-700 flex justify-start items-center">{shippingFee.toLocaleString('en-US')}<FaDongSign /></span>
+                  <span className="text-md font-semibold text-gray-700 flex justify-start items-center">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(shippingFee)}</span>
                 </div>
 
                 <hr className="my-2" />
@@ -560,7 +570,7 @@ export default function Payment() {
                 {/* Tổng thanh toán cuối cùng */}
                 <div className="flex justify-between items-center text-lg font-bold text-red-600 ">
                   <span>Tổng cộng:</span>
-                  <span className="flex justify-start items-center">{(cartItems.reduce((total, item) => total + item.price * item.quantity, 0) + shippingFee).toLocaleString('en-US')}<FaDongSign /></span>
+                  <span className="flex justify-start items-center"> {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format((cartItems.reduce((total, item) => total + item.price * item.quantity, 0) + shippingFee))}</span>
                 </div>
               </div>
             </div>

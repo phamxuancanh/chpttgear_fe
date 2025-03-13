@@ -185,6 +185,7 @@ export default function SearchResult() {
             setSelectedCategory({ id: "", name: "" });
         }
     }, [location.search, categories]);
+
     useEffect(() => {
         const queryParams = new URLSearchParams(location.search);
         const allParams = {};

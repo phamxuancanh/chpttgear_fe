@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { FaShippingFast } from "react-icons/fa";
-import { findUserById, getPaymentsByOrderId } from '../../routers/ApiRoutes';
+import { findUserById, getPaymentsByOrderId, getProductsByListId } from '../../routers/ApiRoutes';
 import Loading from '../loading';
 import { format } from 'date-fns';
 
@@ -8,6 +8,7 @@ export default function OrderDetailsModal({ order, onClose }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(false);
     const [transaction, setTransaction] = useState(null);
+    const [products, setProducts] = useState([]);
 
     const fetchData = async () => {
         setLoading(true);
@@ -17,12 +18,27 @@ export default function OrderDetailsModal({ order, onClose }) {
             const res1 = await getPaymentsByOrderId(order.order_id);
             const transactions = res1?.data.flatMap(payment => payment?.transaction);
             setTransaction(transactions);
+            const productIds = order.order_item.map(item => item.product_id);
+            if (productIds.length > 0) {
+                fetchProducts(productIds)
+            }
         } catch (error) {
             console.error("Lỗi khi gọi API:", error);
         } finally {
             setLoading(false);
         }
     }
+
+    const fetchProducts = async (productIds) => {
+        try {
+            const res = await getProductsByListId(productIds.join(','));
+            setProducts(res.data);
+            console.log("Danh sách sản phẩm:", res.data);
+
+        } catch (error) {
+            console.error("Lỗi khi lấy danh sách sản phẩm:", error);
+        }
+    };
 
     useEffect(() => {
         console.log(order)
@@ -32,6 +48,11 @@ export default function OrderDetailsModal({ order, onClose }) {
     }, []);
 
     if (!order) return null;
+
+    const productMap = products.reduce((acc, product) => {
+        acc[product.id] = product;
+        return acc;
+    }, {});
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -59,27 +80,30 @@ export default function OrderDetailsModal({ order, onClose }) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {order?.order_item.map((item, index) => (
-                                    <tr key={index} className="border-b">
-                                        <td className="p-2">{item.product_id}</td>
-                                        <td className="p-2 text-right">{item.quantity}</td>
-                                        <td className="p-2 text-right">
-                                            {item?.price.toLocaleString("vi-VN")}đ
-                                        </td>
-                                        <td className="p-2 text-right">
-                                            {(item?.quantity * item?.price).toLocaleString("vi-VN")}đ
-                                        </td>
-                                    </tr>
-                                ))}
+                                {order?.order_item.map((item, index) => {
+                                    const product = productMap[item.product_id];
+                                    return (
+                                        <tr key={index} className="border-b">
+                                            <td className="p-2">{product?.name || 'Sản phẩm'}</td>
+                                            <td className="p-2 text-right">{item.quantity}</td>
+                                            <td className="p-2 text-right">
+                                                {item?.price.toLocaleString("vi-VN")}đ
+                                            </td>
+                                            <td className="p-2 text-right">
+                                                {(item?.quantity * item?.price).toLocaleString("vi-VN")}đ
+                                            </td>
+                                        </tr>
+                                    )
+                                })}
                             </tbody>
                         </table>
                     </div>
-                    <div className="mb-6">
+                    <div className="mb-6 flex justify-end">
                         <p className="text-md">Chi phí vận chuyển: {order?.shipping_amount.toLocaleString()}đ</p>
                         {/* {order.notes && <p className="mt-2">Ghi chú: {order.notes}</p>} */}
                     </div>
 
-                    <div className="mb-6">
+                    <div className="mb-6 flex justify-end">
                         <p className="text-lg font-semibold">Tổng Giá Trị: {order?.total_amount.toLocaleString()}đ</p>
                         {/* {order.notes && <p className="mt-2">Ghi chú: {order.notes}</p>} */}
                     </div>
@@ -96,23 +120,34 @@ export default function OrderDetailsModal({ order, onClose }) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {transaction?.map((transaction, index) => (
-                                    <tr key={index} className="border-b border-gray-200">
-                                        <td className="p-2 border border-gray-200">{transaction.transaction_id}</td>
-                                        <td className="p-2 border border-gray-200">{format(transaction.createdAt, "dd/MM/yyyy HH:mm")}</td>
-                                        <td className="p-2 text-right border border-gray-200">
-                                            {transaction.amount.toLocaleString("vi-VN")}đ
-                                        </td>
-                                        <td className="p-2 border border-gray-200">{transaction.transaction_type}</td>
-                                        <td className="p-2 text-center border border-gray-200">
-                                            {transaction.status === "SUCCESS" ? (
-                                                <span className="text-green-600 font-semibold">Hoàn tất</span>
-                                            ) : (
-                                                <span className="text-red-600 font-semibold">Thất bại</span>
-                                            )}
+                                {transaction?.length > 0 ? (
+                                    transaction.map((transaction, index) => (
+                                        <tr key={index} className="border-b border-gray-200">
+                                            <td className="p-2 border border-gray-200">{transaction.transaction_id}</td>
+                                            <td className="p-2 border border-gray-200">
+                                                {format(transaction.createdAt, "dd/MM/yyyy HH:mm")}
+                                            </td>
+                                            <td className="p-2 text-right border border-gray-200">
+                                                {transaction.amount.toLocaleString("vi-VN")}đ
+                                            </td>
+                                            <td className="p-2 border border-gray-200">{transaction.transaction_type}</td>
+                                            <td className="p-2 text-center border border-gray-200">
+                                                {transaction.status === "SUCCESS" ? (
+                                                    <span className="text-green-600 font-semibold">Hoàn tất</span>
+                                                ) : (
+                                                    <span className="text-red-600 font-semibold">Thất bại</span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="5" className="p-4 text-center text-gray-500">
+                                            Chưa có lịch sử giao dịch
                                         </td>
                                     </tr>
-                                ))}
+                                )}
+
                             </tbody>
                         </table>
                     </div>
