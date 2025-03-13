@@ -69,16 +69,11 @@ export default function Inventory() {
             toast.error("Hãy chọn kho để nhập hàng")
             return
         }
-
-
         setShowCreateOrder(true);
-
-
     };
 
 
     const handleInventory = () => {
-
 
         setShowCreateInventory(true);
     };
@@ -183,39 +178,54 @@ export default function Inventory() {
                 <div className="bg-white rounded-lg shadow-sm overflow-hidden">
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên sản phẩm</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá nhập trung bình</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tồn kho</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                            <tr className="text-center">
+                                <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider w-2/12">Hình ảnh</th>
+                                <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider w-5/12">Tên sản phẩm</th>
+                                <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider w-2/12">Giá nhập</th>
+                                <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider w-1/12">Tồn kho</th>
+                                <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider w-2/12">Hành động</th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                             {filteredProducts.map((product) => (
-                                <tr key={product.id}>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="flex items-center">
-                                            <div className="h-10 w-10 flex-shrink-0">
-                                                <img className="h-10 w-10 rounded-full object-cover" src={product.image} alt={product.name} />
-                                            </div>
-                                            <div className="ml-4">
-                                                <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                                            </div>
+                                <tr key={product.id} className="">
+                                    {/* Cột hình ảnh */}
+                                    <td className="px-4 py-4">
+                                        <div className="flex justify-center text-center">
+                                            <img className="h-16 w-16 rounded-lg object-cover" src={product.image.split(',')[0]} alt={product.name} />
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex justify-start">{getProductCost(product.id)} <FaDongSign className="ml-1" /></td>
 
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+
+                                    <td className="px-4 py-4">
+                                        <div className="text-sm font-medium text-gray-900 break-words max-w-[300px] mx-auto">
+                                            {product.name}
+                                        </div>
+                                    </td>
+
+
+                                    <td className="px-4 py-4 text-sm text-gray-500 text-center">
+                                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(getProductCost(product.id))}
+                                    </td>
+
+
+                                    <td className="px-4 py-4 text-sm text-gray-500 text-center">
+                                        {getProductStock(product.id)}
+                                    </td>
+
+
+                                    <td className="px-4 py-4 ">
                                         <button
                                             onClick={() => handleViewDetails(product)}
-                                            className="text-green-600 hover:text-green-900"
+                                            className="text-green-600 hover:text-green-900 flex items-center justify-center"
                                         >
-                                            <FaEye className="inline mr-1" /> Xem chi tiết nhập hàng
+                                            <FaEye className="inline mr-1" /> Xem chi tiết
                                         </button>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
+
                     </table>
                 </div>
 

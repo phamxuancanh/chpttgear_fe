@@ -607,7 +607,7 @@ export default function Products() {
                     />
                 </div> */}
             </div>}
-            <Box sx={{ overflowX: "auto"}}>
+            <Box sx={{ overflowX: "auto" }}>
                 <MaterialReactTable
                     columns={columns}
                     data={results?.data || []}
