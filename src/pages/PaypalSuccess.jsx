@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { getPaypalSuccess } from '../routers/ApiRoutes';
+import { getPaypalSuccess, updateTransactionStatus } from '../routers/ApiRoutes';
 import { AiOutlineCheckCircle } from 'react-icons/ai';
 
 const PaypalSuccess = () => {
@@ -11,13 +11,15 @@ const PaypalSuccess = () => {
         const orderId = query.get('orderId')
         const token = query.get('token');
         const payerId = query.get('PayerID');
+        const transaction_id = query.get('transactionId')
 
         const confirmPayment = async () => {
             if (token && payerId) {
                 try {
                     if (!paymentConfirmedRef.current) {
                         const response = await getPaypalSuccess(orderId, token, payerId);
-                        if (response.status === 200) {
+                        const res = await updateTransactionStatus(transaction_id, { status: "SUCCESS", response_message: "Payment via PayPal was successful." })
+                        if (response.status === 200 && res.status === 200) {
                             paymentConfirmedRef.current = true;
                             const redirectTimeout = setTimeout(() => {
                                 window.location.href = '/';

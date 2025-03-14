@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { getPaypalCancel } from '../routers/ApiRoutes';
+import { getPaypalCancel, updateTransactionStatus } from '../routers/ApiRoutes';
 import { AiOutlineCloseCircle } from 'react-icons/ai';
 
 const PaypalCancel = () => {
@@ -9,13 +9,15 @@ const PaypalCancel = () => {
     useEffect(() => {
         const query = new URLSearchParams(window.location.search);
         const orderId = query.get('orderId');
+        const transaction_id = query.get('transactionId')
 
         const cancelPayment = async () => {
             if (orderId) {
                 try {
                     if (!cancelConfirmedRef.current) {
                         const response = await getPaypalCancel(orderId);
-                        if (response.status === 200) {
+                        const res = await updateTransactionStatus(transaction_id, { status: "FAILED", response_message: "Payment via PayPal failed." })
+                        if (response.status === 200 && res.status === 200) {
                             cancelConfirmedRef.current = true;
                             const redirectTimeout = setTimeout(() => {
                                 window.location.href = '/';

@@ -10,6 +10,7 @@ import Loading from "../utils/Loading";
 export default function Order() {
 
     const [orders, setOrders] = useState([]);
+    const [selectedStatus, setSelectedStatus] = useState("Tất cả");
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -74,16 +75,19 @@ export default function Order() {
             console.error("Lỗi khi lấy danh sách sản phẩm:", error);
         }
     };
-
+    // 
     // Lọc và sắp xếp đơn hàng theo ngày tạo mới nhất
+    const uniqueStatuses = ["Tất cả", "PENDING", "PAID", "SHIPPED", "DELIVERED", "CANCELLED",];
+
+    // Lọc đơn hàng theo status và searchQuery
     const filteredOrders = orders
         ?.filter((order) => {
+            if (selectedStatus !== "Tất cả" && order.status !== selectedStatus) {
+                return false;
+            }
             const orderId = order?.order_id ? order.order_id.toLowerCase() : "";
             const status = order?.status ? order.status.toLowerCase() : "";
-            return (
-                orderId.includes(searchQuery.toLowerCase()) ||
-                status.includes(searchQuery.toLowerCase())
-            );
+            return orderId.includes(searchQuery.toLowerCase()) || status.includes(searchQuery.toLowerCase());
         })
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
@@ -118,6 +122,12 @@ export default function Order() {
         return acc;
     }, {});
 
+    const orderCounts = orders.reduce((acc, order) => {
+        acc[order.status] = (acc[order.status] || 0) + 1;
+        return acc;
+    }, {});
+
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
             {loading && <Loading />}
@@ -135,6 +145,29 @@ export default function Order() {
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
+                </div>
+
+                <div className="flex space-x-4 border-b pb-2">
+                    {uniqueStatuses.map((status) => {
+                        const count = orderCounts[status] ?? 0;
+                        return (
+                            <button
+                                key={status}
+                                onClick={() => setSelectedStatus(status)}
+                                className={`px-4 py-2 rounded-t-lg border-b-2 transition-colors duration-200 ${selectedStatus === status
+                                    ? "border-orange-600 text-orange-600 font-semibold"
+                                    : "border-transparent text-gray-600 hover:text-orange-600"
+                                    }`}
+                            >
+                                {statusMap[status] ?? status}
+                                {count > 0 && (
+                                    <span className="ml-2 text-md font-semibold text-orange-600">
+                                        ({count})
+                                    </span>
+                                )}
+                            </button>
+                        )
+                    })}
                 </div>
 
                 {/* Orders List */}
@@ -171,9 +204,6 @@ export default function Order() {
 
                                             </div>
                                         </div>
-
-                                        {/* Order Date & Delivery Date */}
-
 
                                         {/* Danh sách sản phẩm */}
                                         <div className="mt-6 space-y-6">
