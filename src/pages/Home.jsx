@@ -37,14 +37,17 @@ import TYPE17 from "../assets/type17.webp"
 import ProductCarousel from "../components/ProductCarousel";
 import { useCategory } from "../context/CategoryContext";
 import MenuModal from "../components/Modal/MenuModal";
+import { useDispatch, useSelector } from "react-redux";
+import { setStockInsInInventory, setStockOutsInInventory } from "../redux/inventorySlice";
 
 
 
 export default function Home() {
     const { isCategoryOpen, setIsCategoryOpen } = useCategory();
     const navigate = useNavigate();
-    const [stockIns, setStockIns] = useState([])
-    const [stockOuts, setStockOuts] = useState([])
+    const stockIns = useSelector(state => state.inventory.stockIns)
+    const stockOuts = useSelector(state => state.inventory.stockOuts)
+    const dispatch = useDispatch()
     const categories = [
         { name: "LAPTOP", name_vi: "Laptop", img: TYPE1 },
         { name: "SCREEN", name_vi: "Màn hình", img: TYPE3 },
@@ -98,8 +101,9 @@ export default function Home() {
 
                 ]);
                 setProducts(allProductWithCategory.data);
-                setStockOuts(stockOuts)
-                setStockIns(stockIns)
+                dispatch(setStockInsInInventory(stockIns || []))
+                dispatch(setStockOutsInInventory(stockOuts || []))
+
             } catch (error) {
                 console.error("Error fetching inventory:", error);
             } finally {

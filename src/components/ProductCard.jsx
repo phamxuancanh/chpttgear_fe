@@ -7,6 +7,8 @@ import { setCartItemsRedux, increaseQuantityItem, setSelectedItemsRedux } from "
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { useModal } from "../context/ModalProvider";
+import SOLD_OUT_TAG from "../assets/sold-out_tag.png"
+
 
 
 export default function ProductCard({ product }) {
@@ -16,10 +18,11 @@ export default function ProductCard({ product }) {
     const cartItems = useSelector(state => state.shoppingCart.items);
     const { openModal } = useModal();
     const selectedItems = useSelector(state => state.shoppingCart.selectItems);
+    const stockInsInInventory = useSelector(state => state.inventory.stockIns)
+    const stockOutsInInventory = useSelector(state => state.inventory.stockOuts)
 
     const handlerAddToCart = async ({ product }) => {
-        console.log(product)
-        console.log(cartItems)
+
         const item = cartItems.find(item => item.productId === product.id);
         if (item) {
             const updatedItems = selectedItems.map(i =>
@@ -31,7 +34,7 @@ export default function ProductCard({ product }) {
             // dispatch(setSelectedItemsRedux({ selectItems: updatedItems }));
             try {
                 const updateItemResponse = await updateQuantityCartItem(item.itemId, item.quantity + 1);
-                console.log(updateItemResponse)
+
                 if (updateItemResponse.data) {
                     dispatch(increaseQuantityItem({ itemId: item.itemId }));
                     openModal("Sản phẩm đã được thêm vào Giỏ hàng!");
@@ -49,10 +52,8 @@ export default function ProductCard({ product }) {
                 quantity: 1,
                 cart: cart
             };
-            console.log("newCartItem:", newCartItem);
 
             const createItemResponse = await createCartItem(newCartItem);
-            console.log("createItemResponse:", createItemResponse);
 
             if (createItemResponse.status === 201 && createItemResponse.data) {
 
@@ -71,7 +72,7 @@ export default function ProductCard({ product }) {
 
                 openModal("Sản phẩm đã được thêm vào Giỏ hàng!");
             } else {
-                console.log("Lỗi khi thêm sản phẩm");
+
                 toast.error("Lỗi khi thêm sản phẩm vào giỏ hàng");
             }
         } catch (error) {
@@ -81,8 +82,24 @@ export default function ProductCard({ product }) {
 
     };
 
+
+    const getProductStock = (productId) => {
+        const stockIn = stockInsInInventory
+            .filter(item => item.product_id === productId)
+            .reduce((acc, item) => acc + item.quantity, 0);
+
+        const stockOut = stockOutsInInventory
+            .filter(item => item.product_id === productId)
+            .reduce((acc, item) => acc + item.quantity, 0);
+
+        return stockIn - stockOut;
+    };
+
     return (
-        <div className="bg-card rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105 flex flex-col h-[60vh] mb-4">
+        <div className="bg-card rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105 flex flex-col h-[60vh] mb-4 relative">
+            {getProductStock(product.id) <= 0 && <div className="absolute top-2 left-2 w-14 h-14">
+                <img src={SOLD_OUT_TAG} alt="Sold Out" className="w-full h-full object-contain" />
+            </div>}
             <Link to={`/product/${product.id}`}>
                 <div className="flex justify-center items-center h-[20vh]">
                     <img
@@ -135,12 +152,22 @@ export default function ProductCard({ product }) {
 
             {/* Nút Thêm vào giỏ hàng - luôn nằm dưới */}
             <div className="p-4">
-                <button className="w-full py-2 px-4 rounded-md hover:bg-gray-400 transition-colors duration-300 flex items-center justify-center gap-2 h-[5vh]"
-                    onClick={() => handlerAddToCart({ product })}
-                >
-                    <FiShoppingCart />
-                    Thêm vào giỏ hàng
-                </button>
+
+                {getProductStock(product.id) > 0 ?
+                    <button className="w-full py-2 px-4 rounded-md hover:bg-gray-400 transition-colors duration-300 flex items-center justify-center gap-2 h-[5vh]"
+                        onClick={() => handlerAddToCart({ product })}
+                    >
+                        <FiShoppingCart />
+                        Thêm vào giỏ hàng
+                    </button>
+                    :
+                    <button
+                        className="w-full py-2 px-4 rounded-md bg-red-400 transition-colors duration-300 flex items-center justify-center gap-2 h-[5vh]"
+                        disabled={true}
+                    >
+
+                        <span className="text-white">Đã hết hàng</span>
+                    </button>}
             </div>
 
         </div >

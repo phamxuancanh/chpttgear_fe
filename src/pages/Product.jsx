@@ -6,6 +6,7 @@ import { findAllCategory, getAllProduct, getAllProductWithCategory, getAllStockI
 import { FaDongSign } from "react-icons/fa6";
 import BANNER1 from "../assets/banner1.webp"
 import Loading from "../utils/Loading";
+import { useSelector } from "react-redux";
 
 export default function Product() {
     const [searchParams] = useSearchParams();
@@ -23,8 +24,8 @@ export default function Product() {
     const [maxPrice, setMaxPrice] = useState(0);
     const [priceRange, setPriceRange] = useState(0); // Đặt 0 ban đầu để tránh lỗi
     const [loading, setLoading] = useState(false)
-    const [stockIns, setStockIns] = useState([])
-    const [stockOuts, setStockOuts] = useState([])
+    const stockInsInInventory = useSelector(state => state.inventory.stockIns)
+    const stockOutsInInventory = useSelector(state => state.inventory.stockOuts)
 
     useEffect(() => {
         const updateCategories = async () => {
@@ -34,7 +35,6 @@ export default function Product() {
                 await new Promise(resolve => setTimeout(resolve, 700)); // Chờ 500ms
 
                 setSelectedCategories(categoriesFromURL);
-                console.log("Đã cập nhật selectedCategories:", categoriesFromURL);
                 setLoading(false)
             } else {
                 setSelectedCategories([]);
@@ -49,18 +49,14 @@ export default function Product() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [allCategory, allProductWithCategory, stockIns, stockOuts] = await Promise.all([
+                const [allCategory, allProductWithCategory] = await Promise.all([
                     findAllCategory(),
                     getAllProductWithCategory(),
-                    getAllStockIn(),
-                    getAllStockOut()
 
                 ]);
 
                 setCategories(allCategory.data);
                 setProducts(allProductWithCategory.data);
-                setStockOuts(stockOuts)
-                setStockIns(stockIns)
                 // Tìm giá lớn nhất trong danh sách sản phẩm
                 const highestPrice = Math.max(...allProductWithCategory.data.map(product => product.price), 0);
                 // Cập nhật maxPrice và priceRange
@@ -85,11 +81,11 @@ export default function Product() {
     }, [maxPrice]);
 
     const getProductStock = (productId) => {
-        const stockIn = stockIns
+        const stockIn = stockInsInInventory
             .filter(item => item.product_id === productId)
             .reduce((acc, item) => acc + item.quantity, 0);
 
-        const stockOut = stockOuts
+        const stockOut = stockOutsInInventory
             .filter(item => item.product_id === productId)
             .reduce((acc, item) => acc + item.quantity, 0);
 
@@ -105,9 +101,6 @@ export default function Product() {
             );
         }
 
-        // Lọc sản phẩm có quantityInStock > 0
-        filtered = filtered.filter(product => getProductStock(product.id) > 0);
-
         if (selectedCategories.length > 0) {
             filtered = filtered.filter(product =>
                 selectedCategories.includes(product.category_type)
@@ -116,16 +109,16 @@ export default function Product() {
 
         filtered = filtered.filter(product => product.price <= priceRange);
 
+        // Sắp xếp theo số lượng từ lớn đến bé
+        filtered.sort((a, b) => getProductStock(b.id) - getProductStock(a.id));
 
-
-        console.log(filtered);
         setFilteredProducts(filtered);
         setCurrentPage(1);
-    }, [searchQuery, selectedCategories, priceRange]);
+    }, [searchQuery, selectedCategories, priceRange, products]);
+
 
 
     const handleCategoryToggle = (category) => {
-        console.log(category)
         setSelectedCategories((prev) =>
             prev.includes(category)
                 ? prev.filter((c) => c !== category)
