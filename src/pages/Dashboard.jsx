@@ -13,11 +13,14 @@ import { toast } from "react-toastify";
 import ROUTES from "../constants/Page";
 import Chats from "../components/Dashboard/Chats";
 import Loading from "../utils/Loading";
+import { useDispatch } from "react-redux";
+import { setAllProductsInInventory } from "../redux/inventorySlice";
 
 export default function Dashboard() {
     const [activeTab, setActiveTab] = useState("analysis");
     const [loading, setLoading] = useState(false)
     const navigate = useNavigate();
+    const dispatch = useDispatch()
 
     const logout = async () => {
         try {
@@ -45,7 +48,10 @@ export default function Dashboard() {
 
     const NavItem = ({ icon: Icon, text, tabName }) => (
         <button
-            onClick={() => setActiveTab(tabName)}
+            onClick={() => {
+                setActiveTab(tabName)
+                dispatch(setAllProductsInInventory([]))
+            }}
             className={`flex items-center w-full p-3 mb-2 rounded-lg transition-colors ${activeTab === tabName ? "bg-blue-600 text-white" : "hover:bg-gray-100"
                 }`}
         >

@@ -4,6 +4,8 @@ import provinceData from "../../assets/address/province.json"
 import Select from "react-select";
 import { toast } from "react-toastify";
 import { createInventory } from "../../routers/ApiRoutes";
+import { useDispatch } from "react-redux";
+import { addInventory, setAllInventory } from "../../redux/inventorySlice";
 
 export default function AddInventoryModal({ setShowCreateInventory }) {
     const [selectedProvince, setSelectedProvince] = useState({});
@@ -15,6 +17,7 @@ export default function AddInventoryModal({ setShowCreateInventory }) {
     const [formData, setFormData] = useState()
     const [name, setName] = useState(null)
     const [loading, setLoading] = useState(false)
+    const dispatch = useDispatch()
 
     useEffect(() => {
         const provinces = provinceData.map((province) => ({
@@ -129,6 +132,7 @@ export default function AddInventoryModal({ setShowCreateInventory }) {
             toast.success("Tạo kho mới thành công")
             setLoading(false)
             setShowCreateInventory(false)
+            dispatch(addInventory({ inventory: res.data }));
 
         } catch (error) {
             console.error("Error while creating inventory:", error);

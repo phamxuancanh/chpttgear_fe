@@ -6,6 +6,8 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import { createStockIn, getAllProduct, increaseQuantity } from "../../routers/ApiRoutes";
 import Loading from "../../utils/Loading";
+import { addProductsToInventory, upadteSelectedInventoryQuantity, updateQuantityByInventory, updateStockIn } from "../../redux/inventorySlice";
+import { useDispatch } from "react-redux";
 
 export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory }) {
     const [searchTerm, setSearchTerm] = useState("");
@@ -17,6 +19,8 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
     const [products, setProducts] = useState([]);
     const [loading1, setLoading1] = useState(false);
     const [loading2, setLoading2] = useState(false);
+    const dispatch = useDispatch()
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -36,39 +40,26 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
         fetchData();
     }, []);
 
-    const debouncedSearch = debounce((term) => {
-        setLoading(true);
-        try {
-            const filtered = products.filter(product =>
-                product.name.toLowerCase().includes(term.toLowerCase())
-            );
-            setProducts(filtered);
-        } catch (err) {
-            setError("Có lỗi khi tìm kiếm sản phẩm");
-        } finally {
-            setLoading(false);
-        }
-    }, 200);
-
-    useEffect(() => {
-        debouncedSearch(searchTerm);
-        return () => debouncedSearch.cancel();
-    }, [searchTerm]);
+    const filteredProducts = products.filter(
+        (product) =>
+            product.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     const handleSelectAll = (e) => {
         if (e.target.checked) {
-            setSelectedProducts(products.map(p => p.id));
-            console.log(products)
+            setSelectedProducts(filteredProducts.map(p => p.id));
+
         } else {
             setSelectedProducts([]);
         }
     };
 
     const handleSelectProduct = (id) => {
+        console.log(id);
         setSelectedProducts(prevSelected =>
             prevSelected.includes(id)
-                ? prevSelected.filter(id => id !== id)
-                : [...prevSelected, id]
+                ? prevSelected.filter(selectedId => selectedId !== id) // Loại bỏ id đã chọn
+                : [...prevSelected, id] // Thêm id nếu chưa có
         );
     };
 
@@ -99,12 +90,12 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
         }
 
 
-
+        let productList = []
         for (let product_id of selectedProducts) {
             try {
                 const quantity = quantities[product_id] || 0;
                 const price = prices[product_id] ?? products.find(p => p.id === product_id)?.price ?? 0; // Đảm bảo có giá trị
-                console.log(price)
+
                 if (quantity <= 0) {
                     toast.error(`Hãy nhập số lượng sản phẩm `);
                     return;
@@ -120,21 +111,33 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
                     price: price,
                     inventory_id: inventory?.inventory_id
                 });
-                console.log('Stock-in successful:', stockInRes.data);
+                const product = products.find(p => p.id === product_id);
+                console.log(product)
+                if (product) {
+                    productList.push(product);
+                }
 
+                dispatch(updateStockIn(stockInRes.data));
                 // Gọi API increase quantity
                 const increaseQuantityRes = await increaseQuantity(inventory?.inventory_id, quantity)
-                console.log('Stock quantity increased successfully:', increaseQuantityRes.data);
+
+                dispatch(updateQuantityByInventory({
+                    inventory_id: inventory?.inventory_id,
+                    quantity: quantity
+                }));
+                dispatch(upadteSelectedInventoryQuantity(quantity));
+
                 setLoading2(false)
             } catch (error) {
-                console.error("Error while creating order:", error);
+
                 toast.error("Có lỗi xảy ra khi tạo đơn nhập hàng");
                 return; // Dừng hàm nếu có lỗi xảy ra trong vòng lặp
             } finally {
                 setLoading2(false)
             }
         }
-
+        console.log(productList)
+        dispatch(addProductsToInventory({ products: productList }));
         setShowCreateOrder(false);
         toast.success("Tạo đơn nhập hàng thành công");
     };
@@ -209,7 +212,7 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
                                 <div className="p-8 text-center text-gray-500">Không tìm thấy sản phẩm</div>
                             ) : (
                                 <div>
-                                    {products.map((product) => (
+                                    {filteredProducts.map((product) => (
                                         <div
                                             key={product.id}
                                             className="flex items-center p-4 hover:bg-gray-50 border-b border-gray-200"
