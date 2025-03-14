@@ -7,7 +7,8 @@ import { BiSolidCommentEdit } from "react-icons/bi";
 import { useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { login } from "../redux/authSlice";
-import { findProductById, findSpecificationsByProductId, getQuantityInStock, getStockInByProductId, getStockOutByProductId } from "../routers/ApiRoutes";
+import { findProductById, findSpecificationsByProductId, getQuantityInStock, getStockInByProductId, getStockOutByProductId, createCartItem, updateQuantityCartItem } from "../routers/ApiRoutes";
+import { setCartItemsRedux, increaseQuantityItem, setSelectedItemsRedux } from "../redux/cartSlice";
 import { FaDongSign, FaCashRegister } from "react-icons/fa6";
 import Loading from "../utils/Loading";
 import { FiShoppingCart } from "react-icons/fi";
@@ -27,6 +28,8 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Navigation } from "swiper/modules";
 import translationMap from "../assets/Menu/translate.json";
+import { toast } from "react-toastify";
+import { useModal } from "../context/ModalProvider";
 
 export default function ProductDetail() {
     const [userRating, setUserRating] = useState(0);
@@ -46,6 +49,10 @@ export default function ProductDetail() {
     const API_URL = process.env.REACT_APP_API_URL;
 
     const dispatch = useDispatch();
+    const cart = useSelector(state => state.shoppingCart.cart);
+    const cartItems = useSelector(state => state.shoppingCart.items);
+    const selectedItems = useSelector(state => state.shoppingCart.selectItems);
+    const { openModal } = useModal();
     const user_id = useSelector((state) => {
         console.log("Redux state:", state);
         return state.auth.user.id;
@@ -249,6 +256,57 @@ export default function ProductDetail() {
         return distribution;
     };
 
+    const handlerAddToCart = async ({ product }) => {
+        const item = cartItems.find(item => item.productId === product.id);
+        if (item) {
+            const updatedItems = selectedItems.map(i =>
+                i.itemId === item.itemId ? { ...i, quantity: i.quantity + 1 } : i
+            );
+            if (!selectedItems.some(i => i.itemId === item.itemId)) {
+                updatedItems.push({ ...item, quantity: 1 });
+            }
+            // dispatch(setSelectedItemsRedux({ selectItems: updatedItems }));
+            try {
+                const updateItemResponse = await updateQuantityCartItem(item.itemId, item.quantity + 1);
+                if (updateItemResponse.data) {
+                    dispatch(increaseQuantityItem({ itemId: item.itemId }));
+                    openModal("Sản phẩm đã được thêm vào Giỏ hàng!");
+                } else {
+                    toast.error("Lỗi khi thêm sản phẩm vào giỏ hàng");
+                }
+            } catch (error) {
+                toast.error("Lỗi khi thêm sản phẩm vào giỏ hàng");
+            }
+            return;
+        }
+        try {
+            const newCartItem = {
+                productId: product.id,
+                quantity: 1,
+                cart: cart
+            };
+            const createItemResponse = await createCartItem(newCartItem);
+            if (createItemResponse.status === 201 && createItemResponse.data) {
+                const newItem = {
+                    itemId: createItemResponse.data.id,
+                    productId: createItemResponse.data.productId,
+                    name: product.name,
+                    price: product.price,
+                    quantity: createItemResponse.data.quantity,
+                    image: product.image
+                };
+                const updatedCartItems = cartItems ? [...cartItems, newItem] : [newItem];
+                dispatch(setCartItemsRedux({ items: updatedCartItems }));
+                openModal("Sản phẩm đã được thêm vào Giỏ hàng!");
+            } else {
+                toast.error("Lỗi khi thêm sản phẩm vào giỏ hàng");
+            }
+        } catch (error) {
+            console.error("Lỗi trong quá trình thêm sản phẩm:", error);
+            toast.error("Lỗi khi thêm sản phẩm vào giỏ hàng");
+        }
+    };
+
     return (
 
         <div className="min-h-screen bg-gray-50 -mt-20">
@@ -336,7 +394,9 @@ export default function ProductDetail() {
                         {/* Thêm vào giỏ hàng Section */}
                         <div className="flex items-center space-x-4 mb-6">
 
-                            <button className={`gap-2 flex items-center justify-center ${quantityInStock == 0 ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"} text-white px-6 py-2 rounded-md  transition-colors`} disabled={quantityInStock == 0}>
+                            <button className={`gap-2 flex items-center justify-center ${quantityInStock == 0 ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"} text-white px-6 py-2 rounded-md  transition-colors`} disabled={quantityInStock == 0}
+                                onClick={() => handlerAddToCart({ product })}
+                            >
                                 <FiShoppingCart />
                                 Thêm vào giỏ hàng
                             </button>

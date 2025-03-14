@@ -3,7 +3,7 @@ import { FcGoogle } from "react-icons/fc";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import LOGO from "../assets/logo.png"
 import { Link, useNavigate } from "react-router-dom";
-import { googleSignIn, signIn } from "../routers/ApiRoutes";
+import { googleSignIn, signIn, createCart, findCartByUserId } from "../routers/ApiRoutes";
 import { setToLocalStorage } from "../utils/functions";
 import { toast } from "react-toastify";
 import ROUTES from '../constants/Page';
@@ -91,7 +91,15 @@ export default function Login() {
                 const { accessToken, currentUser } = result;
                 let userRole = currentUser?.key;
                 let data;
-    
+                const cartExists = await findCartByUserId(currentUser.id);
+                if (cartExists.data.id) {
+                    console.log("Cart exists", cartExists.data);
+                } else {
+                    const responseCart = await createCart(currentUser.id);
+                    if (responseCart.status === 200) {
+                        console.log("Create cart successfully");
+                    }
+                }
                 if (userRole) {
                     try {
                         const decrypted = CryptoJS.AES.decrypt(
