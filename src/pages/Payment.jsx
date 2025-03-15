@@ -4,7 +4,7 @@ import { TbTruckDelivery } from "react-icons/tb";
 import { Link, useNavigate } from "react-router-dom";
 import provinceData from "../assets/address/province.json";
 import { useDispatch, useSelector } from "react-redux";
-import { calculateShippingFee, createOrder, createOrderItem, createPayment, editUserById } from "../routers/ApiRoutes";
+import { calculateShippingFee, createOrder, createOrderItem, createPayment, createTransaction, editUserById } from "../routers/ApiRoutes";
 import Loading from "../utils/Loading";
 import AddressModal from "../components/Modal/AddressModal";
 import { useModal } from "../context/ModalProvider";
@@ -297,6 +297,25 @@ export default function Payment() {
 
         if (formData.paymentMethod === "PAYPAL") {
           if (approvalUrl) {
+            // const paymentData = {
+            //   order_id: orderId,
+            //   user_id: userFromRedux.id,
+            //   payment_method: "PAYPAL",
+            //   amount: totalAmountVnd
+            // }
+            // const res = await createPayment(paymentData);
+            // const data = res.data;
+            // console.log(res.data);
+            // const transactionData = {
+            //   payment_id: data.payment_id,
+            //   user_id: userFromRedux.id,
+            //   transaction_type: "DEBIT",
+            //   amount: totalAmountVnd,
+            //   status: "INIT"
+            // }
+            // const res1 = await createTransaction(transactionData);
+            // console.log(res1.data)
+
             window.location.href = approvalUrl;
             return;
           } else {

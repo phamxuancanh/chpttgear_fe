@@ -494,39 +494,39 @@ export const deletePayment = async (paymentId) => {
 };
 
 export const createTransaction = async (transactionData) => {
-    return await requestWithJwt.post('/transactions', transactionData);
+    return await requestWithJwt.post('/payments/transactions', transactionData);
 };
 
 export const getTransactionById = async (transactionId) => {
-    return await requestWithJwt.get(`/transactions/${transactionId}`);
+    return await requestWithJwt.get(`/payments/transactions/${transactionId}`);
 };
 
 export const getTransactionsByPaymentId = async (paymentId) => {
-    return await requestWithJwt.get(`/transactions/payment/${paymentId}`);
+    return await requestWithJwt.get(`/payments/transactions/payment/${paymentId}`);
 };
 
 export const updateTransactionStatus = async (transactionId, statusData) => {
-    return await requestWithJwt.put(`/transactions/${transactionId}/status`, statusData);
+    return await requestWithJwt.put(`/payments/transactions/${transactionId}/status`, statusData);
 };
 
 export const handlePaymentGatewayResponse = async (responseData) => {
-    return await requestWithJwt.post('/transactions/payment-response', responseData);
+    return await requestWithJwt.post('/payments/transactions/payment-response', responseData);
 };
 
 export const createRefund = async (refundData) => {
-    return await requestWithJwt.post('/refunds', refundData);
+    return await requestWithJwt.post('/payments/refunds', refundData);
 };
 
 export const getRefundById = async (refundId) => {
-    return await requestWithJwt.get(`/refunds/${refundId}`);
+    return await requestWithJwt.get(`/payments/refunds/${refundId}`);
 };
 
 export const getRefundsByPayment = async (paymentId) => {
-    return await requestWithJwt.get(`/refunds/payment/${paymentId}`);
+    return await requestWithJwt.get(`/payments/refunds/payment/${paymentId}`);
 };
 
 export const updateRefundStatus = async (refundId, statusData) => {
-    return await requestWithJwt.put(`/refunds/${refundId}/status`, statusData);
+    return await requestWithJwt.put(`/payments/refunds/${refundId}/status`, statusData);
 };
 
 // shippingService
