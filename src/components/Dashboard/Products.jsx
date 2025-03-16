@@ -41,6 +41,7 @@ export default function Products() {
         { key: "yellow", value: "Vàng" },
         { key: "purple", value: "Tím" },
         { key: "gray", value: "Xám" },
+
         { key: "brown", value: "Nâu" },
         { key: "pink", value: "Hồng" },
         { key: "orange", value: "Cam" }
@@ -332,14 +333,16 @@ export default function Products() {
         () => [
             {
                 header: "STT",
-                size: 50,
+                enableColumnResizing: false,
+                size: 100,
                 Cell: ({ row }) => row.index + 1,
-                grow: true,
-
+                grow: false
             },
             {
                 accessorKey: "image",
                 header: "Hình ảnh",
+                enableSorting: false,
+                enableColumnResizing: false,
                 Cell: ({ cell }) => (
                     <img
                         src={cell.getValue()?.split(",")[0] || "/placeholder.png"}
@@ -347,13 +350,13 @@ export default function Products() {
                         className="w-16 h-16 object-cover rounded-md"
                     />
                 ),
-                size: 80,
-                grow: true,
+                size: 160,
+                grow: false
             },
             {
                 accessorKey: "name",
+                enableSorting: false,
                 header: "Tên sản phẩm",
-                size: 250,
                 Cell: ({ cell }) => (
                     <Tooltip title={cell.getValue()} arrow>
                         <Box sx={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -361,29 +364,35 @@ export default function Products() {
                         </Box>
                     </Tooltip>
                 ),
-                grow: true,
-
+                grow: 1,
+                size: 180
             },
             {
                 accessorKey: "brand",
+                enableSorting: false,
                 header: "Thương hiệu",
-                size: 120,
-                grow: true,
-
+                grow: 1,
+                size: 150
             },
             {
                 accessorKey: "category.name_Vi",
+                enableSorting: false,
                 header: "Danh mục",
-                size: 150,
-                grow: true,
-
+                grow: 1,
+                size: 120
             },
             {
                 accessorKey: "color",
+                enableSorting: false,
                 header: "Màu sắc",
-                size: 100,
-                grow: true,
-
+                Cell: ({ cell }) => {
+                    const colorData = cell.getValue();
+                    const colorKey = typeof colorData === "string" ? colorData : colorData?.key;
+                    const colorObj = colors.find(c => c.key === colorKey);
+                    return colorObj ? colorObj.value : colorKey;
+                },
+                grow: 1,
+                size: 100
             },
             {
                 accessorKey: "price",
@@ -393,30 +402,26 @@ export default function Products() {
                         {cell.getValue()?.toLocaleString("en-US")} <FaDongSign />
                     </Box>
                 ),
-                size: 120,
-                grow: true,
-
-            },
-            {
-                accessorKey: "size",
-                header: "Kích thước",
-                size: 100,
-                grow: true,
-
-            },
-            {
-                accessorKey: "weight",
-                header: "Trọng lượng (g)",
-                size: 120,
-                grow: true,
-
+                grow: 1,
+                size: 100
             },
             {
                 accessorKey: "guaranteePeriod",
-                header: "Bảo hành (tháng)",
-                size: 120,
-                grow: true,
-
+                enableSorting: false,
+                header: "Bảo hành",
+                Cell: ({ cell }) => {
+                    const value = cell.getValue();
+                    return value ? `${value} tháng` : "Không có bảo hành";
+                },
+                grow: 1,
+                size: 100,
+            },
+            {
+                accessorKey: "quantityInStock",
+                enableSorting: false,
+                header: "Tồn kho",
+                grow: 1,
+                size: 100
             },
             {
                 accessorKey: "actions",
@@ -434,10 +439,12 @@ export default function Products() {
                     </Button>
                 ),
                 size: 150,
-            },
+                grow: false
+            }
         ],
         [results]
     );
+    
     return (
         <div className="flex-1 p-8">
             {loading ? <Loading /> : <div>
@@ -560,52 +567,6 @@ export default function Products() {
                         </div>
                     </div>
                 </div>
-                {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {results?.data
-                        ?.slice()
-                        .sort((a, b) => {
-                            const dateA = a.modifiedDate ? Date.parse(a.modifiedDate) : 0;
-                            const dateB = b.modifiedDate ? Date.parse(b.modifiedDate) : 0;
-                            return dateB - dateA;
-                        })
-                        .map((product) => (
-                            <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-                                <img
-                                    src={product.image ? product.image.split(",")[0] : imageTemp}
-                                    alt={product.name}
-                                    className="w-full h-48 object-cover"
-                                />
-                                <div className="p-4">
-                                    <h3 className="text-lg font-semibold">{product.name}</h3>
-                                    <div className="flex justify-between items-center mt-4">
-                                        <div className="flex justify-start text-blue-600 font-bold">
-                                            <span className=" mr-1">
-                                                {product.price.toLocaleString('en-US')}
-                                            </span>
-                                            <FaDongSign />
-                                        </div>
-                                        <span className="text-gray-500">Số lượng tồn: {quantityInStock}</span>
-                                    </div>
-                                    <div className="mt-4 flex justify-end">
-                                        <ActionButton
-                                            icon={FiEdit}
-                                            color="bg-blue-500"
-                                            onClick={() => handleActionButton(product.id)}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                </div>
-                <div className="flex justify-center">
-                    <CustomPagination
-                        count={totalPage}
-                        page={page}
-                        onChange={(_, page) => handleChangeResultPagination(page)}
-                        boundaryCount={1}
-                        siblingCount={1}
-                    />
-                </div> */}
             </div>}
             <Box sx={{ overflowX: "auto" }}>
                 <MaterialReactTable

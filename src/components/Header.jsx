@@ -345,11 +345,12 @@ export default function Header() {
                                         <FiSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
 
                                         {suggestions?.length > 0 && (
-                                            <ul className="absolute left-0 top-full mt-1 bg-white border border-gray-300 w-full max-h-96 overflow-y-auto z-50 shadow-2xl rounded-b-lg">
+                                            // <ul className="absolute left-0 top-full mt-1 bg-white border border-gray-300 w-full max-h-96 overflow-y-auto z-50 shadow-2xl rounded-b-lg">
+                                            <ul className="absolute left-0 top-full mt-1 bg-white border border-gray-300 max-h-96 min-w-[500px] max-w-[500px] overflow-y-auto z-50 shadow-2xl rounded-b-lg">
                                                 {suggestions.map((suggestion) => (
                                                     <li
                                                         key={suggestion.id}
-                                                        className="p-2 hover:bg-gray-100 hover:font-bold cursor-pointer"
+                                                        className="p-2 hover:bg-gray-100 hover:font-bold cursor-pointer truncate"
                                                         onClick={() => setSearchTerm(suggestion.name)}
                                                     >
                                                         {suggestion.name}
