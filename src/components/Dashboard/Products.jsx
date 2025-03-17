@@ -366,20 +366,20 @@ export default function Products() {
                 grow: 1,
                 size: 180
             },
-            {
-                accessorKey: "brand",
-                enableSorting: false,
-                header: "Thương hiệu",
-                grow: 1,
-                size: 150
-            },
-            {
-                accessorKey: "category.name_Vi",
-                enableSorting: false,
-                header: "Danh mục",
-                grow: 1,
-                size: 120
-            },
+            // {
+            //     accessorKey: "brand",
+            //     enableSorting: false,
+            //     header: "Thương hiệu",
+            //     grow: 1,
+            //     size: 150
+            // },
+            // {
+            //     accessorKey: "category.name_Vi",
+            //     enableSorting: false,
+            //     header: "Danh mục",
+            //     grow: 1,
+            //     size: 120
+            // },
             {
                 accessorKey: "color",
                 enableSorting: false,
@@ -404,17 +404,17 @@ export default function Products() {
                 grow: 1,
                 size: 100
             },
-            {
-                accessorKey: "guaranteePeriod",
-                enableSorting: false,
-                header: "Bảo hành",
-                Cell: ({ cell }) => {
-                    const value = cell.getValue();
-                    return value ? `${value} tháng` : "Không có bảo hành";
-                },
-                grow: 1,
-                size: 100,
-            },
+            // {
+            //     accessorKey: "guaranteePeriod",
+            //     enableSorting: false,
+            //     header: "Bảo hành",
+            //     Cell: ({ cell }) => {
+            //         const value = cell.getValue();
+            //         return value ? `${value} tháng` : "Không có bảo hành";
+            //     },
+            //     grow: 1,
+            //     size: 100,
+            // },
             {
                 accessorKey: "quantityInStock",
                 enableSorting: false,

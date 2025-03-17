@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useRef, useState } from "react";
 import { FaArrowLeft, FaArrowRight, FaStar, FaStarHalfAlt } from "react-icons/fa";
 import ProductCard from "../components/ProductCard";
@@ -7,7 +8,7 @@ import { BiSolidCommentEdit } from "react-icons/bi";
 import { useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { login } from "../redux/authSlice";
-import { findProductById, findSpecificationsByProductId, getQuantityInStock, getStockInByProductId, getStockOutByProductId, createCartItem, updateQuantityCartItem, getRatingById, postReview } from "../routers/ApiRoutes";
+import { findProductById, findSpecificationsByProductId, getQuantityInStock, getStockInByProductId, getStockOutByProductId, createCartItem, updateQuantityCartItem, getRatingById, postReview, getSimilarProducts } from "../routers/ApiRoutes";
 import { setCartItemsRedux, increaseQuantityItem, setSelectedItemsRedux } from "../redux/cartSlice";
 import { FaDongSign, FaCashRegister } from "react-icons/fa6";
 import Loading from "../utils/Loading";
@@ -184,43 +185,23 @@ export default function ProductDetail() {
     };
 
     // Added similar products data
-    const similarProducts = [
-        {
-            id: 1,
-            name: "NVIDIA GeForce RTX 4080",
-            price: 1199.99,
-            rating: 4.7,
-            image: "https://images.unsplash.com/photo-1587202372774-3c678030ef4f"
-        },
-        {
-            id: 2,
-            name: "NVIDIA GeForce RTX 4070",
-            price: 999.99,
-            rating: 4.6,
-            image: "https://images.unsplash.com/photo-1587202372162-638fa6e4e327"
-        },
-        {
-            id: 3,
-            name: "NVIDIA GeForce RTX 3090",
-            price: 1299.99,
-            rating: 4.9,
-            image: "https://images.unsplash.com/photo-1587202372599-36e756f1a00e"
-        },
-        {
-            id: 3,
-            name: "NVIDIA GeForce RTX 3090",
-            price: 1299.99,
-            rating: 4.9,
-            image: "https://images.unsplash.com/photo-1587202372599-36e756f1a00e"
-        },
-        {
-            id: 3,
-            name: "NVIDIA GeForce RTX 3090",
-            price: 1299.99,
-            rating: 4.9,
-            image: "https://images.unsplash.com/photo-1587202372599-36e756f1a00e"
-        }
-    ];
+    const [similarProducts, setSimilarProducts] = useState([]);
+
+    useEffect(() => {
+        const fetchDataSimilarProducts = async () => {
+            try {
+                const response = await getSimilarProducts(id);
+                console.log("Similar products response:", response);
+                if (response.data) {
+                    setSimilarProducts(response.data);
+                }
+            } catch (error) {
+                console.error("Error fetching similar products:", error);
+            }
+        };
+        fetchDataSimilarProducts();
+    }, [id]);
+    
     const ratings = [
         { product_id: 4090, user: "John Doe", score: 2, comment: "được tặng 2 thanh ram là có lắp vô máy chưa ad, nếu mua thêm ổ cứng ssd thì có gắn vô dùm không? hay phải tự mình gắn, còn cài win nữa?", date: "2024-01-15" },
         { product_id: 4090, user: "Jane Smith", score: 2.5, comment: "Lên tảng nước aio thì sao admin nhỉ", date: "2024-01-10" },
