@@ -62,7 +62,6 @@ const OTPModal = ({ onClose, email }) => {
       }, 2000);
     } catch (error) {
       setTimeout(() => {
-        console.log(error);
         setLoading(false);
         if (typeof error === 'object' && error !== null && 'message' in error) {
           const message = String(error.message);
@@ -101,10 +100,10 @@ const OTPModal = ({ onClose, email }) => {
         </div>
       )}
       <div className="bg-white rounded-lg shadow-md text-center">
-        <div className="text-right p-3 cursor-pointer" onClick={onClose}><IoMdClose className="rounded-3xl hover:bg-gray-500"/></div>
+        <div className="text-right p-3 cursor-pointer" onClick={onClose}><IoMdClose className="rounded-3xl hover:bg-gray-500" /></div>
         <div className="pb-8 px-8">
           <h2 className="mb-4 text-lg font-semibold">
-            Nhập mã OTP, mã OTP đã được gửi về mail <br/><div className="text-blue-500">{email}</div>
+            Nhập mã OTP, mã OTP đã được gửi về mail <br /><div className="text-blue-500">{email}</div>
           </h2>
           <div className="flex justify-center mb-4 space-x-2">
             {otp.map((value, index) => (

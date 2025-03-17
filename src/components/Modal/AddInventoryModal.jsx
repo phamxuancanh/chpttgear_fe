@@ -119,7 +119,7 @@ export default function AddInventoryModal({ setShowCreateInventory }) {
                 selectedDistrict.id +
                 "," +
                 selectedProvince.id;
-            console.log(newAddressToAdd)
+
             const res = await createInventory(
                 {
                     name: name,
@@ -128,7 +128,7 @@ export default function AddInventoryModal({ setShowCreateInventory }) {
                     avarage_cost: 0
 
                 })
-            console.log('Stock-in successful:', res.data);
+
             toast.success("Tạo kho mới thành công")
             setLoading(false)
             setShowCreateInventory(false)

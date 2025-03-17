@@ -32,7 +32,6 @@ export default function Cart() {
         const fetchCart = async () => {
             setLoading(true)
             try {
-                console.log("cartFromRedux", cartFromRedux);
                 const [cartItemResponse, productsResponse, stockIns, stockOuts] = await Promise.all([
                     findCartItemsByCartId(cartFromRedux.id),
                     findAllProduct(),
@@ -40,7 +39,6 @@ export default function Cart() {
                     getAllStockOut()
 
                 ]);
-                console.log(productsResponse.data)
                 const cartItemsMapped = cartItemResponse.data.map(item => {
                     const product = productsResponse.data.find(p => p.id === item.productId);
                     return {
@@ -61,7 +59,6 @@ export default function Cart() {
                 dispatch(setCartItemsRedux({ items: cartItemsMapped }));
                 setLoading(false)
             } catch (error) {
-                console.log(error)
                 toast.error("Lỗi load dữ liệu giỏ hàng");
             } finally {
                 setLoading(false)
@@ -75,7 +72,6 @@ export default function Cart() {
 
     const increateseQuantity = async (item, newQuantity) => {
         const itemId = item.itemId;
-        console.log(item, newQuantity);
 
         const quantityInStock = getProductStock(item.productId);
         if (newQuantity > quantityInStock) {
@@ -200,7 +196,6 @@ export default function Cart() {
     };
 
     const handlerSelectItem = (e, item) => {
-        console.log(item)
         if (e.target.checked) {
             setSelectedItems([...selectedItems, item]);
             dispatch(setSelectedItemsRedux({ selectItems: [...selectedItems, item] }));

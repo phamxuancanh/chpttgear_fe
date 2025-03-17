@@ -39,11 +39,11 @@ export default function ChatButton() {
         const maxRetries = 3;
         let retryCount = 0;
         const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-    
+
         while (retryCount < maxRetries) {
             try {
                 const response = await generateChat(userMessage);
-    
+
                 // 🛠 Lấy dữ liệu đúng từ API
                 if (response.data && response.data.result) {
                     const assistantMessage = response.data.result;
@@ -58,7 +58,7 @@ export default function ChatButton() {
             } catch (error) {
                 if (error.response && error.response.status === 429) {
                     retryCount++;
-                    console.log(`Retrying... (${retryCount}/${maxRetries})`);
+
                     await delay(2000); // Chờ 2 giây trước khi thử lại
                 } else {
                     console.error("Lỗi khi gọi API OpenAI:", error);
@@ -66,12 +66,12 @@ export default function ChatButton() {
                 }
             }
         }
-    
+
         if (retryCount === maxRetries) {
             alert("Quá nhiều yêu cầu được gửi đi. Vui lòng thử lại sau một lúc.");
         }
     };
-    
+
     return (
         <>
             {/* Nút mở chat */}
@@ -99,8 +99,7 @@ export default function ChatButton() {
                         {messages.map((msg, index) => (
                             <div
                                 key={index}
-                                className={`p-2 rounded-md mb-2 ${
-                                    msg.isUser
+                                className={`p-2 rounded-md mb-2 ${msg.isUser
                                         ? "bg-green-400 text-black self-end"
                                         : "bg-gray-200 text-black self-start"
                                     }`}
