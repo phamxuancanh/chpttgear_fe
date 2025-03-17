@@ -63,7 +63,7 @@ export default function Header() {
     const fetchSuggestions = debounce(async (value) => {
         try {
             const response = await getSuggestions(value);
-            console.log(response);
+
             setSuggestions(response.data);
         } catch (error) {
             console.error('Error fetching suggestions:', error);
@@ -220,13 +220,11 @@ export default function Header() {
                         };
                     });
                     setCartItems(cartItemsMapped);
-                    console.log(cartItemsMapped)
-                    console.log(cartResponse.data)
                     dispatch(setCartRedux({ cart: cartResponse.data }));
                     dispatch(setCartItemsRedux({ items: cartItemsMapped }));
                 }
             } catch (error) {
-                console.log(error)
+
                 toast.error("1 Lỗi khi load dữ liệu giỏ hàng");
             }
         };
@@ -251,9 +249,9 @@ export default function Header() {
     useEffect(() => {
         const fetchCart = async () => {
             try {
-                console.log("USer current: ", user);
+
                 const cartResponse = await findCartByUserId(user.id);
-                console.log(cartResponse.data)
+
                 if (cartResponse.data) {
                     // Gọi API song song để tăng tốc độ
                     const [cartItemResponse, productsResponse] = await Promise.all([
@@ -272,12 +270,12 @@ export default function Header() {
                         };
                     });
                     setCartItems(cartItemsMapped);
-                    console.log(cartResponse.data)
+
                     dispatch(setCartRedux({ cart: cartResponse.data }));
                     dispatch(setCartItemsRedux({ items: cartItemsMapped }));
                 }
             } catch (error) {
-                console.log(error)
+
                 toast.error("2 Lỗi load dữ liệu giỏ hàng");
             }
         };

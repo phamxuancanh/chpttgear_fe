@@ -1,5 +1,4 @@
 export const DateConverter = (isoString) => {
-  console.log(isoString)
   const dateObj = new Date(isoString);
   dateObj.setHours(dateObj.getHours()); // Cộng thêm 7 giờ
 

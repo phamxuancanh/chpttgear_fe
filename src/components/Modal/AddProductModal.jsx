@@ -125,7 +125,6 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
       const images = response.data.image.includes(",")
         ? response.data.image.split(",")
         : [response.data.image];
-      console.log(images)
       setImages(images);
       setIsAllowUpdate(true);
     } catch (error) {
@@ -136,7 +135,7 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
     try {
       if (updateProductId) {
         const response = await findSpecificationsByProductId(updateProductId);
-        console.log("Thông số kỹ thuật của sản phẩm update:", response.data);
+
 
         setSpecifications(response.data);
 
@@ -169,7 +168,7 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
   const uploadImages = async (imageArray) => {
     if (!imageArray || imageArray.length === 0) return "";
 
-    console.log("Uploading images:", imageArray);
+
 
     const uploadedImages = await Promise.all(
       imageArray.map(async (image) => {
@@ -184,7 +183,7 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
             if (!response.ok) throw new Error("Upload thất bại");
             const res = await response.json();
             if (!res.url) throw new Error("Không lấy được URL ảnh");
-            console.log("Uploaded URL:", res.url);
+
             return res.url;
           } catch (error) {
             console.error("Upload failed:", error.message);
@@ -198,7 +197,7 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
     const validImages = uploadedImages.filter((url) => url !== null);
     const imagesString = validImages.join(",");
 
-    console.log("Final Images String:", imagesString);
+
 
     return imagesString;
   };
@@ -260,14 +259,14 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
     return true;
   };
   const validateSpecification = (specs) => {
-    console.log(specs, "valid leng");
+
     if (specs.length === 0) return false;
     return specs.some(spec => spec.value.trim() !== "");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Submit form");
+
 
     if (!validateProduct()) return;
 
@@ -304,7 +303,6 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
         }))
         .filter((spec) => spec.value.trim() !== "");
 
-      console.log("Thông số kỹ thuật hợp lệ:", updatedSpecifications);
 
       const newProduct = {
         name,
@@ -322,7 +320,7 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
       };
 
       const responseProduct = await createProduct(newProduct);
-      console.log(responseProduct.status);
+
 
       if (updatedSpecifications.length > 0 && responseProduct.status === 201) {
         updatedSpecifications.forEach(async (spec) => {
@@ -334,7 +332,7 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
           });
 
           if (responseSpecification.status === 201) {
-            console.log("Thêm thông số kỹ thuật thành công");
+
           }
         });
       }
@@ -355,7 +353,6 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
         ? [...(Array.isArray(images) ? images : images?.split(",") || []), imgString]
         : images;
 
-      console.log("Hình ảnh cập nhật:", updatedImage);
 
       // Cập nhật specifications
       const updatedSpecifications = specsFields.map((spec) => {
@@ -436,7 +433,6 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
     setBrandSelected({ key: "", value: "" });
     setSelectedCategory({ id: "", name: "" });
     setSpecifications([{ name: "", name_vi: "", value: "" }]);
-    console.log("Reset");
     setUpdateProductId("");
     setInventorys([]);
     setCategories([]);
@@ -452,7 +448,6 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
     if (selectedCategory) {
       setSelectedCategory({ id: selectedId, name: selectedCategory.name });
       setSelectedSpec("");
-      console.log("Loại sản phẩm:", selectedCategory.name);
     }
   };
 
@@ -464,7 +459,6 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
   const handleColorChange = (e) => {
     setSelectedColor(e.target.value);
     setColor(e.target.value);
-    console.log("Màu sắc:", e.target.value);
   };
 
   const handlePriceChange = (e) => {

@@ -19,11 +19,10 @@ export default function OrderTracking() {
       setLoading(true); // Bắt đầu loading
       try {
         const res = await getOrderById(orderId);
-        console.log(res.data);
+
         const data = res.data;
         setOrder(res.data);
         const productIds = data.order_item.map(item => item.product_id);
-        console.log(productIds);
         if (productIds.length > 0) {
           fetchProducts(productIds)
         }
@@ -43,7 +42,6 @@ export default function OrderTracking() {
       setLoading(true); // Bắt đầu loading
       try {
         const res = await findUserById(order.user_id);
-        console.log(res.data);
         setUserInfo(res.data);
       } catch (error) {
         console.error("Error fetching user details:", error);
@@ -59,7 +57,6 @@ export default function OrderTracking() {
     try {
       const res = await getProductsByListId(productIds.join(','));
       setProducts(res.data);
-      console.log("Danh sách sản phẩm:", res.data);
 
     } catch (error) {
       console.error("Lỗi khi lấy danh sách sản phẩm:", error);
