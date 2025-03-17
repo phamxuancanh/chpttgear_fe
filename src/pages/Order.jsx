@@ -42,7 +42,6 @@ export default function Order() {
             const res = await getOrdersByUserId(userId, pageNumber, limit);
             const data = res.data;
 
-            console.log("Danh sách đơn hàng:", data);
 
             // Kiểm tra nếu data.orders không phải là mảng thì gán giá trị mặc định []
             const orders = Array.isArray(data.orders) ? data.orders : [];
@@ -55,7 +54,6 @@ export default function Order() {
                 .flatMap((order) => order.order_item?.map((item) => item.product_id) || []) // Kiểm tra order_item có tồn tại không
                 .filter((id, index, self) => self.indexOf(id) === index); // Loại bỏ ID trùng
 
-            console.log("Danh sách productIds:", productIds);
 
             if (productIds.length > 0) {
                 fetchProducts(productIds);
@@ -70,7 +68,6 @@ export default function Order() {
         try {
             const res = await getProductsByListId(productIds.join(','));
             setProducts(res.data);
-            console.log("Danh sách sản phẩm:", res.data);
         } catch (error) {
             console.error("Lỗi khi lấy danh sách sản phẩm:", error);
         }
@@ -147,7 +144,7 @@ export default function Order() {
                     </div>
                 </div>
 
-                <div className="flex space-x-4 border-b pb-2">
+                <div className="flex space-x-4 border-b pb-2 justify-between px-24">
                     {uniqueStatuses.map((status) => {
                         const count = orderCounts[status] ?? 0;
                         return (

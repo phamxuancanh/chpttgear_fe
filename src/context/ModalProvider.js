@@ -6,7 +6,6 @@ export const ModalProvider = ({ children }) => {
   const [modalData, setModalData] = useState({ isOpen: false, text: "" });
 
   const openModal = (text) => {
-    console.log(text);
     setModalData({ isOpen: true, text });
     setTimeout(() => closeModal(), 1000); // Tự động tắt sau 3s
   };

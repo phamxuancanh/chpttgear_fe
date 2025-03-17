@@ -27,7 +27,7 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
             try {
                 setLoading1(true)
                 const res1 = await getAllProduct();
-                console.log(res1.data)
+
                 setProducts(res1.data)
                 setLoading1(false)
 
@@ -55,7 +55,6 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
     };
 
     const handleSelectProduct = (id) => {
-        console.log(id);
         setSelectedProducts(prevSelected =>
             prevSelected.includes(id)
                 ? prevSelected.filter(selectedId => selectedId !== id) // Loại bỏ id đã chọn
@@ -112,7 +111,6 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
                     inventory_id: inventory?.inventory_id
                 });
                 const product = products.find(p => p.id === product_id);
-                console.log(product)
                 if (product) {
                     productList.push(product);
                 }
@@ -136,7 +134,6 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
                 setLoading2(false)
             }
         }
-        console.log(productList)
         dispatch(addProductsToInventory({ products: productList }));
         setShowCreateOrder(false);
         toast.success("Tạo đơn nhập hàng thành công");

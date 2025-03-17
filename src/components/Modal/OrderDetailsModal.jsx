@@ -33,7 +33,6 @@ export default function OrderDetailsModal({ order, onClose }) {
         try {
             const res = await getProductsByListId(productIds.join(','));
             setProducts(res.data);
-            console.log("Danh sách sản phẩm:", res.data);
 
         } catch (error) {
             console.error("Lỗi khi lấy danh sách sản phẩm:", error);
@@ -41,10 +40,7 @@ export default function OrderDetailsModal({ order, onClose }) {
     };
 
     useEffect(() => {
-        console.log(order)
         fetchData();
-        console.log(user);
-        console.log(transaction)
     }, []);
 
     if (!order) return null;

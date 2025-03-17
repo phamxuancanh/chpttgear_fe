@@ -7,7 +7,7 @@ import { BiSolidCommentEdit } from "react-icons/bi";
 import { useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { login } from "../redux/authSlice";
-import { findProductById, findSpecificationsByProductId, getQuantityInStock, getStockInByProductId, getStockOutByProductId, createCartItem, updateQuantityCartItem } from "../routers/ApiRoutes";
+import { findProductById, findSpecificationsByProductId, getQuantityInStock, getStockInByProductId, getStockOutByProductId, createCartItem, updateQuantityCartItem, getRatingById, postReview } from "../routers/ApiRoutes";
 import { setCartItemsRedux, increaseQuantityItem, setSelectedItemsRedux } from "../redux/cartSlice";
 import { FaDongSign, FaCashRegister } from "react-icons/fa6";
 import Loading from "../utils/Loading";
@@ -54,7 +54,6 @@ export default function ProductDetail() {
     const selectedItems = useSelector(state => state.shoppingCart.selectItems);
     const { openModal } = useModal();
     const user_id = useSelector((state) => {
-        console.log("Redux state:", state);
         return state.auth.user.id;
     });
     const [images, setImages] = useState([])
@@ -62,7 +61,6 @@ export default function ProductDetail() {
     const [specs, setspecs] = useState([])
 
     const scrollToReviews = () => {
-        console.log("a")
         if (reviewsRef.current) {
             reviewsRef.current.scrollIntoView({ behavior: "smooth" });
         }
@@ -92,65 +90,81 @@ export default function ProductDetail() {
     //     if (id) fetchData();
     // }, [id]); // Gọi lại khi id thay đổi
 
+    const handleSubmit = async () => {
+        try {
+            const newReview = {
+                productId: id,
+                userId: user_id,
+                rating: rating,
+                review: comment,
+                createDate: new Date().toISOString(), // Định dạng chuẩn
+            };
 
+            console.log(newReview);
 
+            // Gửi đánh giá lên server
+            await postReview(newReview);
 
-    useEffect(() => {
+            // Cập nhật state `review` ngay lập tức mà không cần fetch lại API
+            setReview(prevReviews => [...prevReviews, newReview]);
 
-        // const fetchData1 = async () => {
-        //     try {
-        //         fetch(`${process.env.REACT_APP_REVIEW_BASE_URL}/review/${id}`)
-        //             .then(response => response.json()) // Chuyển đổi JSON
-        //             .then(data => {
-        //                 setReview(data); // Lưu vào state
-        //                 const total = data.reduce((sum, r) => sum + (r.rating ?? 0), 0);
-        //                 const average = total / data.length;
-        //                 setRating(Math.round(average));
-        //                 console.log("Fetched data:", data);
-        //             })
-        //             .catch(error => console.error("Error:", error));
+            // Cập nhật trung bình rating từ state mới
+            const updatedReviews = [...review, newReview];
+            const total = updatedReviews.reduce((sum, r) => sum + (r.rating ?? 0), 0);
+            const average = total / updatedReviews.length;
+            setRating(Math.round(average));
 
-        //         const [productRes, quantityInStockRes] = await Promise.all([
-        //             findProductById(id),
-        //             getQuantityInStock(id)
-        //         ]);
+            // Hiển thị thông báo
+            openModal(`Bạn đã đánh giá ${rating} sao với nội dung: ${comment}`);
 
-        //         if (productRes?.data) setProduct(productRes.data);
-        //         if (quantityInStockRes) setQuantityInStock(quantityInStockRes.quantityInStock);
-        //     } catch (error) {
-        //         console.error("Error fetching product data:", error);
-        //     }
-        // };
-        const fetchData = async () => {
-            try {
-                setLoading(true)
-                const [productRes, quantityInStockRes, specRes] = await Promise.all([
-                    findProductById(id),
-                    getQuantityInStock(id),
-                    findSpecificationsByProductId(id)
-                ]);
-                if (productRes?.data) {
-                    setProduct(productRes.data);
-                    console.log(productRes.data.image.split(','))
-                    setImages(productRes.data.image.split(','))
-                    setspecs(specRes.data)
-                }
+            // ✅ Reset lại comment và rating
+            setComment("");
+            setRating(0);
 
-                if (quantityInStockRes) setQuantityInStock(quantityInStockRes.quantityInStock);
-                setLoading(false)
-            } catch (error) {
-                console.error("Error fetching product data:", error);
-            } finally {
-                setLoading(false)
+        } catch (error) {
+            alert("Lỗi khi gửi đánh giá: " + error.message);
+        }
+    };
+
+    const fetchData = async () => {
+        try {
+            setLoading(true)
+            const [productRes, quantityInStockRes, specRes, ratingRes] = await Promise.all([
+                findProductById(id),
+                getQuantityInStock(id),
+                findSpecificationsByProductId(id),
+                getRatingById(id)
+
+            ]);
+            if (ratingRes?.data) {
+                const data = ratingRes?.data
+                setReview(data); // Lưu vào state
+                const total = data.reduce((sum, r) => sum + (r.rating ?? 0), 0);
+                const average = total / data.length;
+                setRating(Math.round(average));
+                console.log("Fetched data:", data);
             }
-        };
 
+            if (productRes?.data) {
+                setProduct(productRes.data);
+                console.log(productRes.data.image.split(','))
+                setImages(productRes.data.image.split(','))
+                setspecs(specRes.data)
+            }
+
+            if (quantityInStockRes) setQuantityInStock(quantityInStockRes.quantityInStock);
+            setLoading(false)
+        } catch (error) {
+            console.error("Error fetching product data:", error);
+        } finally {
+            setLoading(false)
+        }
+    };
+    useEffect(() => {
 
         if (id) {
             fetchData()
-            // fetchData1()
         }
-
     }, [id]); // Gọi lại khi id thay đổi
     useEffect(() => {
         console.log("Updated rating:", rating);
@@ -374,7 +388,7 @@ export default function ProductDetail() {
                     <div>
                         <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
                         <div className="flex items-center mb-4 text-lg text-orange-400">
-                            <p className="font-bold mr-1 ">{rating}</p>
+                            <p className="font-bold mr-1 ">{rating || 0}</p>
                             <FaStar className="mr-10 " />
                             <p
                                 className="font-bold text-blue-500 cursor-pointer "
@@ -441,7 +455,7 @@ export default function ProductDetail() {
                         <div className="w-full  p-6 shadow-sm text-center ">
                             <h2 className="text-2xl font-bold mb-6">Đánh giá & Nhận xét</h2>
                             <div className="flex flex-col items-center">
-                                <h2 className="text-4xl font-bold text-red-500">{rating}/5</h2>
+                                <h2 className="text-4xl font-bold text-red-500">{rating || 0}/5</h2>
                                 <div className="flex justify-center my-2">{renderStars(rating)}</div>
                                 <h2 className="text-sm font-bold">({review.length}) đánh giá & nhận xét</h2>
                             </div>
@@ -518,34 +532,12 @@ export default function ProductDetail() {
                                 value={comment}
                                 onChange={(e) => setComment(e.target.value)}
                             ></textarea>
-                            {/* <div className="flex justify-end">
-                                <button
-                                    className="bg-blue-500 text-white text-sm font-semibold rounded-md flex justify-center items-center px-3 py-1"
-                                    onClick={() => fetch(`${process.env.REACT_APP_REVIEW_BASE_URL}/review`, {
-                                        method: "POST",
-                                        headers: {
-                                            "Content-Type": "application/json",
-                                        },
-                                        body: JSON.stringify({
-                                            productId: id,
-                                            userId: user_id,
-                                            rating: rating,
-                                            review: comment,
-                                            createDate: new Date()
-                                        }),
-                                    })
-                                        .then(response => response.text())
-                                        .then(data => {
-                                            alert(`Bạn đã đánh giá ${rating} sao với nội dung: ${comment}`);
-                                            fetchData();
-                                        })
-                                        .catch(error => {
-                                            alert("Error: " + error.message);
-                                        })}
-                                >
-                                    <BiSolidCommentEdit className="text-xl mr-2" />Gửi đánh giá của bạn.
-                                </button>
-                            </div> */}
+                            <button
+                                className="bg-blue-500 text-white text-sm font-semibold rounded-md flex justify-center items-center px-3 py-1"
+                                onClick={handleSubmit}
+                            >
+                                <BiSolidCommentEdit className="text-xl mr-2" />Gửi đánh giá của bạn.
+                            </button>
                         </div>
                     </div>
                 </div>
