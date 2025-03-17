@@ -20,7 +20,7 @@ const TableProduct = () => {
     const [rowSelection, setRowSelection] = useState(null)
     const [globalFilter, setGlobalFilter] = useState('')
     const [dataTable, setDataTable] = useState(null)
-    const [pagination, setPagination] = useState <MRT_TablePagination> ({
+    const [pagination, setPagination] = useState < MRT_TablePagination > ({
         pageIndex: 0,
         pageSize: 5
     })
@@ -68,7 +68,7 @@ const TableProduct = () => {
         // fetchCoursesDoneByUsers()
         // setIsFinding(false)
     }, [pagination.pageIndex, pagination.pageSize, dataTable?.pageSize, isFinding])
-    
+
     const columns = useMemo < Array < MRT_ColumnDef < any >>> (
         () => [
             {
@@ -196,7 +196,6 @@ const TableProduct = () => {
      */
     const handleExportAllData = async () => {
         setIsExporting(true)
-        console.log('Exporting all data...')
         let csvContent = '\uFEFF'
         let allUsersData = []
         let pageIndex = 1
@@ -220,12 +219,9 @@ const TableProduct = () => {
             }
         }
         let pageData = await fetchPageData(pageIndex)
-        console.log(pageData, 'pageData')
         while (allUsersData.length < (pageData?.totalRecords ?? 0)) {
-            console.log('loop')
             if (pageData && pageData.data && pageData.data.length > 0) {
                 allUsersData = allUsersData.concat(pageData.data)
-                console.log(allUsersData, 'allUsersDataaaaa')
                 pageIndex++
                 pageData = await fetchPageData(pageIndex)
             } else {

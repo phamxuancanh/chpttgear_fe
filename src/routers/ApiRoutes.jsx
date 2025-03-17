@@ -54,7 +54,7 @@ export const resetPassword = async (payload) => {
 };
 
 export const verifyEmail = async (token) => {
-    console.log(token);
+
     return await requestWithoutJwt.post('/users/verifyEmail', {
         params: { token },
     });
@@ -76,9 +76,8 @@ export const googleSignIn = async () => {
 
     try {
         const result = await signInWithPopup(auth, provider);
-        console.log(result)
         const token = await result.user.getIdToken();
-        console.log('Token:', token);
+
         const response = await fetch('http://localhost:6868/api/v1/users/google', {
             method: 'POST',
             headers: {
@@ -90,7 +89,6 @@ export const googleSignIn = async () => {
 
         const data = await response.json();
         if (response.ok) {
-            console.log('Đăng nhập thành công:', data);
 
             const currentUser = {
                 accessToken: data.accessToken, // Sử dụng accessToken từ response
@@ -165,7 +163,7 @@ export const findProductById = async (productId) => {
     }
 };
 export const findSpecificationsByProductId = async (productId) => {
-    console.log(productId);
+
     try {
         return await requestWithJwt.get(`/products/specifications/findByProductId//${productId}`);
     } catch (error) {
@@ -238,7 +236,6 @@ export const getAllInventory = async () => {
     return await requestWithJwt.get(`/inventory`);
 };
 export const createStockIn = async (payload) => {
-    console.log(payload)
     return await requestWithJwt.post(`/inventory/stock-in`, {
         data: payload,
     });
@@ -274,7 +271,6 @@ export const getStockInByInventoryId = async (inventory_id) => {
         const response = await requestWithJwt.get(`/inventory/stock-in/getByInventoryId/${inventory_id}`);
         return response.data; // Trả về dữ liệu từ phản hồi của API
     } catch (error) {
-        console.log(error)
         if (error && error.status === 404) {
             return []; // Trả về mảng rỗng nếu API trả về 404
         }
@@ -288,7 +284,6 @@ export const getAllStockIn = async () => {
         const response = await requestWithJwt.get(`/inventory/stock-in/getAll`);
         return response.data; // Trả về dữ liệu từ phản hồi của API
     } catch (error) {
-        console.log(error)
         if (error && error.status === 404) {
             return []; // Trả về mảng rỗng nếu API trả về 404
         }
@@ -302,7 +297,7 @@ export const getAllStockOut = async () => {
         const response = await requestWithJwt.get(`/inventory/stock-out/getAll`);
         return response.data; // Trả về dữ liệu từ phản hồi của API
     } catch (error) {
-        console.log(error)
+
         if (error && error.status === 404) {
             return []; // Trả về mảng rỗng nếu API trả về 404
         }
@@ -314,11 +309,11 @@ export const getAllStockOut = async () => {
 
 export const getStockInByProductId = async (product_id) => {
     try {
-        console.log(product_id)
+
         const response = await requestWithJwt.get(`/inventory/stock-in/getByProductId/${product_id}`);
         return response.data; // Trả về dữ liệu từ phản hồi của API
     } catch (error) {
-        console.log(error)
+
         if (error && error.status === 404) {
             return []; // Trả về mảng rỗng nếu API trả về 404
         }
@@ -328,11 +323,11 @@ export const getStockInByProductId = async (product_id) => {
 };
 export const getStockOutByProductId = async (product_id) => {
     try {
-        console.log(product_id)
+
         const response = await requestWithJwt.get(`/inventory/stock-out/getByProductId/${product_id}`);
         return response.data; // Trả về dữ liệu từ phản hồi của API
     } catch (error) {
-        console.log(error)
+
         if (error && error.status === 404) {
             return []; // Trả về mảng rỗng nếu API trả về 404
         }
@@ -372,7 +367,7 @@ export const findCartByUserId = async (userId) => {
     return await requestWithJwt.get(`/carts/findByUserId/${userId}`);
 };
 export const createCart = async (payload) => {
-    console.log('payload', payload);
+
     return await requestWithJwt.post(`/carts/createCart`, {
         userId: payload
     });
@@ -382,7 +377,7 @@ export const findCartItemsByCartId = async (cartId) => {
 };
 export const updateQuantityCartItem = async (cartItemId, payload) => {
     try {
-        console.log("1234", cartItemId, payload);
+
         return await requestWithJwt.put(`/carts/cart_items/updateQuantityByCartItemId/${cartItemId}`,
             { newQuantity: payload },
             { headers: { 'Content-Type': 'application/json' } }
@@ -394,7 +389,6 @@ export const updateQuantityCartItem = async (cartItemId, payload) => {
 };
 export const createCartItem = (payload) => {
     try {
-        console.log("add to cart", payload);
         return requestWithJwt.post(`/carts/cart_items/createCartItems`, payload);
     } catch (error) {
         console.error('Error creating cart item:', error);
@@ -533,7 +527,7 @@ export const updateRefundStatus = async (refundId, statusData) => {
 
 // shippingService
 export const calculateShippingFee = async (toDistrict, toWard, weight, ShopId) => {
-    console.log(toDistrict, toWard, weight, ShopId)
+
     try {
         const res = await requestWithJwt.post("/shipping/calculate-fee", {
             "toDistrict": toDistrict,
@@ -541,7 +535,6 @@ export const calculateShippingFee = async (toDistrict, toWard, weight, ShopId) =
             "total_weight": weight,
             "ShopId": ShopId
         })
-        console.log(res.data.shippingFee)
         return res.data.shippingFee || 0
     } catch (error) {
         console.error("Lỗi khi gọi API GHN:", error);
@@ -549,8 +542,27 @@ export const calculateShippingFee = async (toDistrict, toWard, weight, ShopId) =
     }
 };
 
-// reviewService
+// ratingService
+export const getRatingById = async (productId) => {
+    console.log("product_id:", productId)
+    return await requestWithJwt.get(`/review/${productId}`);
+};
 
+export const postReview = async ({ productId, userId, rating, review }) => {
+    try {
+        const response = await requestWithJwt.post("/review", {
+            productId,
+            userId,
+            rating,
+            review,
+            createDate: new Date()
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error posting review:", error);
+        throw error;
+    }
+};
 // notificationService
 
 // recommendationService

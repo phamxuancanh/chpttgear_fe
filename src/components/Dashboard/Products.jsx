@@ -66,7 +66,6 @@ export default function Products() {
             try {
                 const response = await findAllCategory();
                 setCategories(response.data);
-                console.log("Danh sách loại sản phẩm:");
             } catch (error) {
                 console.error('Error fetching categories:', error);
             }
@@ -85,7 +84,7 @@ export default function Products() {
     };
     useEffect(() => {
         if (selectedCategory.id) {
-            console.log("Selected category:", selectedCategory);
+
             setSpecsFields(specDefinitions[selectedCategory.name] || []);
         }
         else {
@@ -105,7 +104,7 @@ export default function Products() {
             setLoading(true);
             const response = await searchProducts({ params });
             setResults(response.data);
-            console.log(response.data);
+
         } catch (error) {
             console.error("Error fetching results:", error);
         } finally {
@@ -183,7 +182,7 @@ export default function Products() {
         });
         setProductData(initialData);
 
-        console.log("All params:", allParams);
+
         fetchResults(allParams);
     }, [location.search]);
 
@@ -195,7 +194,7 @@ export default function Products() {
     };
     const handleFilterClick = () => {
         setLoading(true);
-        console.log("Filtering...");
+
         try {
             const queryParams = new URLSearchParams(location.search);
 
@@ -330,7 +329,7 @@ export default function Products() {
     );
 
     const handleActionButton = (product_id) => {
-        console.log(product_id);
+
         setShowProductModal({ show: true, productId: product_id });
     }
     const handleViewDetails = (product_id) => {
@@ -445,6 +444,7 @@ export default function Products() {
     );
     
     
+
     return (
         <div className="flex-1 p-8">
             {loading ? <Loading /> : <div>

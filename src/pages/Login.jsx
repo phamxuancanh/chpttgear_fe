@@ -54,14 +54,12 @@ export default function Login() {
             try {
                 // Simulating API call
                 const response = await signIn(formData);
-                console.log("Login response:", response);
                 if (response.status === 200) {
                     const { accessToken, user } = response.data;
                     const payload = {
                         token: accessToken,
                         user: user
                     }
-                    console.log(payload)
                     dispatch(login(payload)); // Dispatch action với payload đúng format
                     navigate(ROUTES.HOME_PAGE.path);
                     toast.success('Đăng nhập thành công');
@@ -111,7 +109,7 @@ export default function Login() {
                         console.error('Decryption error:', error);
                     }
                 }
-    
+
                 const payload = {
                     token: accessToken,
                     user: currentUser
@@ -124,7 +122,7 @@ export default function Login() {
                 } else {
                     navigate(ROUTES.HOME_PAGE.path);
                 }
-    
+
                 toast.success('Đăng nhập thành công');
             }
         } catch (error) {
@@ -132,7 +130,7 @@ export default function Login() {
             toast.error('Đăng nhập thất bại');
         }
     };
-    
+
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-800 py-12 px-4 sm:px-6 lg:px-8">

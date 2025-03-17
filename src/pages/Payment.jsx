@@ -76,12 +76,11 @@ export default function Payment() {
 
     fetchExchangeRate();
     setProvinces(provinceData);
-    console.log(userFromRedux)
+
   }, []);
 
   useEffect(() => {
     const fetchData = async () => {
-      console.log(selectedAddress)
       if (!selectedAddress || provinces.length === 0) return;
 
       const parts = selectedAddress.split(",").map((part) => part.trim());
@@ -91,7 +90,6 @@ export default function Payment() {
       const houseNumber = parts[parts.length - 4];
 
       const [toWard, toDistrict] = selectedCodeAddress.split(',')
-      console.log(selectedItems)
       const totalWeight = selectedItems.reduce((sum, item) => sum + item.weight * item.quantity, 1);
       const res = await calculateShippingFee(parseInt(toDistrict), toWard, totalWeight, 195800);
       setShippingFee(res);
@@ -127,10 +125,8 @@ export default function Payment() {
             ...prev,
             streetAddress: houseNumber,
           }));
-          console.log(district.DistrictID, ward.WardCode)
           const totalWeight = selectedItems.reduce((sum, item) => sum + item.weight * item.quantity, 1);
           const res = await calculateShippingFee(parseInt(district?.DistrictID), ward?.WardCode, totalWeight, 195800);
-          console.log(res)
           setShippingFee(res);
         }
       }
@@ -187,7 +183,6 @@ export default function Payment() {
     const totalWeight = selectedItems.reduce((sum, item) => sum + item.weight * item.quantity, 1);
     const res = await calculateShippingFee(parseInt(selectedDistrict.id), wardID, totalWeight, 195800);
     setShippingFee(res);
-    console.log(res)
   };
 
   const validateForm = () => {
@@ -226,7 +221,6 @@ export default function Payment() {
       return;
     }
 
-    console.log("Form submitted:", formData);
     const totalAmountVnd = cartItems.reduce((total, item) => total + item.price * item.quantity, 0) + shippingFee;
     const payload = {
       user_id: userFromRedux.id,
@@ -241,9 +235,6 @@ export default function Payment() {
       email: userFromRedux.email,
     };
 
-    console.log(payload);
-
-
     let isConfirmed = false;
 
     if (!addresses.includes(payload.houseNumber)) {
@@ -256,7 +247,6 @@ export default function Payment() {
         const newAddressToAdd = payload.houseNumber + '|' + selectedWard.id + ',' + selectedDistrict.id + ',' + selectedProvince.id;
         currentUserAddresses.push(newAddressToAdd);
         const updatedAddresses = currentUserAddresses.join(";;");
-        console.log(updatedAddresses);
         const response = await editUserById(userFromRedux.id, { address: updatedAddresses });
         if (response.status === 200) {
           toast.success("Set default address successfully");
@@ -279,8 +269,6 @@ export default function Payment() {
           orderId = orderData.order_id;
         }
 
-        console.log("Order ID:", orderId);
-
         const orderItemPromises = cartItems.map(item =>
           createOrderItem({
             order_id: orderId,
@@ -291,9 +279,8 @@ export default function Payment() {
           })
         );
 
-        console.log("Tạo sản phẩm trong đơn hàng:", orderItemPromises);
         await Promise.all(orderItemPromises);
-        console.log("Order items đã được tạo thành công!");
+
 
         if (formData.paymentMethod === "PAYPAL") {
           if (approvalUrl) {
@@ -328,9 +315,8 @@ export default function Payment() {
           payment_method: "COD",
           amount: totalAmountVnd
         }
-        console.log(paymentData)
+
         const res = await createPayment(paymentData);
-        console.log(res.data)
         openModal("Tạo đơn hàng thành công")
         navigate("/orders");
       }
@@ -559,7 +545,7 @@ export default function Payment() {
             <div className="flex flex-col gap-4">
               {cartItems.map((item) => (
                 <div key={item.itemId} className="p-4 bg-white rounded-lg shadow flex items-center gap-4">
-                  <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-md" />
+                  <img src={item.image.split(',')[0]} alt={item.name} className="w-16 h-16 object-cover rounded-md" />
                   <div className="flex-1">
                     <h3 className="text-md font-medium text-gray-900">{item.name}</h3>
                     <p className="text-gray-700">Đơn giá: {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price)}</p>

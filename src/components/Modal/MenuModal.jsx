@@ -16,7 +16,6 @@ export default function MenuModal() {
         const fetchData = async () => {
             try {
                 const res = await findAllCategory();
-                console.log(res)
                 setCategoriesFromDB(res.data);
             } catch (error) {
                 console.error("Error fetching categories:", error);

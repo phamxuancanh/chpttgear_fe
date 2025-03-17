@@ -17,12 +17,10 @@ export default function AddCategoryModal({ setShowCategoryModal }) {
                 const newCategory = { name, description };
                 const response = await createCategory(newCategory);
                 if (response.status === 201) {
-                    console.log("Category created successfully");
                     setShowCategoryModal({ show: false });
-                    console.log("res:",response.data);
                 }
             } catch (error) {
-                console.log("Error creating category", error);
+
             }
             handleReset();
         }
