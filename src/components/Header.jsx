@@ -448,7 +448,7 @@ export default function Header() {
                                     <div className="p-2 flex items-center space-x-2 border border-white rounded-lg">
                                         {isLoggedIn ? (
                                             <>
-                                                <img src={user.avatar ? user?.avatar : "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3"} alt="avatar" className="w-8 h-8 rounded-full" />
+                                                <img src={user.avatar ? user?.avatar : "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3"} alt="avatar" className="w-8 h-8 rounded-full" referrerPolicy="no-referrer" />
                                                 <div>
                                                     <div>Xin chào</div>
                                                     <div className="font-bold">

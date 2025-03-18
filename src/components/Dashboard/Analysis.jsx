@@ -1,5 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FiHome, FiUsers, FiBox, FiShoppingCart, FiEdit, FiTrash2, FiLogOut, FiPackage, FiEye, FiX } from "react-icons/fi";
+import { setStockIns, setStockOuts } from "../../redux/inventorySlice";
+import { getAllStockIn, getAllStockOut } from "../../routers/ApiRoutes";
+import { useDispatch } from "react-redux";
+import Loading from "../loading";
 
 
 export default function Analysis() {
@@ -14,6 +18,31 @@ export default function Analysis() {
         { id: 2, name: "Jane Smith", role: "Developer", status: "active", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1" },
         { id: 3, name: "Mike Johnson", role: "Designer", status: "inactive", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1" }
     ];
+
+    const [loading, setLoading] = useState(false)
+    const dispatch = useDispatch()
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const [stockIns, stockOuts] = await Promise.all([
+                    getAllStockIn(),
+                    getAllStockOut()
+
+                ]);
+                dispatch(setStockIns(stockIns || []))
+                dispatch(setStockOuts(stockOuts || []))
+
+            } catch (error) {
+                console.error("Error fetching inventory:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [])
 
 
 
@@ -50,7 +79,7 @@ export default function Analysis() {
     ];
     return (
         <div className="flex-1 p-8">
-            <div>
+            {loading ? <Loading /> : <div>
                 <h2 className="text-2xl font-semibold mb-6">Tổng quan hệ thống</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <div className="bg-white p-6 rounded-lg shadow-md">
@@ -81,7 +110,8 @@ export default function Analysis() {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div>}
+
         </div>
     )
 }

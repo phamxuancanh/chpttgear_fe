@@ -30,48 +30,48 @@ const handleTokenRefresh = async () => {
   const persistedAuthString = getFromLocalStorage('persist:auth'); // Retrieve persisted data
 
   if (!persistedAuthString) {
-      console.log('No persisted auth data found');
-      return null;
+    console.log('No persisted auth data found');
+    return null;
   }
 
   try {
-      const persistedAuth = (persistedAuthString)
-      const isLoggedIn = persistedAuth.isLoggedIn === 'true';
-      const user = JSON.parse(persistedAuth.user); // Parse user JSON string
-      console.log('Persisted User:', user);
-      console.log('Is logged in:', isLoggedIn);
-      const token = JSON.parse(persistedAuth.token); // Parse token JSON string (removes double quotes)
-      console.log('Persisted Auth:', persistedAuth);
+    const persistedAuth = (persistedAuthString)
+    const isLoggedIn = persistedAuth.isLoggedIn === 'true';
+    const user = JSON.parse(persistedAuth.user); // Parse user JSON string
+    console.log('Persisted User:', user);
+    console.log('Is logged in:', isLoggedIn);
+    const token = JSON.parse(persistedAuth.token); // Parse token JSON string (removes double quotes)
+    console.log('Persisted Auth:', persistedAuth);
 
-      if (token && checkTokenValidity(token)) {
-          console.log('Token is valid')
-          return token;
-      }
+    if (token && checkTokenValidity(token)) {
+      console.log('Token is valid')
+      return token;
+    }
 
-      console.log('Refreshing token...');
-      const response = await refresh();
-      const newAccessToken = response.data.accessToken;
-      // Dispatch the setToken action to update Redux state with new token
-      store.dispatch(setToken(newAccessToken));
+    console.log('Refreshing token...');
+    const response = await refresh();
+    const newAccessToken = response.data.accessToken;
+    // Dispatch the setToken action to update Redux state with new token
+    store.dispatch(setToken(newAccessToken));
 
-      console.log('New access token:', newAccessToken);
-      return newAccessToken;
+    console.log('New access token:', newAccessToken);
+    return newAccessToken;
   } catch (error) {
-      console.error('Token refresh failed:', error);
-      Swal.fire({
-          title: 'Warning',
-          text: 'Your session has expired. Please log in again.',
-          icon: 'warning',
-          confirmButtonText: 'OK',
-          allowOutsideClick: false
-      }).then((result) => {
-          if (result.isConfirmed) {
-              store.dispatch(logout()); // Clear auth state
-              removeAllLocalStorage();
-              window.location.reload()
-          }
-      });
-      return null;
+    console.error('Token refresh failed:', error);
+    Swal.fire({
+      title: 'Cảnh báo',
+      text: 'Phiên đăng nhập của bạn đã hết hạn',
+      icon: 'warning',
+      confirmButtonText: 'OK',
+      allowOutsideClick: false
+    }).then((result) => {
+      if (result.isConfirmed) {
+        store.dispatch(logout()); // Clear auth state
+        removeAllLocalStorage();
+        window.location.reload()
+      }
+    });
+    return null;
   }
 };
 

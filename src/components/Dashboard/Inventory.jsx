@@ -25,8 +25,8 @@ export default function Inventory() {
     const itemsPerPage = 6;
     const allInventoryInRedux = useSelector(state => state.inventory.inventories)
     const allProductsInInventoryInRedux = useSelector(state => state.inventory.productsInInventory)
-    const stockInsInInventory = useSelector(state => state.inventory.stockIns)
-    const stockOutsInInventory = useSelector(state => state.inventory.stockOuts)
+    const stockInsInInventory = useSelector(state => state.inventory.stockInsInInventory)
+    const stockOutsInInventory = useSelector(state => state.inventory.stockOutsInInventory)
     const selectedInventory = useSelector(state => state.inventory.selectedInventory)
     const dispatch = useDispatch()
 
@@ -56,7 +56,7 @@ export default function Inventory() {
 
         const queryString = res.join(",");
         const res3 = await getProductsByListId(queryString)
-
+        console.log(res1)
         dispatch(setAllProductsInInventory(res3.data || []))
         dispatch(setStockInsInInventory(res1 || []))
         dispatch(setStockOutsInInventory(res2 || []))
@@ -296,8 +296,8 @@ export default function Inventory() {
                                 />
                                 <h3 className="text-xl font-bold mb-2">{selectedProduct.name}</h3>
                                 <div className="flex justify-start">
-                                    <p className="text-gray-600 mb-4 font-bold">Giá hiện tại: {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(getProductCost(selectedProduct.id))}</p>
-                                    <FaDongSign className="ml-1" />
+                                    <p className="text-gray-600 mb-4 font-bold">Giá nhập trung bình: {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(getProductCost(selectedProduct.id))}</p>
+
                                 </div>
                             </div>
                             <div>

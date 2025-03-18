@@ -18,8 +18,8 @@ export default function ProductCard({ product }) {
     const cartItems = useSelector(state => state.shoppingCart.items);
     const { openModal } = useModal();
     const selectedItems = useSelector(state => state.shoppingCart.selectItems);
-    const stockInsInInventory = useSelector(state => state.inventory.stockIns)
-    const stockOutsInInventory = useSelector(state => state.inventory.stockOuts)
+    const stockIns = useSelector(state => state.inventory.stockIns)
+    const stockOuts = useSelector(state => state.inventory.stockOuts)
 
     const handlerAddToCart = async ({ product }) => {
 
@@ -84,11 +84,11 @@ export default function ProductCard({ product }) {
 
 
     const getProductStock = (productId) => {
-        const stockIn = stockInsInInventory
+        const stockIn = stockIns
             .filter(item => item.product_id === productId)
             .reduce((acc, item) => acc + item.quantity, 0);
 
-        const stockOut = stockOutsInInventory
+        const stockOut = stockOuts
             .filter(item => item.product_id === productId)
             .reduce((acc, item) => acc + item.quantity, 0);
 

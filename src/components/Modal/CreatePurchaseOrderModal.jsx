@@ -15,12 +15,11 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [quantities, setQuantities] = useState({});
-    const [prices, setPrices] = useState({});
     const [products, setProducts] = useState([]);
     const [loading1, setLoading1] = useState(false);
     const [loading2, setLoading2] = useState(false);
     const dispatch = useDispatch()
-
+    const [prices, setPrices] = useState({})
 
     useEffect(() => {
         const fetchData = async () => {
@@ -39,11 +38,20 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
         };
         fetchData();
     }, []);
-
+    // Danh sách sản phẩm sau khi lọc
     const filteredProducts = products.filter(
-        (product) =>
-            product.name.toLowerCase().includes(searchTerm.toLowerCase())
+        (product) => product.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    useEffect(() => {
+        if (products.length > 0) {
+            const initialPrices = {};
+            products.forEach(product => {
+                initialPrices[product.id] = product.price * 0.8;
+            });
+            setPrices(initialPrices);
+        }
+    }, [products]);
 
     const handleSelectAll = (e) => {
         if (e.target.checked) {
@@ -69,11 +77,25 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
             [id]: Math.max(0, quantity)
         }));
     };
-    const handlePriceChange = (id, value) => {
-        const quantity = parseInt(value) || 0;
+    const handlePriceChange = (id, value, sellingPrice) => {
+        const price = parseInt(value) || 0;
+        const maxAllowedPrice = sellingPrice * 0.8;
+
+        if (price > maxAllowedPrice) {
+            toast.error(`Giá nhập không được vượt quá 80% giá bán (${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(sellingPrice)}).`);
+
+            // Quay về giá mặc định (80% giá bán) khi nhập sai
+            setPrices(prev => ({
+                ...prev,
+                [id]: maxAllowedPrice
+            }));
+
+            return;
+        }
+
         setPrices(prev => ({
             ...prev,
-            [id]: Math.max(0, quantity)
+            [id]: price
         }));
     };
 
@@ -236,8 +258,8 @@ export default function CreatePurchaseOrderModal({ setShowCreateOrder, inventory
                                                     id={`price-${product.id}`}
                                                     type="number"
                                                     min="0"
-                                                    defaultValue={product.price}
-                                                    onChange={(e) => handlePriceChange(product.id, e.target.value)}
+                                                    value={prices[product.id] ?? ""}
+                                                    onChange={(e) => handlePriceChange(product.id, e.target.value, product.price)}
                                                     className="w-28 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                     aria-label={`price for ${product.name}`}
                                                 />

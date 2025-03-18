@@ -103,7 +103,7 @@ export default function Product() {
 
         if (selectedCategories.length > 0) {
             filtered = filtered.filter(product =>
-                selectedCategories.includes(product.category_type)
+                selectedCategories.includes(product.categoryName)
             );
         }
 
@@ -220,34 +220,67 @@ export default function Product() {
                             </div>
 
                             {totalPages > 1 && (
-                                <div className="flex justify-center items-center mt-8 gap-2">
+                                <div className="flex justify-center mt-4 space-x-2">
+                                    {/* Nút "Trước" */}
                                     <button
-                                        onClick={() => handlePageChange(currentPage - 1)}
+                                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                         disabled={currentPage === 1}
-                                        className="p-2 rounded-md   disabled:opacity-50"
+                                        className={`px-3 py-1 border rounded ${currentPage === 1 ? "text-gray-400 border-gray-300" : "text-blue-600 border-blue-500 hover:bg-blue-50"}`}
                                     >
-                                        <FiChevronLeft />
+                                        Trước
                                     </button>
-                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                        <button
-                                            key={page}
-                                            onClick={() => handlePageChange(page)}
-                                            className={`px-4 py-2 rounded-md ${currentPage === page
-                                                ? " "
-                                                : "bg-card text-foreground hover:bg-accent"}`}
-                                        >
-                                            {page}
-                                        </button>
-                                    ))}
+
+                                    {/* Trang 1 luôn hiển thị */}
                                     <button
-                                        onClick={() => handlePageChange(currentPage + 1)}
-                                        disabled={currentPage === totalPages}
-                                        className="p-2 rounded-md   disabled:opacity-50"
+                                        onClick={() => setCurrentPage(1)}
+                                        className={`px-3 py-1 border rounded ${currentPage === 1 ? "bg-blue-500 text-white" : "text-blue-600 border-blue-500 hover:bg-blue-50"}`}
                                     >
-                                        <FiChevronRight />
+                                        1
+                                    </button>
+
+                                    {/* Nếu currentPage >= 4 thì hiển thị dấu "..." sau trang 1 */}
+                                    {currentPage > 3 && <span className="px-2">...</span>}
+
+                                    {/* Hiển thị các trang ở giữa */}
+                                    {Array.from({ length: 3 }, (_, i) => currentPage - 1 + i)
+                                        .filter(page => page > 1 && page < totalPages)
+                                        .map(page => (
+                                            <button
+                                                key={page}
+                                                onClick={() => setCurrentPage(page)}
+                                                className={`px-3 py-1 border rounded ${currentPage === page
+                                                    ? "bg-blue-500 text-white"
+                                                    : "text-blue-600 border-blue-500 hover:bg-blue-50"}`}
+                                            >
+                                                {page}
+                                            </button>
+                                        ))}
+
+                                    {/* Nếu currentPage <= totalPages - 3 thì hiển thị dấu "..." trước trang cuối */}
+                                    {currentPage < totalPages - 2 && <span className="px-2">...</span>}
+
+                                    {/* Trang cuối luôn hiển thị nếu có nhiều trang */}
+                                    {totalPages > 1 && (
+                                        <button
+                                            onClick={() => setCurrentPage(totalPages)}
+                                            className={`px-3 py-1 border rounded ${currentPage === totalPages ? "bg-blue-500 text-white" : "text-blue-600 border-blue-500 hover:bg-blue-50"}`}
+                                        >
+                                            {totalPages}
+                                        </button>
+                                    )}
+
+                                    {/* Nút "Sau" */}
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                        disabled={currentPage === totalPages}
+                                        className={`px-3 py-1 border rounded ${currentPage === totalPages ? "text-gray-400 border-gray-300" : "text-blue-600 border-blue-500 hover:bg-blue-50"}`}
+                                    >
+                                        Sau
                                     </button>
                                 </div>
                             )}
+
+
                         </section>
                     </div>
                 </div>
