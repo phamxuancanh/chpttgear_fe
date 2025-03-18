@@ -2,9 +2,12 @@
 import { use, useState, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FiEdit } from "react-icons/fi";
+import { FiEye } from "react-icons/fi";
+
 import { styled } from '@mui/system'
 import { Pagination, Slider } from '@mui/material'
 import AddProductModal from "../Modal/AddProductModal";
+import DetailProductModal from "../Modal/DetailProductModal";
 import { findAllCategory, getProductsManagementPage, searchProducts } from "../../routers/ApiRoutes";
 import AddCategoryModal from "../Modal/AddCategoryModal";
 import { FaDongSign } from "react-icons/fa6";
@@ -24,6 +27,7 @@ export default function Products() {
     const quantityInStock = 100;
     const imageTemp = "https://images.unsplash.com/photo-1526406915894-7bcd65f60845?ixlib=rb-1.2.1";
     const [showProductModal, setShowProductModal] = useState({ show: false, productId: "" });
+    const [showProducDetailtModal, setShowProducDetailtModal] = useState({ show: false, productId: "" });
     const [showCategoryModal, setShowCategoryModal] = useState({ show: false });
     const [results, setResults] = useState(null);
     const navigate = useNavigate();
@@ -328,14 +332,21 @@ export default function Products() {
 
         setShowProductModal({ show: true, productId: product_id });
     }
+    const handleViewDetails = (product_id) => {
+        console.log(product_id);
+        setShowProducDetailtModal({ show: true, productId: product_id });
+    }
     const columns = useMemo(
         () => [
             {
                 header: "STT",
                 enableColumnResizing: false,
-                size: 100,
+                size: 150,
                 Cell: ({ row }) => row.index + 1,
-                grow: false
+                grow: false,
+                justifyContent: "center",
+                headerAlign: "center"
+
             },
             {
                 accessorKey: "image",
@@ -346,44 +357,31 @@ export default function Products() {
                     <img
                         src={cell.getValue()?.split(",")[0] || "/placeholder.png"}
                         alt="Product"
-                        className="w-16 h-16 object-cover rounded-md"
+                        className="w-32 h-32 object-cover rounded-md"
                     />
                 ),
-                size: 160,
+                justifyContent: "center",
+                size: 250,
                 grow: false
             },
             {
                 accessorKey: "name",
-                enableSorting: false,
                 header: "Tên sản phẩm",
+                enableSorting: false,
                 Cell: ({ cell }) => (
                     <Tooltip title={cell.getValue()} arrow>
-                        <Box sx={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        <Box sx={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "300px" }}>
                             {cell.getValue()}
                         </Box>
                     </Tooltip>
                 ),
-                grow: 1,
-                size: 180
-            },
-            {
-                accessorKey: "brand",
-                enableSorting: false,
-                header: "Thương hiệu",
-                grow: 1,
-                size: 150
-            },
-            {
-                accessorKey: "category.name_Vi",
-                enableSorting: false,
-                header: "Danh mục",
-                grow: 1,
-                size: 120
+                grow: 2,
+                size: 280
             },
             {
                 accessorKey: "color",
-                enableSorting: false,
                 header: "Màu sắc",
+                enableSorting: false,
                 Cell: ({ cell }) => {
                     const colorData = cell.getValue();
                     const colorKey = typeof colorData === "string" ? colorData : colorData?.key;
@@ -391,7 +389,7 @@ export default function Products() {
                     return colorObj ? colorObj.value : colorKey;
                 },
                 grow: 1,
-                size: 100
+                size: 120
             },
             {
                 accessorKey: "price",
@@ -402,25 +400,14 @@ export default function Products() {
                     </Box>
                 ),
                 grow: 1,
-                size: 100
-            },
-            {
-                accessorKey: "guaranteePeriod",
-                enableSorting: false,
-                header: "Bảo hành",
-                Cell: ({ cell }) => {
-                    const value = cell.getValue();
-                    return value ? `${value} tháng` : "Không có bảo hành";
-                },
-                grow: 1,
-                size: 100,
+                size: 150
             },
             {
                 accessorKey: "quantityInStock",
+                header: "Số lượng tồn",
                 enableSorting: false,
-                header: "Tồn kho",
                 grow: 1,
-                size: 100
+                size: 120
             },
             {
                 accessorKey: "actions",
@@ -428,21 +415,35 @@ export default function Products() {
                 enableSorting: false,
                 enableColumnFilter: false,
                 Cell: ({ row }) => (
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        startIcon={<FiEdit />}
-                        onClick={() => handleActionButton(row.original.id)}
-                    >
-                        Sửa
-                    </Button>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            startIcon={<FiEdit />}
+                            onClick={() => handleActionButton(row.original.id)}
+                        >
+                            Sửa
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="secondary"
+                            startIcon={<FiEye />}
+                            onClick={() => handleViewDetails(row.original.id)}
+                        >
+                            Xem
+                        </Button>
+                    </div>
                 ),
-                size: 150,
-                grow: false
+                size: 220,
+                grow: false,
+                flexGrow: 1
             }
+            
         ],
         [results]
     );
+    
+    
 
     return (
         <div className="flex-1 p-8">
@@ -462,6 +463,7 @@ export default function Products() {
 
                 {showProductModal.show && <AddProductModal setShowProductModal={setShowProductModal} product_id={showProductModal.productId} />}
                 {showCategoryModal.show && <AddCategoryModal setShowCategoryModal={setShowCategoryModal} />}
+                {showProducDetailtModal.show && <DetailProductModal setShowProductModal={setShowProducDetailtModal} product_id={showProducDetailtModal.productId} />}
                 {/* bộ lọc */}
                 <div className="mb-6 bg-white p-6 rounded-lg shadow-md border border-gray-200">
                     <h3 className="text-xl font-semibold text-gray-800 mb-4">Bộ lọc sản phẩm</h3>
@@ -572,15 +574,14 @@ export default function Products() {
                     columns={columns}
                     data={results?.data || []}
                     enablePagination={false}
-                    enableColumnResizing={true}
+                    // enableColumnResizing={true}
                     enableSorting={true}
-                    enableStickyHeader={true}
-                    muiTableProps={{
-                        sx: {
-                            backgroundColor: "#fafafa",
-                            borderRadius: "8px",
-                        }
-                    }}
+                    // muiTableProps={{
+                    //     sx: {
+                    //         backgroundColor: "#fafafa",
+                    //         borderRadius: "8px",
+                    //     }
+                    // }}
                     muiTableHeadCellProps={{
                         sx: {
                             fontWeight: "bold",

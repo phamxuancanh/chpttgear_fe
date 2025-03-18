@@ -222,7 +222,9 @@ export const getAllProduct = async () => {
 export const getAllProductWithCategory = async () => {
     return await requestWithJwt.get('/products/products/getAllProductWithCategory');
 };
-
+export const getSimilarProducts = async (productId) => {
+    return await requestWithJwt.get(`/products/products/${productId}/similar`);
+}
 
 // inventoryService
 export const createInventory = async (payload) => {
