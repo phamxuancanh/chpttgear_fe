@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { FaShippingFast } from "react-icons/fa";
-import { findUserById, getPaymentsByOrderId, getProductsByListId } from '../../routers/ApiRoutes';
+import { createShippingOrder, findUserById, getPaymentsByOrderId, getProductsByListId } from '../../routers/ApiRoutes';
 import Loading from '../loading';
 import { format } from 'date-fns';
 import { useSelector } from 'react-redux';
 import { FcCancel } from "react-icons/fc";
+import { toast } from 'react-toastify';
 
 export default function OrderDetailsModal({ order, onClose }) {
     const [user, setUser] = useState(null);
@@ -13,7 +14,17 @@ export default function OrderDetailsModal({ order, onClose }) {
     const [products, setProducts] = useState([]);
     const stockIns = useSelector(state => state.inventory.stockIns)
     const stockOuts = useSelector(state => state.inventory.stockOuts)
-
+    const [selectedValue, setSelectedValue] = useState("");
+    const requiredNoteOptions = {
+        CHOTHUHANG: "Cho thử hàng",
+        CHOXEMHANGKHONGTHU: "Cho xem hàng, không thử",
+        KHONGCHOXEMHANG: "Không cho xem hàng",
+    };
+    const handleChange = (event) => {
+        const selectedKey = event.target.value;
+        setSelectedValue(selectedKey);
+        console.log("Người dùng đã chọn:", selectedKey);
+    };
     const fetchData = async () => {
         setLoading(true);
         try {
@@ -102,8 +113,66 @@ export default function OrderDetailsModal({ order, onClose }) {
         return isOutOfStock
     }
 
-    const handleCreateShipping = () => {
+    const handleCreateShipping = async () => {
+        if (!selectedValue) {
+            toast.error("Vui lòng chọn đề xuất khi nhận hàng")
+            return
+        }
+        setLoading(true)
+        console.log(order)
+        const parts = order.houseNumber.split(",").map((part) => part.trim());
+        const productIds = order.order_item.map(item => item.product_id);
+        const queryString = productIds.join(",");
+        const res3 = await getProductsByListId(queryString)
 
+        const filteredProducts = order.order_item.map(item => {
+            const product = res3.data?.find(p => p.id === item.product_id);
+            return {
+                product_id: product?.product_id || item.product_id,
+                name: product?.name || "Unknown",
+                weight: product?.weight || 0,
+                quantity: item.quantity,
+                price: item.price
+            };
+        });
+
+        // Tạo chuỗi chứa danh sách tên sản phẩm
+        const productNames = filteredProducts.map(p => p.name).join(", ");
+        const total_weight = filteredProducts.reduce((sum, p) => sum + p.weight, 0);
+        const orderData = {
+            note: "",
+            required_note: selectedValue,
+            to_name: "TinTest124",
+            to_phone: "0987654321",
+            to_address: order.houseNumber + ', Vietnam',
+            to_ward_name: parts[1] || "",
+            to_district_name: parts[2] || "",
+            to_province_name: parts[3] || "",
+            order_name: productNames,
+            // cod_amount: order.total_amount,
+            cod_amount: 3000000,
+            length: 4,
+            width: 4,
+            height: 4,
+            total_weight: total_weight,
+            service_type_id: 2,
+            ShopId: 195800,
+            order_id: order.order_id,
+            user_id: order.user_id,
+            status: "CONFIRMED",
+            total_price: order.total_amount,
+            payment_method: order.payment_method,
+            items: filteredProducts
+        };
+        try {
+            const result = await createShippingOrder(orderData);
+            console.log("Kết quả đơn hàng:", result);
+            setLoading(false)
+        } catch (error) {
+            console.error("Lỗi khi gọi API:", error);
+        } finally {
+            setLoading(false)
+        }
 
         alert("Lên đơn thành công!");
     };
@@ -116,15 +185,22 @@ export default function OrderDetailsModal({ order, onClose }) {
                     <h2 className="text-2xl font-bold mb-4">Chi Tiết Đơn Hàng {order.order_id}</h2>
                     <h3 className="text-lg font-semibold mb-2"><strong>Thông Tin Khách Hàng</strong></h3>
                     <div className="mb-6 flex justify-between px-9">
-
                         <div>
-
                             <p><strong>Tên:</strong> {user?.firstName ? user?.firstName + ' ' + user?.lastName : "Michael Tèo Lọ"}</p>
                             <p><strong>SĐT:</strong> {user?.phone ? user?.phone : "0926789JQK"}</p>
                             <p><strong>Địa chỉ:</strong> {order?.houseNumber}</p>
                         </div>
-                        <div>
+                        <div className='leading-7'>
                             <p><strong>Phương thức thanh toán:</strong> {order?.payment_method == 'COD' ? 'Thanh toán khi nhận hàng' : 'Thanh toán bằng Paypal'}</p>
+                            <h2 >Chọn đề xuất khi nhận hàng</h2>
+                            <select value={selectedValue} onChange={handleChange} className='p-2 border rounded-lg border-black mt-2'>
+                                <option value="">Chọn đề xuất</option>
+                                {Object.entries(requiredNoteOptions).map(([key, value]) => (
+                                    <option key={key} value={key}>
+                                        {value}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                     </div>
 

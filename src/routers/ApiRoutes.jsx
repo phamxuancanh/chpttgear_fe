@@ -542,6 +542,30 @@ export const calculateShippingFee = async (toDistrict, toWard, weight, ShopId) =
     }
 };
 
+const API_URL = "http://localhost:2223/api/v1/shipping";
+
+export const createShippingOrder = async (data) => {
+    try {
+        const response = await axios.post(
+            API_URL,
+            data,
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    Token: "aa43f060-d157-11ef-b2e4-6ec7c647cc27",
+                    ShopId: "195800",
+                },
+            }
+        );
+
+        console.log("Response:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Lỗi khi tạo đơn hàng:", error.response?.data || error.message);
+        throw new Error("Lỗi khi tạo đơn hàng");
+    }
+};
+
 // ratingService
 export const getRatingById = async (productId) => {
     console.log("product_id:", productId)
