@@ -224,8 +224,6 @@ export default function Header() {
                     dispatch(setCartItemsRedux({ items: cartItemsMapped }));
                 }
             } catch (error) {
-
-                toast.error("1 Lỗi khi load dữ liệu giỏ hàng");
             }
         };
         if (user?.id) {
@@ -430,7 +428,7 @@ export default function Header() {
                                                 </div>
                                             ))}
                                             <div className="w-full flex justify-between items-center px-2">
-                                                <h5 className="font-normal mb-3 text-xs text-gray-500 mt-5">{cartItemRedux.length} sản phẩm thêm vào vỏ hàng</h5>
+                                                <h5 className="font-normal mb-3 text-xs text-gray-500 mt-5">{cartItemRedux.length} sản phẩm thêm vào giỏ hàng</h5>
                                                 <Link to="/cart" onClick={handleLinkClick}>
                                                     <button className=" bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 mt-3">
                                                         Xem giỏ hàng
@@ -450,7 +448,7 @@ export default function Header() {
                                     <div className="p-2 flex items-center space-x-2 border border-white rounded-lg">
                                         {isLoggedIn ? (
                                             <>
-                                                <img src={user.avatar ? user?.avatar : "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3"} alt="avatar" className="w-8 h-8 rounded-full" />
+                                                <img src={user.avatar ? user?.avatar : "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3"} alt="avatar" className="w-8 h-8 rounded-full" referrerPolicy="no-referrer" />
                                                 <div>
                                                     <div>Xin chào</div>
                                                     <div className="font-bold">

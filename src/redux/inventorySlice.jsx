@@ -9,6 +9,8 @@ const inventorySlice = createSlice({
         productsInInventory: [],
         stockIns: [],
         stockOuts: [],
+        stockInsInInventory: [],
+        stockOutsInInventory: [],
         selectedInventory: null
     },
     reducers: {
@@ -20,9 +22,15 @@ const inventorySlice = createSlice({
 
         },
         setStockInsInInventory: (state, action) => {
-            state.stockIns = action.payload;
+            state.stockInsInInventory = action.payload;
         },
         setStockOutsInInventory: (state, action) => {
+            state.stockOutsInInventory = action.payload;
+        },
+        setStockIns: (state, action) => {
+            state.stockIns = action.payload;
+        },
+        setStockOuts: (state, action) => {
             state.stockOuts = action.payload;
         },
 
@@ -39,8 +47,12 @@ const inventorySlice = createSlice({
         // ✅ Cập nhật thông tin stockIn
         updateStockIn: (state, action) => {
 
+            state.stockInsInInventory.push(action.payload);
             state.stockIns.push(action.payload);
 
+        },
+        updateStockOut: (state, action) => {
+            state.stockOuts.push(...action.payload);
         },
         updateQuantityByInventory: (state, action) => {
 
@@ -74,10 +86,13 @@ const {
     setStockInsInInventory,
     addProductsToInventory,
     updateStockIn,
+    updateStockOut,
     addInventory,
     updateQuantityByInventory,
     setSelectedInventory,
-    upadteSelectedInventoryQuantity
+    upadteSelectedInventoryQuantity,
+    setStockIns,
+    setStockOuts
 } = inventorySlice.actions;
 
 const persistConfig = {
@@ -95,10 +110,13 @@ export {
     setStockInsInInventory,
     addProductsToInventory,
     updateStockIn,
+    updateStockOut,
     addInventory,
     updateQuantityByInventory,
     setSelectedInventory,
-    upadteSelectedInventoryQuantity
+    upadteSelectedInventoryQuantity,
+    setStockIns,
+    setStockOuts
 };
 
 export default persistedInventoryReducer;

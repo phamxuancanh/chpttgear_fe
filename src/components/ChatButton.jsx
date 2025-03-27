@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import LOGO from "../assets/a.avif";
 import { IoIosSend, IoIosCloseCircleOutline } from "react-icons/io";
@@ -9,7 +9,7 @@ export default function ChatButton() {
     const [inputMessage, setInputMessage] = useState("");
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(false);
-
+    const messagesEndRef = useRef(null);
     // Toggle hiển thị chatbox
     const toggleChatWindow = () => {
         setIsChatOpen(!isChatOpen);
@@ -72,6 +72,10 @@ export default function ChatButton() {
         }
     };
 
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages]);
+
     return (
         <>
             {/* Nút mở chat */}
@@ -86,9 +90,8 @@ export default function ChatButton() {
 
             {/* Cửa sổ chat */}
             {isChatOpen && (
-                <div className="fixed bottom-16 right-8 bg-gray-800 text-white w-96 h-[60vh] rounded-lg shadow-2xl flex flex-col p-4 z-40">
-                    <div className="flex justify-between items-center pb-2 border-b border-gray-600">
-                        <h2 className="font-semibold text-xl">ChatBox</h2>
+                <div className="fixed bottom-0 right-28 bg-gray-700 text-white w-96 h-[60vh] rounded-lg shadow-2xl flex flex-col p-4 z-40">
+                    <div className="flex justify-end items-center pb-2 border-b border-gray-600">
                         <button onClick={toggleChatWindow} className="text-gray-400">
                             <IoIosCloseCircleOutline className="text-2xl hover:text-red-500" />
                         </button>
@@ -100,8 +103,8 @@ export default function ChatButton() {
                             <div
                                 key={index}
                                 className={`p-2 rounded-md mb-2 ${msg.isUser
-                                        ? "bg-green-400 text-black self-end"
-                                        : "bg-gray-200 text-black self-start"
+                                    ? "bg-green-400 text-black self-end"
+                                    : "bg-gray-200 text-black self-start"
                                     }`}
                             >
                                 <p className="break-words">{msg.text}</p>
@@ -113,6 +116,7 @@ export default function ChatButton() {
                                 <p className="break-words text-gray-700 animate-pulse">Đang tải...</p>
                             </div>
                         )}
+                        <div ref={messagesEndRef} />
                     </div>
 
                     {/* Ô nhập và nút gửi */}

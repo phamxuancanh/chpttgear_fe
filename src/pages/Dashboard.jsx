@@ -14,7 +14,7 @@ import ROUTES from "../constants/Page";
 import Chats from "../components/Dashboard/Chats";
 import Loading from "../utils/Loading";
 import { useDispatch } from "react-redux";
-import { setAllProductsInInventory } from "../redux/inventorySlice";
+import { setAllProductsInInventory, setSelectedInventory } from "../redux/inventorySlice";
 
 export default function Dashboard() {
     const [activeTab, setActiveTab] = useState("analysis");
@@ -51,6 +51,7 @@ export default function Dashboard() {
             onClick={() => {
                 setActiveTab(tabName)
                 dispatch(setAllProductsInInventory([]))
+                dispatch(setSelectedInventory(null));
             }}
             className={`flex items-center w-full p-3 mb-2 rounded-lg transition-colors ${activeTab === tabName ? "bg-blue-600 text-white" : "hover:bg-gray-100"
                 }`}

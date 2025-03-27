@@ -8,7 +8,7 @@ import { styled } from '@mui/system'
 import { Pagination, Slider } from '@mui/material'
 import AddProductModal from "../Modal/AddProductModal";
 import DetailProductModal from "../Modal/DetailProductModal";
-import { findAllCategory, getProductsManagementPage, searchProducts } from "../../routers/ApiRoutes";
+import { findAllCategory, getAllInventory, getProductsManagementPage, searchProducts } from "../../routers/ApiRoutes";
 import AddCategoryModal from "../Modal/AddCategoryModal";
 import { FaDongSign } from "react-icons/fa6";
 import Loading from "../../utils/Loading";
@@ -17,6 +17,7 @@ import translationMap from "../../assets/Menu/translate.json";
 import { MaterialReactTable } from "material-react-table"
 import { Box, Button, Avatar } from "@mui/material";
 import { Tooltip } from "@mui/material";
+import { useDispatch, useSelector } from "react-redux";
 
 const useQuery = () => {
     return new URLSearchParams(useLocation().search);
@@ -36,6 +37,8 @@ export default function Products() {
     const initialPage = parseInt(query.get('page') || '1', 10);
     const [page, setPage] = useState(initialPage);
     const [loading, setLoading] = useState([])
+    const stockIns = useSelector(state => state.inventory.stockIns)
+    const stockOuts = useSelector(state => state.inventory.stockOuts)
     const colors = [
         { key: "black", value: "Đen" },
         { key: "white", value: "Trắng" },
@@ -64,6 +67,7 @@ export default function Products() {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
+                console.log()
                 const response = await findAllCategory();
                 setCategories(response.data);
             } catch (error) {
@@ -72,6 +76,19 @@ export default function Products() {
         };
         fetchCategories();
     }, []);
+
+    const getProductStock = (productId) => {
+        const stockIn = stockIns
+            .filter(item => item.product_id === productId)
+            .reduce((acc, item) => acc + item.quantity, 0);
+
+        const stockOut = stockOuts
+            .filter(item => item.product_id === productId)
+            .reduce((acc, item) => acc + item.quantity, 0);
+
+        return stockIn - stockOut;
+    };
+
     const handleCategoryChange = (e) => {
         const selectedIndex = e.target.selectedIndex;
         const selectedId = e.target.value;
@@ -103,6 +120,7 @@ export default function Products() {
         try {
             setLoading(true);
             const response = await searchProducts({ params });
+            console.log(response.data)
             setResults(response.data);
 
         } catch (error) {
@@ -341,11 +359,12 @@ export default function Products() {
             {
                 header: "STT",
                 enableColumnResizing: false,
-                size: 150,
+                size: 10,
                 Cell: ({ row }) => row.index + 1,
                 grow: false,
                 justifyContent: "center",
-                headerAlign: "center"
+                headerAlign: "center",
+                headerProps: { sx: { textAlign: "center" } }
 
             },
             {
@@ -361,8 +380,8 @@ export default function Products() {
                     />
                 ),
                 justifyContent: "center",
-                size: 250,
-                grow: false
+                size: 150,
+                grow: false,
             },
             {
                 accessorKey: "name",
@@ -370,14 +389,23 @@ export default function Products() {
                 enableSorting: false,
                 Cell: ({ cell }) => (
                     <Tooltip title={cell.getValue()} arrow>
-                        <Box sx={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "300px" }}>
+                        <Box sx={{
+                            //whiteSpace: "nowrap", // Không cho phép tự động xuống dòng
+                            overflow: "hidden", // Ẩn phần vượt quá khung
+                            textOverflow: "ellipsis", // Hiển thị "..." khi quá dài
+                            //maxWidth: "100%", // Đảm bảo không bị giới hạn cứng
+                            display: "block",
+                            wordBreak: "break-word"
+                        }}>
                             {cell.getValue()}
                         </Box>
                     </Tooltip>
                 ),
+                headerProps: { sx: { textAlign: "center" } }, // Căn giữa tiêu đề của cột này
                 grow: 2,
-                size: 280
+                size: 360
             },
+
             {
                 accessorKey: "color",
                 header: "Màu sắc",
@@ -389,25 +417,35 @@ export default function Products() {
                     return colorObj ? colorObj.value : colorKey;
                 },
                 grow: 1,
-                size: 120
+                size: 10
             },
             {
                 accessorKey: "price",
                 header: "Giá",
                 Cell: ({ cell }) => (
                     <Box sx={{ color: "green", fontWeight: "bold", display: "flex", alignItems: "center" }}>
-                        {cell.getValue()?.toLocaleString("en-US")} <FaDongSign />
+
+                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(cell.getValue())}
                     </Box>
                 ),
                 grow: 1,
-                size: 150
+                size: 50
             },
             {
                 accessorKey: "quantityInStock",
-                header: "Số lượng tồn",
-                enableSorting: false,
+                header: "Tồn kho",
+                enableSorting: false, // Cho phép sắp xếp
+                sortingFn: "alphanumeric", // Đảm bảo sắp xếp đúng nếu là số
+                Cell: ({ row }) => {
+                    const stock = parseInt(getProductStock(row.original.id) || row.original.quantityInStock) || 0;
+                    return (
+                        <Box sx={{ fontWeight: "bold" }}>
+                            {stock}
+                        </Box>
+                    );
+                },
                 grow: 1,
-                size: 120
+                size: 20
             },
             {
                 accessorKey: "actions",
@@ -434,22 +472,22 @@ export default function Products() {
                         </Button>
                     </div>
                 ),
-                size: 220,
+                size: 50,
                 grow: false,
                 flexGrow: 1
             }
-            
+
         ],
         [results]
     );
-    
-    
+
+
 
     return (
         <div className="flex-1 p-8">
             {loading ? <Loading /> : <div>
 
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex justify-between items-center mb-6 ">
                     <h2 className="text-2xl font-semibold">Danh sách sản phẩm</h2>
                     <div className="flex space-x-4">
                         <button
@@ -568,37 +606,50 @@ export default function Products() {
                         </div>
                     </div>
                 </div>
+                <Box sx={{ overflowX: "auto" }}>
+                    <MaterialReactTable
+                        columns={columns}
+                        data={results?.data || []}
+                        enablePagination={false}
+                        enableSorting={true}
+                        muiTableProps={{
+                            sx: {
+                                backgroundColor: "#fafafa",
+                                borderRadius: "8px",
+                                "& td, & th": {
+                                    borderRight: "1px solid #ddd"
+                                },
+                                "& th:last-child, & td:last-child": {
+                                    borderRight: "none"
+                                },
+                                textAlign: "center"
+                            }
+                        }}
+                        muiTableHeadCellProps={{
+                            sx: {
+                                fontWeight: "bold",
+                                backgroundColor: "#f1f5f9",
+                                textAlign: "center" // Căn giữa tiêu đề
+                            }
+                        }}
+                        muiTableBodyCellProps={{
+                            sx: {
+                                textAlign: "center" // Căn giữa nội dung của các ô dữ liệu
+                            }
+                        }}
+                    />
+                </Box>
+                <div className="flex justify-center">
+                    <CustomPagination
+                        count={totalPage}
+                        page={page}
+                        onChange={(_, page) => handleChangeResultPagination(page)}
+                        boundaryCount={1}
+                        siblingCount={1}
+                    />
+                </div>
             </div>}
-            <Box sx={{ overflowX: "auto" }}>
-                <MaterialReactTable
-                    columns={columns}
-                    data={results?.data || []}
-                    enablePagination={false}
-                    // enableColumnResizing={true}
-                    enableSorting={true}
-                    // muiTableProps={{
-                    //     sx: {
-                    //         backgroundColor: "#fafafa",
-                    //         borderRadius: "8px",
-                    //     }
-                    // }}
-                    muiTableHeadCellProps={{
-                        sx: {
-                            fontWeight: "bold",
-                            backgroundColor: "#f1f5f9"
-                        }
-                    }}
-                />
-            </Box>
-            <div className="flex justify-center">
-                <CustomPagination
-                    count={totalPage}
-                    page={page}
-                    onChange={(_, page) => handleChangeResultPagination(page)}
-                    boundaryCount={1}
-                    siblingCount={1}
-                />
-            </div>
+
         </div>
     );
 };

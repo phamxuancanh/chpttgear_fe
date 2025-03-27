@@ -240,6 +240,11 @@ export const createStockIn = async (payload) => {
         data: payload,
     });
 };
+export const createStockOuts = async (payload) => {
+    return await requestWithJwt.post(`/inventory/stock-out`, {
+        data: payload,
+    });
+};
 export const increaseQuantity = async (inventory_id, payload) => {
 
     try {
@@ -539,6 +544,28 @@ export const calculateShippingFee = async (toDistrict, toWard, weight, ShopId) =
     } catch (error) {
         console.error("Lỗi khi gọi API GHN:", error);
         throw error.response?.data || { message: "Lỗi khi gọi API GHN" };
+    }
+};
+
+export const createShippingOrder = async (data) => {
+    try {
+        const response = await requestWithJwt.post(
+            "/shipping",
+            data,
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    Token: "aa43f060-d157-11ef-b2e4-6ec7c647cc27",
+                    ShopId: "195800",
+                },
+            }
+        );
+
+        console.log("Response:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Lỗi khi tạo đơn hàng:", error.response?.data || error.message);
+        throw new Error("Lỗi khi tạo đơn hàng");
     }
 };
 
