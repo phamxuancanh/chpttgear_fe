@@ -104,6 +104,8 @@ export default function Order() {
                 return "bg-orange-100 text-orange-800";
             case "PARTIALLY_PAID":
                 return "bg-cyan-100 text-cyan-800";
+            case "REFUND":
+                return "bg-red-100 text-red-800";
             default:
                 return "bg-gray-100 text-gray-800";
         }
@@ -117,7 +119,8 @@ export default function Order() {
         "DELIVERED": "Giao hàng thành công",
         "CANCELLED": "Đã hủy",
         "PENDING_PAYMENT": "Chờ thanh toán tiền cọc",
-        "PARTIALLY_PAID": "Thanh toán một phần"
+        "PARTIALLY_PAID": "Thanh toán một phần",
+        "REFUND": "Trả hàng / Hoàn tiền",
     };
 
     const productMap = products.reduce((acc, product) => {
@@ -241,9 +244,9 @@ export default function Order() {
                                                             {expandedOrders[order.order_id] && (
                                                                 <div className="mt-4 space-y-3">
                                                                     {order.order_item.slice(1).map((item) => (
-                                                                        <div key={item.order_item_id} className="flex items-center justify-between gap-4 p-3 bg-gray-50 rounded-md border border-gray-200">
-                                                                            <div className="flex items-center gap-4">
-                                                                                <div className="w-16 h-16 flex items-center justify-center border border-gray-100 rounded-md overflow-hidden">
+                                                                        <div key={item.order_item_id} className="flex items-center justify-between gap-5 p-4 border-b border-gray-200">
+                                                                            <div className="flex items-center gap-5">
+                                                                                <div className="w-20 h-20 flex items-center justify-center border border-gray-100 rounded-md overflow-hidden">
                                                                                     <img
                                                                                         src={productMap[item.product_id]?.image.split(",")[0] || "https://via.placeholder.com/100"}
                                                                                         alt={productMap[item.product_id]?.name || "Sản phẩm"}
@@ -252,13 +255,13 @@ export default function Order() {
                                                                                     />
                                                                                 </div>
                                                                                 <div>
-                                                                                    <h3 className="text-[15px] font-medium text-gray-900">
+                                                                                    <h3 className="text-[16px] font-semibold text-gray-900">
                                                                                         {productMap[item.product_id]?.name || "Sản phẩm"}
                                                                                     </h3>
-                                                                                    <p className="text-gray-600 text-[13px]">Số lượng: {item.quantity || 1}</p>
+                                                                                    <p className="text-gray-600 text-[14px]">Số lượng: {item.quantity || 1}</p>
                                                                                 </div>
                                                                             </div>
-                                                                            <p className="text-[15px] font-semibold text-orange-600">
+                                                                            <p className="text-[16px] font-semibold text-orange-600">
                                                                                 {(Number(item.price?.toFixed(2)) || 0).toLocaleString("vi-VN")}₫
                                                                             </p>
                                                                         </div>

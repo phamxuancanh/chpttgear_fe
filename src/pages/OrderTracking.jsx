@@ -69,10 +69,10 @@ export default function OrderTracking() {
   }, {});
 
   const orderStages = [
-    { id: 1, name: "Đơn hàng đã đặt", icon: <FaBox />, completed: true },
-    { id: 2, name: "Đã xác nhận đơn hàng", icon: <FaCheckCircle />, completed: true },
-    { id: 3, name: "Bàn giao cho đơn vị vận chuyển", icon: <FaTruck />, completed: true },
-    { id: 4, name: "Đang vận chuyển", icon: <FaShippingFast />, completed: false },
+    { id: 1, name: "Đang chuẩn bị hàng", icon: <FaBox />, completed: true },
+    { id: 2, name: "Đã gửi cho bên vận chuyển", icon: <FaCheckCircle />, completed: true },
+    { id: 3, name: "Đang giao hàng", icon: <FaTruck />, completed: true },
+    { id: 4, name: "Giao hàng thành công", icon: <FaShippingFast />, completed: false },
     { id: 5, name: "Đã nhận được hàng", icon: <FaCheckCircle />, completed: false }
   ];
 
@@ -94,12 +94,28 @@ export default function OrderTracking() {
   };
 
   const statusMap = {
-    "PENDING": "Đặt hàng thành công",
-    "PAID": "Đã thanh toán",
+    "PENDING": "Đang chuẩn bị hàng",
+    "PAID": "Đã gửi cho bên vận chuyển",
     "SHIPPED": "Đang giao hàng",
     "DELIVERED": "Giao hàng thành công",
     "CANCELLED": "Đã hủy"
   };
+  const statusOrderMap = {
+    "PENDING": 1,   // Đơn hàng đã đặt
+    "PAID": 2,      // Đã xác nhận đơn hàng
+    "SHIPPED": 3,   // Bàn giao cho đơn vị vận chuyển
+    "DELIVERED": 4, // Đang vận chuyển
+    "CANCELLED": 0  // Đã hủy (hoặc không hiển thị progress)
+  };
+
+  const currentStageIndex = statusOrderMap[order?.status] || 0;
+  const progressPercentage = (currentStageIndex / orderStages.length) * 100;
+
+  // Cập nhật danh sách stages với trạng thái completed
+  const updatedOrderStages = orderStages.map((stage, index) => ({
+    ...stage,
+    completed: index < currentStageIndex // Nếu index nhỏ hơn trạng thái hiện tại => Đã hoàn thành
+  }));
 
   return (
     <div className="min-h-screen bg-gray-100 py-10 px-4 sm:px-6 lg:px-8">
@@ -138,15 +154,16 @@ export default function OrderTracking() {
           <div className="relative">
             <div className="overflow-hidden h-3 mb-6 text-xs flex rounded bg-gray-300">
               <div
-                style={{ width: "50%" }}
+                style={{ width: `${progressPercentage}%` }}
                 className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-green-600"
               ></div>
             </div>
             <div className="flex justify-between">
-              {orderStages.map((stage) => (
+              {updatedOrderStages.map((stage) => (
                 <div key={stage.id} className="flex flex-col items-center">
                   <div
-                    className={`w-12 h-12 flex items-center justify-center rounded-full text-lg font-bold ${stage.completed ? "bg-green-600 text-white" : "bg-gray-300 text-gray-500"}`}
+                    className={`w-12 h-12 flex items-center justify-center rounded-full text-lg font-bold ${stage.completed ? "bg-green-600 text-white" : "bg-gray-300 text-gray-500"
+                      }`}
                   >
                     {stage.icon}
                   </div>

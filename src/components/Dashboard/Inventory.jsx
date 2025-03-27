@@ -25,8 +25,8 @@ export default function Inventory() {
     const itemsPerPage = 6;
     const allInventoryInRedux = useSelector(state => state.inventory.inventories)
     const allProductsInInventoryInRedux = useSelector(state => state.inventory.productsInInventory)
-    const stockInsInInventory = useSelector(state => state.inventory.stockIns)
-    const stockOutsInInventory = useSelector(state => state.inventory.stockOuts)
+    const stockInsInInventory = useSelector(state => state.inventory.stockInsInInventory)
+    const stockOutsInInventory = useSelector(state => state.inventory.stockOutsInInventory)
     const selectedInventory = useSelector(state => state.inventory.selectedInventory)
     const dispatch = useDispatch()
 
@@ -56,12 +56,12 @@ export default function Inventory() {
 
         const queryString = res.join(",");
         const res3 = await getProductsByListId(queryString)
-
+        console.log(res1)
         dispatch(setAllProductsInInventory(res3.data || []))
         dispatch(setStockInsInInventory(res1 || []))
         dispatch(setStockOutsInInventory(res2 || []))
 
-
+        setCurrentPage(1)
     };
 
     const filteredProducts = allProductsInInventoryInRedux.filter(
@@ -297,44 +297,80 @@ export default function Inventory() {
                                 />
                                 <h3 className="text-xl font-bold mb-2">{selectedProduct.name}</h3>
                                 <div className="flex justify-start">
-                                    <p className="text-gray-600 mb-4 font-bold">Giá hiện tại: {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(getProductCost(selectedProduct.id))}</p>
-                                    <FaDongSign className="ml-1" />
+                                    <p className="text-gray-600 mb-4 font-bold">Giá nhập trung bình: {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(getProductCost(selectedProduct.id))}</p>
+
                                 </div>
                             </div>
-                            <div>
-                                <h4 className="text-lg font-bold mb-3">Lịch sử nhập hàng</h4>
-                                <div className="overflow-x-auto overflow-y-auto max-h-[30vh]"> {/* Added max height for vertical scrolling */}
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ngày</th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Số lượng</th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Đơn giá</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {stockInsInInventory?.filter(stock_in => stock_in.product_id === selectedProduct.id).length > 0 ? (
-                                                stockInsInInventory
-                                                    .filter(stock_in => stock_in.product_id === selectedProduct.id)
-                                                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                                                    .map((stock_in, index) => (
-                                                        <tr key={index} className="hover:bg-gray-100">
-                                                            <td className="px-6 py-4 text-sm text-gray-900">{DateConverter(stock_in.createdAt)}</td>
-                                                            <td className="px-6 py-4 text-sm text-gray-900">{stock_in.quantity}</td>
-                                                            <td className="px-6 py-4 text-sm text-gray-900 flex justify-start"> {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(stock_in.price)} </td>
-                                                        </tr>
-                                                    ))
-                                            ) : (
+                            <div className="max-h-[40vh] overflow-y-auto">
+                                <div >
+                                    <h4 className="text-lg font-bold mb-3">Lịch sử nhập hàng</h4>
+                                    <div className="overflow-x-auto overflow-y-auto max-h-[30vh]"> {/* Added max height for vertical scrolling */}
+                                        <table className="min-w-full divide-y divide-gray-200">
+                                            <thead className="bg-gray-50">
                                                 <tr>
-                                                    <td colSpan="3" className="px-6 py-4 text-center text-gray-500">
-                                                        Không có dữ liệu ...
-                                                    </td>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ngày</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Số lượng</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Đơn giá</th>
                                                 </tr>
-                                            )}
-                                        </tbody>
+                                            </thead>
+                                            <tbody className="bg-white divide-y divide-gray-200">
+                                                {stockInsInInventory?.filter(stock_in => stock_in.product_id === selectedProduct.id).length > 0 ? (
+                                                    stockInsInInventory
+                                                        .filter(stock_in => stock_in.product_id === selectedProduct.id)
+                                                        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                                                        .map((stock_in, index) => (
+                                                            <tr key={index} className="hover:bg-gray-100">
+                                                                <td className="px-6 py-4 text-sm text-gray-900">{DateConverter(stock_in.createdAt)}</td>
+                                                                <td className="px-6 py-4 text-sm text-gray-900">{stock_in.quantity}</td>
+                                                                <td className="px-6 py-4 text-sm text-gray-900 flex justify-start"> {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(stock_in.price)} </td>
+                                                            </tr>
+                                                        ))
+                                                ) : (
+                                                    <tr>
+                                                        <td colSpan="3" className="px-6 py-4 text-center text-gray-500">
+                                                            Không có dữ liệu ...
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
 
-                                    </table>
+                                        </table>
 
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 className="text-lg font-bold mb-3">Lịch sử xuất hàng</h4>
+                                    <div className="overflow-x-auto overflow-y-auto max-h-[30vh]"> {/* Added max height for vertical scrolling */}
+                                        <table className="min-w-full divide-y divide-gray-200">
+                                            <thead className="bg-gray-50">
+                                                <tr>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ngày</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Số lượng</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="bg-white divide-y divide-gray-200">
+                                                {stockOutsInInventory?.filter(stock_out => stock_out.product_id === selectedProduct.id).length > 0 ? (
+                                                    stockOutsInInventory
+                                                        .filter(stock_out => stock_out.product_id === selectedProduct.id)
+                                                        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                                                        .map((stock_out, index) => (
+                                                            <tr key={index} className="hover:bg-gray-100">
+                                                                <td className="px-6 py-4 text-sm text-gray-900">{DateConverter(stock_out.createdAt)}</td>
+                                                                <td className="px-6 py-4 text-sm text-gray-900">{stock_out.quantity}</td>
+                                                            </tr>
+                                                        ))
+                                                ) : (
+                                                    <tr>
+                                                        <td colSpan="3" className="px-6 py-4 text-center text-gray-500">
+                                                            Không có dữ liệu ...
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+
+                                        </table>
+
+                                    </div>
                                 </div>
                             </div>
                         </div>

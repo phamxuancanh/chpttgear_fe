@@ -18,6 +18,7 @@ export default function Order() {
     const [loading, setLoading] = useState(false);
 
 
+
     const fetchAllOrder = async (pageNumber) => {
         try {
             const res = await getAllOrders(pageNumber, pageSize);
@@ -94,11 +95,10 @@ export default function Order() {
                                 onChange={(e) => setStatusFilter(e.target.value)}
                             >
                                 <option value="all">Tất Cả</option>
-                                <option value="Đang Chuẩn Bị">Đang Chuẩn Bị</option>
-                                <option value="Đã Xác Nhận">Đã Xác Nhận</option>
-                                <option value="Đang Vận Chuyển">Đang Vận Chuyển</option>
-                                <option value="Đã Giao">Đã Giao</option>
-                                <option value="Đã Hủy">Đã Hủy</option>
+                                <option value="PENDING">Đang xử lý</option>
+                                <option value="PAID">Đã hoàn thành</option>
+                                <option value="CANCELLED">Đã hủy</option>
+
                             </select>
                         </div>
 
@@ -159,7 +159,7 @@ export default function Order() {
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 {order.total_amount.toLocaleString()}đ
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">{order.payment_method}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">{order.payment_method == 'COD' ? 'Thanh toán khi nhận hàng' : 'Thanh toán bằng Paypal'}</td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[order.status]}`}>
                                                     {statusMap[order.status]}
