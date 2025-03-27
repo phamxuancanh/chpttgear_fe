@@ -5,49 +5,47 @@ import { AiOutlineCheckCircle } from 'react-icons/ai';
 const PaypalSuccess = () => {
     const [countdown, setCountdown] = useState(3);
     const paymentConfirmedRef = useRef(false);
+    const redirectTimeoutRef = useRef(null);
 
-    useEffect(() => {
+    const handleRedirect = async () => {
+        if (paymentConfirmedRef.current) return; // Ngăn gọi API nhiều lần
+
         const query = new URLSearchParams(window.location.search);
-        const orderId = query.get('orderId')
+        const orderId = query.get('orderId');
         const token = query.get('token');
         const payerId = query.get('PayerID');
-        const transaction_id = query.get('transactionId')
+        const transactionId = query.get('transactionId');
 
-        const confirmPayment = async () => {
-            if (token && payerId) {
-                try {
-                    if (!paymentConfirmedRef.current) {
-                        const response = await getPaypalSuccess(orderId, token, payerId);
-                        const res = await updateTransactionStatus(transaction_id, { status: "SUCCESS", response_message: "Payment via PayPal was successful." })
-                        if (response.status === 200 && res.status === 200) {
-                            paymentConfirmedRef.current = true;
-                            const redirectTimeout = setTimeout(() => {
-                                window.location.href = '/';
-                            }, 3000);
-                            return () => clearTimeout(redirectTimeout);
-                        }
-                    }
-                } catch (error) {
-                    console.error('Lỗi xác thực giao dịch:', error);
-                }
-            } else {
-                console.error('Payment ID hoặc Payer ID không hợp lệ');
-            }
-        };
-
-        confirmPayment();
-
-        const countdownInterval = setInterval(() => {
-            setCountdown(prev => {
-                if (prev === 1) {
-                    clearInterval(countdownInterval);
-                    return prev;
-                }
-                return prev - 1;
+        try {
+            paymentConfirmedRef.current = true;
+            await getPaypalSuccess(orderId, token, payerId);
+            await updateTransactionStatus(transactionId, {
+                status: "SUCCESS",
+                response_message: "Payment via PayPal was successful.",
             });
+
+            window.location.href = '/';
+        } catch (error) {
+            console.error('Lỗi xác thực giao dịch:', error);
+        }
+    };
+
+    useEffect(() => {
+        // Gọi API ngay khi trang load
+        handleRedirect();
+
+        // Bắt đầu đếm ngược
+        const countdownInterval = setInterval(() => {
+            setCountdown(prev => (prev > 1 ? prev - 1 : prev));
         }, 1000);
 
-        return () => clearInterval(countdownInterval);
+        // Chuyển trang sau 3 giây
+        redirectTimeoutRef.current = setTimeout(handleRedirect, 3000);
+
+        return () => {
+            clearInterval(countdownInterval);
+            clearTimeout(redirectTimeoutRef.current);
+        };
     }, []);
 
     return (
@@ -58,13 +56,16 @@ const PaypalSuccess = () => {
                 </div>
                 <h1 className="text-3xl font-bold text-green-600 mb-2">Thanh toán thành công</h1>
                 <p className="text-lg text-gray-500">Cảm ơn bạn đã thực hiện giao dịch!</p>
-                <p className="text-lg text-gray-500">Bạn sẽ được chuyển trở về trang chủ trong {countdown} giây.</p>
-                <a
-                    href="/"
+                <p className="text-lg text-gray-500">Bạn sẽ được chuyển về trang chủ trong {countdown} giây.</p>
+                <button
+                    onClick={() => {
+                        clearTimeout(redirectTimeoutRef.current); // Hủy timeout nếu bấm nút
+                        handleRedirect();
+                    }}
                     className="mt-4 inline-block bg-green-500 text-white font-semibold py-2 px-4 rounded hover:bg-green-600 transition"
                 >
                     Trở về trang chủ
-                </a>
+                </button>
             </div>
         </div>
     );

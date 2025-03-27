@@ -347,7 +347,7 @@ export default function Payment() {
           orderId = orderData.order.order_id;
           approvalUrl = orderData.approvalUrl;
         } else {
-          orderId = orderData.order_id;
+          orderId = orderData.order.order_id;
         }
 
         const orderItemPromises = cartItems.map(item =>
@@ -363,7 +363,7 @@ export default function Payment() {
         await Promise.all(orderItemPromises);
 
         const emailContext = {
-          orderId: orderData.order.id,
+          orderId: orderId,
           orderDate: orderData.order.createdAt,
           orderTotal: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.order.total_amount),
           shippingFee: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.order.shipping_amount),
