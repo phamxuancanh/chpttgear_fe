@@ -82,7 +82,7 @@ export default function Dashboard() {
                         <NavItem icon={FiBox} text="Quản lý sản phẩm" tabName="products" />
                         <NavItem icon={FiShoppingCart} text="Quản lý đơn hàng" tabName="orders" />
                         <NavItem icon={FiPackage} text="Quản lý kho" tabName="inventories" />
-                        <NavItem icon={FiMessageCircle} text="Quản lý tin nhắn" tabName="chats" />
+                        {/* <NavItem icon={FiMessageCircle} text="Quản lý tin nhắn" tabName="chats" /> */}
                         <NavItem icon={FiLogOut} text="Đăng xuất" tabName="logout" />
                     </nav>
                 </div>
