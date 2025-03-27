@@ -74,7 +74,7 @@ export default function Order() {
     };
     // 
     // Lọc và sắp xếp đơn hàng theo ngày tạo mới nhất
-    const uniqueStatuses = ["Tất cả", "PENDING", "PAID", "SHIPPED", "DELIVERED", "CANCELLED",];
+    const uniqueStatuses = ["Tất cả", "PENDING", "PAID", "SHIPPED", "DELIVERED", "CANCELLED", "PENDING_PAYMENT", "PARTIALLY_PAID"];
 
     // Lọc đơn hàng theo status và searchQuery
     const filteredOrders = orders
@@ -100,6 +100,10 @@ export default function Order() {
                 return "bg-green-100 text-green-800";
             case "CANCELLED":
                 return "bg-red-100 text-red-800";
+            case "PENDING_PAYMENT":
+                return "bg-orange-100 text-orange-800";
+            case "PARTIALLY_PAID":
+                return "bg-cyan-100 text-cyan-800";
             case "REFUND":
                 return "bg-red-100 text-red-800";
             default:
@@ -109,11 +113,13 @@ export default function Order() {
 
 
     const statusMap = {
-        "PENDING": "Chờ thanh toán",
-        "SHIPPED": "Vận chuyển",
-        "DELIVERED": "Chờ giao hàng",
-        "PAID": "Hoàn thành",
+        "PENDING": "Đặt hàng thành công",
+        "PAID": "Đã thanh toán",
+        "SHIPPED": "Đang giao hàng",
+        "DELIVERED": "Giao hàng thành công",
         "CANCELLED": "Đã hủy",
+        "PENDING_PAYMENT": "Chờ thanh toán tiền cọc",
+        "PARTIALLY_PAID": "Thanh toán một phần",
         "REFUND": "Trả hàng / Hoàn tiền",
     };
 
@@ -147,7 +153,7 @@ export default function Order() {
                     </div>
                 </div>
 
-                <div className="flex space-x-4 border-b pb-2 justify-between px-24">
+                <div className="flex space-x-2 border-b pb-2 justify-between px-2">
                     {uniqueStatuses.map((status) => {
                         const count = orderCounts[status] ?? 0;
                         return (

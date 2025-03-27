@@ -422,6 +422,9 @@ export const getAllOrders = async (page = 1, pageSize = 10) => {
     return await requestWithJwt.get(`/orders?page=${page}&pageSize=${pageSize}`);
 };
 
+export const getAllOrdersNoPaging = async () => {
+    return await requestWithJwt.get(`/orders/all-orders`);
+};
 
 export const getOrderById = async (orderId) => {
     return await requestWithJwt.get(`/orders/${orderId}`);
@@ -436,6 +439,9 @@ export const createOrder = async (payload) => {
     return await requestWithJwt.post(`/orders/`, payload);
 };
 
+export const createPaypalDeposit = async (payload) => {
+    return await requestWithJwt.post(`/orders/paypal`, payload);
+};
 
 export const updateOrder = async (orderId, payload) => {
     return await requestWithJwt.put(`/orders/${orderId}`, payload);
@@ -473,6 +479,11 @@ export const getPaypalCancel = async (orderId) => {
         `/orders/paypal/cancel?orderId=${orderId}`
     );
 };
+
+export const sendEmail = async (email, context) => {
+    return await requestWithJwt.post(`/orders/send-email`, { email, context });
+};
+
 // paymentService
 export const createPayment = async (paymentData) => {
     return await requestWithJwt.post('/payments', paymentData);

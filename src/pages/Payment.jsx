@@ -4,7 +4,7 @@ import { TbTruckDelivery } from "react-icons/tb";
 import { Link, useNavigate } from "react-router-dom";
 import provinceData from "../assets/address/province.json";
 import { useDispatch, useSelector } from "react-redux";
-import { calculateShippingFee, createOrder, createOrderItem, createPayment, createTransaction, editUserById } from "../routers/ApiRoutes";
+import { calculateShippingFee, createOrder, createOrderItem, createPayment, createPaypalDeposit, createTransaction, editUserById, sendEmail } from "../routers/ApiRoutes";
 import Loading from "../utils/Loading";
 import AddressModal from "../components/Modal/AddressModal";
 import { useModal } from "../context/ModalProvider";
@@ -76,7 +76,8 @@ export default function Payment() {
 
     fetchExchangeRate();
     setProvinces(provinceData);
-
+    console.log(userFromRedux)
+    console.log(cartItems)
   }, []);
 
   useEffect(() => {
@@ -222,6 +223,84 @@ export default function Payment() {
     }
 
     const totalAmountVnd = cartItems.reduce((total, item) => total + item.price * item.quantity, 0) + shippingFee;
+    let status = "PENDING";
+    let prepaidAmount = 0;
+
+    if (formData.paymentMethod === "COD" && totalAmountVnd > 50000000) {
+      const isConfirmed = window.confirm("Giá trị đơn hàng vượt quá 50 triệu, bạn cần đặt cọc 10% giá trị đơn hàng qua PayPal. Bạn có muốn tiếp tục?");
+      if (!isConfirmed) {
+        setLoading(false);
+        return;
+      }
+
+      prepaidAmount = Math.ceil(totalAmountVnd * 0.1);
+
+      try {
+        const paypalResponse = await createPaypalDeposit({
+          user_id: userFromRedux.id,
+          total_amount: totalAmountVnd,
+          status: "PENDING_PAYMENT",
+          prepaid_amount: prepaidAmount,
+          payment_method: "COD",
+          shipping_amount: shippingFee,
+          provinceCode: String(selectedProvince.id),
+          districtCode: String(selectedDistrict.id),
+          wardCode: String(selectedWard.id),
+          houseNumber: `${formData.streetAddress}, ${selectedWard.name}, ${selectedDistrict.name}, ${selectedProvince.name}`,
+          email: formData.email,
+          phone: formData.phoneNumber
+        });
+
+        const orderId = paypalResponse.data.order.order_id;
+        console.log(orderId);
+
+        const orderItemPromises = cartItems.map(item =>
+          createOrderItem({
+            order_id: orderId,
+            product_id: item.productId,
+            quantity: item.quantity,
+            price: item.price,
+            profit: item.profit,
+          })
+        );
+
+        const orderItemsResponses = await Promise.all(orderItemPromises);
+
+        const allItemsCreated = orderItemsResponses.every(res => res.status === 201);
+
+        console.log(paypalResponse.data);
+        console.log(orderItemsResponses);
+
+        if (paypalResponse?.data.approvalUrl && allItemsCreated) {
+          const emailContext = {
+            orderId: orderId,
+            orderDate: paypalResponse.data.order.createdAt,
+            orderTotal: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(paypalResponse.data.order.total_amount),
+            address: paypalResponse.data.order.houseNumber,
+            products: cartItems.map(item => ({
+              imageUrl: item.image.split(',')[0],
+              name: item.name,
+              price: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price),
+              quantity: item.quantity
+            })),
+            shippingFee: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(paypalResponse.data.order.shipping_amount),
+            totalAmount: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(paypalResponse.data.order.total_amount + paypalResponse.data.order.shipping_amount),
+          }
+          await sendEmail(formData.email, emailContext);
+          window.location.href = paypalResponse.data.approvalUrl;
+          return;
+        } else {
+          throw new Error("Không tìm thấy approvalUrl từ PayPal hoặc tạo order item thất bại");
+        }
+      } catch (error) {
+        console.error("Lỗi khi tạo đơn đặt cọc:", error);
+        alert("Đã xảy ra lỗi khi tạo đơn đặt cọc. Vui lòng thử lại!");
+        setLoading(false);
+        return;
+      }
+
+    }
+
     const payload = {
       user_id: userFromRedux.id,
       status: "PENDING",
@@ -232,7 +311,8 @@ export default function Payment() {
       districtCode: String(selectedDistrict.id),
       wardCode: String(selectedWard.id),
       houseNumber: `${formData.streetAddress}, ${selectedWard.name}, ${selectedDistrict.name}, ${selectedProvince.name}`,
-      email: userFromRedux.email,
+      email: formData.email,
+      phone: formData.phoneNumber
     };
 
     let isConfirmed = false;
@@ -255,6 +335,7 @@ export default function Payment() {
           toast.error("Set default address failed");
         }
       }
+
       const resOrder = await createOrder(payload);
 
       if (resOrder.status === 201) {
@@ -275,34 +356,32 @@ export default function Payment() {
             product_id: item.productId,
             quantity: item.quantity,
             price: item.price,
-            profit: 0,
+            profit: item.profit,
           })
         );
 
         await Promise.all(orderItemPromises);
 
+        const emailContext = {
+          orderId: orderData.order.id,
+          orderDate: orderData.order.createdAt,
+          orderTotal: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.order.total_amount),
+          shippingFee: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.order.shipping_amount),
+          totalAmount: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.order.total_amount + orderData.order.shipping_amount),
+          address: orderData.order.houseNumber,
+          products: cartItems.map(item => ({
+            imageUrl: item.image.split(',')[0],
+            name: item.name,
+            price: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price),
+            quantity: item.quantity
+          }))
+        };
+
+        await sendEmail(formData.email, emailContext);
+
 
         if (formData.paymentMethod === "PAYPAL") {
           if (approvalUrl) {
-            // const paymentData = {
-            //   order_id: orderId,
-            //   user_id: userFromRedux.id,
-            //   payment_method: "PAYPAL",
-            //   amount: totalAmountVnd
-            // }
-            // const res = await createPayment(paymentData);
-            // const data = res.data;
-            // console.log(res.data);
-            // const transactionData = {
-            //   payment_id: data.payment_id,
-            //   user_id: userFromRedux.id,
-            //   transaction_type: "DEBIT",
-            //   amount: totalAmountVnd,
-            //   status: "INIT"
-            // }
-            // const res1 = await createTransaction(transactionData);
-            // console.log(res1.data)
-
             window.location.href = approvalUrl;
             return;
           } else {

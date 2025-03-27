@@ -43,7 +43,19 @@ export default function Order() {
         "PAID": "bg-blue-100 text-blue-800",
         "SHIPPED": "bg-purple-100 text-purple-800",
         "DELIVERED": "bg-green-100 text-green-800",
-        "CANCELLED": "bg-red-100 text-red-800"
+        "CANCELLED": "bg-red-100 text-red-800",
+        "PENDING_PAYMENT": "bg-orange-100 text-orange-800",
+        "PARTIALLY_PAID": "bg-cyan-100 text-cyan-800"
+    };
+
+    const statusMap = {
+        "PENDING": "Đặt hàng thành công",
+        "PAID": "Đã thanh toán",
+        "SHIPPED": "Đang giao hàng",
+        "DELIVERED": "Giao hàng thành công",
+        "CANCELLED": "Đã hủy",
+        "PENDING_PAYMENT": "Chờ thanh toán tiền cọc",
+        "PARTIALLY_PAID": "Thanh toán một phần"
     };
 
     const handleViewDetails = (order) => {
@@ -150,7 +162,7 @@ export default function Order() {
                                             <td className="px-6 py-4 whitespace-nowrap">{order.payment_method == 'COD' ? 'Thanh toán khi nhận hàng' : 'Thanh toán bằng Paypal'}</td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[order.status]}`}>
-                                                    {order.status == 'PENDING' ? 'Đang xử lý' : order.status == 'PAID' ? 'Hoàn thành' : 'Đã Hủy'}
+                                                    {statusMap[order.status]}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap space-x-2">

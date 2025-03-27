@@ -39,8 +39,12 @@ export default function Cart() {
                     getAllStockOut()
 
                 ]);
+                console.log(stockIns)
+                console.log(stockOuts)
+                console.log(productsResponse)
                 const cartItemsMapped = cartItemResponse.data.map(item => {
                     const product = productsResponse.data.find(p => p.id === item.productId);
+                    const stockIn = stockIns[item.productId] || {};
                     return {
                         itemId: item.id,
                         productId: item.productId,
@@ -49,10 +53,11 @@ export default function Cart() {
                         quantity: parseInt(item.quantity),
                         image: product?.image,
                         weight: product?.weight,
-                        size: product?.size
-
+                        size: product?.size,
+                        profit: (product.price && stockIn.price) ? parseFloat(product.price) - parseFloat(stockIn.price) : 0
                     };
                 });
+                console.log(cartItemsMapped)
                 setStockOuts(stockOuts)
                 setStockIns(stockIns)
                 setCartItems(cartItemsMapped);
