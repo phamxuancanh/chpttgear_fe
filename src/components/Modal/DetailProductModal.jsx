@@ -25,7 +25,6 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
     const [product, setProduct] = useState(null);
     const stockIns = useSelector(state => state.inventory.stockIns)
     const stockOuts = useSelector(state => state.inventory.stockOuts)
-    const [stockData, setStockData] = useState([])
 
     useEffect(() => {
         if (product_id) {

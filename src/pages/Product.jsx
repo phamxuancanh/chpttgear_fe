@@ -197,12 +197,13 @@ export default function Product() {
                                 />
                                 <div className="flex justify-between text-sm text-muted-foreground">
                                     <div className="flex justify-start">
-                                        <span>0</span>
-                                        < FaDongSign className="font-thin" />
+
+                                        <span>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(0)}</span>
+
                                     </div>{/* Chỉ format khi hiển thị */}
                                     <div className="flex justify-start">
-                                        <span>{priceRange.toLocaleString('en-US')}</span>
-                                        < FaDongSign className="font-thin" />
+                                        <span> <span>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(priceRange)}</span></span>
+
                                     </div>{/* Chỉ format khi hiển thị */}
                                 </div>
                             </div>

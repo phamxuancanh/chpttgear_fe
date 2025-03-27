@@ -48,7 +48,11 @@ const inventorySlice = createSlice({
         updateStockIn: (state, action) => {
 
             state.stockInsInInventory.push(action.payload);
+            state.stockIns.push(action.payload);
 
+        },
+        updateStockOut: (state, action) => {
+            state.stockOuts.push(...action.payload);
         },
         updateQuantityByInventory: (state, action) => {
 
@@ -82,6 +86,7 @@ const {
     setStockInsInInventory,
     addProductsToInventory,
     updateStockIn,
+    updateStockOut,
     addInventory,
     updateQuantityByInventory,
     setSelectedInventory,
@@ -105,6 +110,7 @@ export {
     setStockInsInInventory,
     addProductsToInventory,
     updateStockIn,
+    updateStockOut,
     addInventory,
     updateQuantityByInventory,
     setSelectedInventory,

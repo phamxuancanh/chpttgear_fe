@@ -133,6 +133,15 @@ export default function Home() {
         console.log(stockIn - stockOut)
         return stockIn - stockOut;
     };
+    const categoryBanner = [
+        { name: "VGA", banner: BANNER4 },
+        { name: "CPU", banner: BANNER5 },
+        { name: "MAINBOARD", banner: BANNER6 },
+        { name: "RAM", banner: BANNER7 },
+        { name: "SSD/HDD", banner: BANNER8 },
+        { name: "CASE", banner: BANNER10 },
+        { name: "PSU", banner: BANNER11 }
+    ];
 
 
     return (
@@ -210,70 +219,24 @@ export default function Home() {
                         </div>
                     </section>
 
-                    <section className="mb-12">
-                        <img src={BANNER4} alt="" />
-                        <ProductCarousel products={products.filter(p => p.categoryName == 'VGA' && getProductStock(p.id) > 0)} />
-                        <div className="w-full  flex justify-center items-center py-2">
-                            <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white"
-                                onClick={() => handleProductClick('VGA')}
-                            >Xem thêm</button>
-                        </div>
-                    </section>
-                    <section className="mb-12">
-                        <img src={BANNER5} alt="" />
-                        <ProductCarousel products={products.filter(p => p.categoryName == 'CPU' && getProductStock(p.id) > 0)} />
-                        <div className="w-full  flex justify-center items-center py-2">
-                            <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white"
-                                onClick={() => handleProductClick('CPU')}
-                            >Xem thêm</button>
-                        </div>
-                    </section>
-                    <section className="mb-12">
-                        <img src={BANNER6} alt="" className="mb-10" />
-                        <ProductCarousel products={products.filter(p => p.categoryName == 'MAINBOARD' && getProductStock(p.id) > 0)} />
-                        <div className="w-full  flex justify-center items-center py-2">
-                            <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white"
-                                onClick={() => handleProductClick('MAINBOARD')}
-                            >Xem thêm</button>
-                        </div>
-                    </section>
-                    <section className="mb-12">
-                        <img src={BANNER7} alt="" className="mb-10" />
-                        <ProductCarousel products={products.filter(p => p.categoryName == 'RAM' && getProductStock(p.id) > 0)} />
-                        <div className="w-full  flex justify-center items-center py-2">
-                            <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white"
-                                onClick={() => handleProductClick('RAM')}
-                            >Xem thêm</button>
-                        </div>
-                    </section>
-                    <section className="mb-12">
-                        <img src={BANNER8} alt="" className="mb-10" />
-                        <ProductCarousel products={products.filter(p => p.categoryName == 'SSD/HDD' && getProductStock(p.id) > 0)} />
-                        <div className="w-full  flex justify-center items-center py-2">
-                            <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white"
-                                onClick={() => handleProductClick('SSD/HDD')}
-                            >Xem thêm</button>
-                        </div>
-                    </section>
+                    {categoryBanner.map(({ name, banner }) => {
+                        const filteredProducts = products.filter(p => p.categoryName === name && getProductStock(p.id) > 0);
 
-                    <section className="mb-12">
-                        <img src={BANNER10} alt="" className="mb-10" />
-                        <ProductCarousel products={products.filter(p => p.categoryName == 'CASE' && getProductStock(p.id) > 0)} />
-                        <div className="w-full  flex justify-center items-center py-2">
-                            <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white"
-                                onClick={() => handleProductClick('CASE')}
-                            >Xem thêm</button>
-                        </div>
-                    </section>
-                    <section className="mb-12">
-                        <img src={BANNER11} alt="" className="mb-10" />
-                        <ProductCarousel products={products.filter(p => p.categoryName == 'PSU' && getProductStock(p.id) > 0)} />
-                        <div className="w-full  flex justify-center items-center py-2">
-                            <button className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white"
-                                onClick={() => handleProductClick('PSU')}
-                            >Xem thêm</button>
-                        </div>
-                    </section>
+                        return filteredProducts.length > 0 && (
+                            <section key={name} className="mb-12">
+                                <img src={banner} alt="" className="mb-10" />
+                                <ProductCarousel products={filteredProducts} />
+                                <div className="w-full flex justify-center items-center py-2">
+                                    <button
+                                        className="shadow-lg rounded-lg border px-5 py-3 hover:bg-black hover:text-white"
+                                        onClick={() => handleProductClick(name)}
+                                    >
+                                        Xem thêm
+                                    </button>
+                                </div>
+                            </section>
+                        );
+                    })}
                 </div>}
 
         </div>

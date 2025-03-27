@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import { FaShippingFast } from "react-icons/fa";
-import { createShippingOrder, findUserById, getPaymentsByOrderId, getProductsByListId } from '../../routers/ApiRoutes';
+import { createShippingOrder, createStockOuts, findUserById, getPaymentsByOrderId, getProductsByListId } from '../../routers/ApiRoutes';
 import Loading from '../loading';
 import { format } from 'date-fns';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { FcCancel } from "react-icons/fc";
 import { toast } from 'react-toastify';
+import { updateStockOut } from '../../redux/inventorySlice';
 
 export default function OrderDetailsModal({ order, onClose }) {
     const [user, setUser] = useState(null);
@@ -15,6 +16,8 @@ export default function OrderDetailsModal({ order, onClose }) {
     const stockIns = useSelector(state => state.inventory.stockIns)
     const stockOuts = useSelector(state => state.inventory.stockOuts)
     const [selectedValue, setSelectedValue] = useState("");
+    const [isHaveStock, setIsHaveStock] = useState(false)
+    const dispatch = useDispatch()
     const requiredNoteOptions = {
         CHOTHUHANG: "Cho thử hàng",
         CHOXEMHANGKHONGTHU: "Cho xem hàng, không thử",
@@ -37,6 +40,8 @@ export default function OrderDetailsModal({ order, onClose }) {
             if (productIds.length > 0) {
                 fetchProducts(productIds)
             }
+            setIsHaveStock(checkStock)
+            setLoading(false);
         } catch (error) {
             console.error("Lỗi khi gọi API:", error);
         } finally {
@@ -100,17 +105,26 @@ export default function OrderDetailsModal({ order, onClose }) {
     }, {});
 
     const checkStock = () => {
+        let temp;
         const isOutOfStock = order?.order_item.some((item) => {
             const product = productMap[item.product_id];
             const stockInfo = getProductStock(product?.id);
             console.log(product)
+            const quantityInOrder = stockInfo.reduce((sum, stock) => sum + stock.stock, 0)
+            console.log(quantityInOrder, item.quantity)
             // Kiểm tra nếu tồn kho không có dữ liệu hoặc tổng số lượng tồn kho nhỏ hơn số lượng đặt hàng
-            if (!Array.isArray(stockInfo) || stockInfo.reduce((sum, stock) => sum + stock.stock, 0) < item.quantity) {
-                return true; // Có ít nhất một sản phẩm không đủ hàng
+            if (!Array.isArray(stockInfo) || quantityInOrder < item.quantity) {
+
+                temp = true; // Có ít nhất một sản phẩm không đủ hàng
             }
-            return false;
+            console.log("ở đây1")
+            temp = false;
         });
+        console.log(temp)
         return isOutOfStock
+    }
+    const checkStatus = () => {
+
     }
 
     const handleCreateShipping = async () => {
@@ -165,8 +179,20 @@ export default function OrderDetailsModal({ order, onClose }) {
             items: filteredProducts
         };
         try {
-            const result = await createShippingOrder(orderData);
-            console.log("Kết quả đơn hàng:", result);
+            // const result = await createShippingOrder(orderData);
+            // console.log("Kết quả đơn hàng:", result);
+            filteredProducts.map(async p => {
+                const data = {
+                    productId: p.product_id,  // Sử dụng p thay vì filteredProducts
+                    quantityToExport: p.quantity,
+                    orderId: order.order_id
+                };
+                console.log(data);
+                const res = await createStockOuts(data)
+                console.log(res.data)
+                dispatch(updateStockOut(res.data));
+            });
+
             setLoading(false)
         } catch (error) {
             console.error("Lỗi khi gọi API:", error);
@@ -174,7 +200,8 @@ export default function OrderDetailsModal({ order, onClose }) {
             setLoading(false)
         }
 
-        alert("Lên đơn thành công!");
+        toast.success("Lên đơn thành công!");
+        onClose()
     };
 
     return (
@@ -227,16 +254,21 @@ export default function OrderDetailsModal({ order, onClose }) {
                                             <td className="p-2 text-right">{item.quantity}</td>
                                             <td className="p-2 text-right">
                                                 <ul className="mt-1 ml-12 text-gray-600 leading-relaxed">
-                                                    {Array.isArray(stockList) && stockList.length > 0 ? (
-                                                        stockList.map((item, index) => (
-                                                            <li key={index}>
-                                                                {item.name}: <strong>{item.stock} sản phẩm</strong>
+                                                    {Array.isArray(stockList) && stockList.length > 0 ? (() => {
+                                                        const totalStock = stockList.reduce((sum, item) => sum + item.stock, 0); // Tính tổng stock
 
-                                                            </li>
-                                                        ))
-                                                    ) : (
-                                                        <li>0</li>
-                                                    )}
+                                                        if (totalStock >= item.quantity) {
+                                                            return stockList.map((item, index) => (
+                                                                <li key={index}>
+                                                                    {item.name}: <strong>{item.stock} sản phẩm</strong>
+                                                                </li>
+                                                            ));
+                                                        } else if (totalStock > 0) {
+                                                            return <li className='text-red-500'>Cần nhập thêm {item.quantity - totalStock} sản phẩm</li>;
+                                                        } else {
+                                                            return <li className='text-red-500'>Cần nhập thêm {item.quantity} sản phẩm</li>;
+                                                        }
+                                                    })() : <li >0</li>}
                                                 </ul>
                                             </td>
                                             <td className="p-2 text-right">
@@ -309,7 +341,7 @@ export default function OrderDetailsModal({ order, onClose }) {
 
 
                     <div className="flex justify-end gap-2">
-                        {!checkStock ? <button
+                        {!isHaveStock ? <button
                             className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-200 flex justify-center items-center"
                             onClick={() => handleCreateShipping()}
                             disabled={true}

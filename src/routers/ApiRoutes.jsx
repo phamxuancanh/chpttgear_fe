@@ -240,6 +240,11 @@ export const createStockIn = async (payload) => {
         data: payload,
     });
 };
+export const createStockOuts = async (payload) => {
+    return await requestWithJwt.post(`/inventory/stock-out`, {
+        data: payload,
+    });
+};
 export const increaseQuantity = async (inventory_id, payload) => {
 
     try {
@@ -542,12 +547,10 @@ export const calculateShippingFee = async (toDistrict, toWard, weight, ShopId) =
     }
 };
 
-const API_URL = "http://localhost:2223/api/v1/shipping";
-
 export const createShippingOrder = async (data) => {
     try {
-        const response = await axios.post(
-            API_URL,
+        const response = await requestWithJwt.post(
+            "/shipping",
             data,
             {
                 headers: {
