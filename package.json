@@ -45,6 +45,7 @@
     "react-toastify": "^11.0.2",
     "react-transition-group": "^4.4.5",
     "react-window": "^1.8.11",
+    "recharts": "^2.15.1",
     "redux-devtools-extension": "^2.13.9",
     "redux-persist": "^6.0.0",
     "slick-carousel": "^1.8.1",

@@ -74,7 +74,7 @@ export default function Order() {
     };
     // 
     // Lọc và sắp xếp đơn hàng theo ngày tạo mới nhất
-    const uniqueStatuses = ["Tất cả", "PENDING", "PAID", "SHIPPED", "DELIVERED", "CANCELLED",];
+    const uniqueStatuses = ["Tất cả", "PENDING", "PAID", "SHIPPED", "DELIVERED", "CANCELLED", "PENDING_PAYMENT", "PARTIALLY_PAID"];
 
     // Lọc đơn hàng theo status và searchQuery
     const filteredOrders = orders
@@ -100,6 +100,10 @@ export default function Order() {
                 return "bg-green-100 text-green-800";
             case "CANCELLED":
                 return "bg-red-100 text-red-800";
+            case "PENDING_PAYMENT":
+                return "bg-orange-100 text-orange-800";
+            case "PARTIALLY_PAID":
+                return "bg-cyan-100 text-cyan-800";
             default:
                 return "bg-gray-100 text-gray-800";
         }
@@ -111,7 +115,9 @@ export default function Order() {
         "PAID": "Đã thanh toán",
         "SHIPPED": "Đang giao hàng",
         "DELIVERED": "Giao hàng thành công",
-        "CANCELLED": "Đã hủy"
+        "CANCELLED": "Đã hủy",
+        "PENDING_PAYMENT": "Chờ thanh toán tiền cọc",
+        "PARTIALLY_PAID": "Thanh toán một phần"
     };
 
     const productMap = products.reduce((acc, product) => {
@@ -144,7 +150,7 @@ export default function Order() {
                     </div>
                 </div>
 
-                <div className="flex space-x-4 border-b pb-2 justify-between px-24">
+                <div className="flex space-x-2 border-b pb-2 justify-between px-2">
                     {uniqueStatuses.map((status) => {
                         const count = orderCounts[status] ?? 0;
                         return (

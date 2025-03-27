@@ -113,7 +113,8 @@ export default function Inventory() {
 
         const totalCost = productStockIns.reduce((acc, item) => acc + (item.quantity * item.price), 0);
         const totalQuantity = productStockIns.reduce((acc, item) => acc + item.quantity, 0);
-
+        console.log(productStockIns)
+        console.log(totalCost)
         return totalQuantity > 0 ? (totalCost / totalQuantity).toFixed(2) : 0;
     };
 
