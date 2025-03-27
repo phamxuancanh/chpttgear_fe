@@ -61,7 +61,7 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
         const stockInMap = stockIns
             .filter(item => item.product_id === productId)
             .reduce((acc, item) => {
-                acc[item.inventory_id] = acc[item.inventory_id] || { stock: 0, name: item.inventory.name };
+                acc[item.inventory_id] = acc[item.inventory_id] || { stock: 0, name: item?.inventory?.name };
                 acc[item.inventory_id].stock += item.quantity;
                 return acc;
             }, {});
@@ -70,8 +70,8 @@ export default function AddProductModal({ setShowProductModal, product_id }) {
         const stockOutMap = stockOuts
             .filter(item => item.product_id === productId)
             .reduce((acc, item) => {
-                acc[item.inventory_id] = acc[item.inventory_id] || { stock: 0, name: item.inventory.name };
-                acc[item.inventory_id].stock += item.quantity;
+                acc[item?.inventory_id] = acc[item?.inventory_id] || { stock: 0, name: item?.inventory?.name };
+                acc[item?.inventory_id].stock += item?.quantity;
                 return acc;
             }, {});
 

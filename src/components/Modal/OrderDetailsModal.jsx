@@ -50,37 +50,35 @@ export default function OrderDetailsModal({ order, onClose }) {
     }
 
     const getProductStock = (productId) => {
-        // Nhóm số lượng nhập kho theo inventory_id
-        const stockInMap = stockIns
+        const stockMap = {};
+
+        // Xử lý nhập kho (cộng số lượng vào stockMap)
+        stockIns
             .filter(item => item.product_id === productId)
-            .reduce((acc, item) => {
-                acc[item.inventory_id] = acc[item.inventory_id] || { stock: 0, name: item.inventory.name };
-                acc[item.inventory_id].stock += item.quantity;
-                return acc;
-            }, {});
+            .forEach(item => {
+                if (!stockMap[item.inventory_id]) {
+                    stockMap[item.inventory_id] = { name: item.inventory.name, stock: 0 };
+                }
+                stockMap[item.inventory_id].stock += item.quantity;
+            });
 
-        // Nhóm số lượng xuất kho theo inventory_id
-        const stockOutMap = stockOuts
+        // Xử lý xuất kho (trừ số lượng từ stockMap)
+        stockOuts
             .filter(item => item.product_id === productId)
-            .reduce((acc, item) => {
-                acc[item.inventory_id] = acc[item.inventory_id] || { stock: 0, name: item.inventory.name };
-                acc[item.inventory_id].stock += item.quantity;
-                return acc;
-            }, {});
+            .forEach(item => {
+                if (!stockMap[item.inventory_id]) {
+                    stockMap[item.inventory_id] = { name: item.inventory.name, stock: 0 };
+                }
+                stockMap[item.inventory_id].stock -= item.quantity;
+            });
 
-        // Lấy danh sách tất cả inventory_id liên quan đến productId
-        const allInventoryIds = new Set([
-            ...Object.keys(stockInMap),
-            ...Object.keys(stockOutMap)
-        ]);
-
-
-
-        return Array.from(allInventoryIds).map(inventory_id => ({
-            name: stockInMap[inventory_id]?.name || stockOutMap[inventory_id]?.name, // Lấy name từ bất kỳ object nào có inventory_id
-            stock: (stockInMap[inventory_id]?.stock || 0) - (stockOutMap[inventory_id]?.stock || 0)
-        }))
+        // Chuyển stockMap thành mảng kết quả
+        return Object.values(stockMap).map(({ name, stock }) => ({
+            name,
+            stock
+        }));
     };
+
 
     const fetchProducts = async (productIds) => {
         try {
@@ -109,19 +107,16 @@ export default function OrderDetailsModal({ order, onClose }) {
         const isOutOfStock = order?.order_item.some((item) => {
             const product = productMap[item.product_id];
             const stockInfo = getProductStock(product?.id);
-            console.log(product)
             const quantityInOrder = stockInfo.reduce((sum, stock) => sum + stock.stock, 0)
-            console.log(quantityInOrder, item.quantity)
             // Kiểm tra nếu tồn kho không có dữ liệu hoặc tổng số lượng tồn kho nhỏ hơn số lượng đặt hàng
             if (!Array.isArray(stockInfo) || quantityInOrder < item.quantity) {
 
-                temp = true; // Có ít nhất một sản phẩm không đủ hàng
+                temp = false; // Có ít nhất một sản phẩm không đủ hàng
             }
-            console.log("ở đây1")
-            temp = false;
+            temp = true;
         });
         console.log(temp)
-        return isOutOfStock
+        return temp
     }
     const checkStatus = () => {
 
@@ -179,8 +174,8 @@ export default function OrderDetailsModal({ order, onClose }) {
             items: filteredProducts
         };
         try {
-            // const result = await createShippingOrder(orderData);
-            // console.log("Kết quả đơn hàng:", result);
+            const result = await createShippingOrder(orderData);
+            console.log("Kết quả đơn hàng:", result);
             filteredProducts.map(async p => {
                 const data = {
                     productId: p.product_id,  // Sử dụng p thay vì filteredProducts
@@ -256,7 +251,7 @@ export default function OrderDetailsModal({ order, onClose }) {
                                                 <ul className="mt-1 ml-12 text-gray-600 leading-relaxed">
                                                     {Array.isArray(stockList) && stockList.length > 0 ? (() => {
                                                         const totalStock = stockList.reduce((sum, item) => sum + item.stock, 0); // Tính tổng stock
-
+                                                        console.log(stockList)
                                                         if (totalStock >= item.quantity) {
                                                             return stockList.map((item, index) => (
                                                                 <li key={index}>
