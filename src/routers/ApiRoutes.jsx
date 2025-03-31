@@ -580,6 +580,10 @@ export const createShippingOrder = async (data) => {
     }
 };
 
+export const getShippingByOrderId = async (orderId) => {
+    return await requestWithJwt.get(`/shipping/order/${orderId}`);
+}
+
 // ratingService
 export const getRatingById = async (productId) => {
     console.log("product_id:", productId)

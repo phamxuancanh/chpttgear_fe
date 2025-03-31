@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { FaShippingFast } from "react-icons/fa";
-import { createShippingOrder, createStockOuts, findUserById, getPaymentsByOrderId, getProductsByListId } from '../../routers/ApiRoutes';
+import { createShippingOrder, createStockOuts, findUserById, getPaymentsByOrderId, getProductsByListId, updateOrder } from '../../routers/ApiRoutes';
 import Loading from '../loading';
 import { format } from 'date-fns';
 import { useDispatch, useSelector } from 'react-redux';
@@ -36,7 +36,7 @@ export default function OrderDetailsModal({ order, onClose }) {
             const res1 = await getPaymentsByOrderId(order.order_id);
             const transactions = res1?.data.flatMap(payment => payment?.transaction);
             setTransaction(transactions);
-            const productIds = order.order_item.map(item => item.product_id);
+            const productIds = order.order_item?.map(item => item?.product_id);
             if (productIds.length > 0) {
                 fetchProducts(productIds)
             }
@@ -54,22 +54,22 @@ export default function OrderDetailsModal({ order, onClose }) {
 
         // Xử lý nhập kho (cộng số lượng vào stockMap)
         stockIns
-            .filter(item => item.product_id === productId)
+            .filter(item => item?.product_id === productId)
             .forEach(item => {
-                if (!stockMap[item.inventory_id]) {
-                    stockMap[item.inventory_id] = { name: item.inventory.name, stock: 0 };
+                if (!stockMap[item?.inventory_id]) {
+                    stockMap[item?.inventory_id] = { name: item.inventory?.name, stock: 0 };
                 }
-                stockMap[item.inventory_id].stock += item.quantity;
+                stockMap[item?.inventory_id].stock += item?.quantity;
             });
 
         // Xử lý xuất kho (trừ số lượng từ stockMap)
         stockOuts
-            .filter(item => item.product_id === productId)
+            .filter(item => item?.product_id === productId)
             .forEach(item => {
-                if (!stockMap[item.inventory_id]) {
-                    stockMap[item.inventory_id] = { name: item.inventory.name, stock: 0 };
+                if (!stockMap[item?.inventory_id]) {
+                    stockMap[item?.inventory_id] = { name: item.inventory?.name, stock: 0 };
                 }
-                stockMap[item.inventory_id].stock -= item.quantity;
+                stockMap[item?.inventory_id].stock -= item?.quantity;
             });
 
         // Chuyển stockMap thành mảng kết quả
@@ -102,46 +102,58 @@ export default function OrderDetailsModal({ order, onClose }) {
         return acc;
     }, {});
 
-    const checkStock = () => {
-        let temp;
-        const isOutOfStock = order?.order_item.some((item) => {
-            const product = productMap[item.product_id];
-            const stockInfo = getProductStock(product?.id);
-            const quantityInOrder = stockInfo.reduce((sum, stock) => sum + stock.stock, 0)
-            // Kiểm tra nếu tồn kho không có dữ liệu hoặc tổng số lượng tồn kho nhỏ hơn số lượng đặt hàng
-            if (!Array.isArray(stockInfo) || quantityInOrder < item.quantity) {
+    const checkStock = async () => {
+        if (!order?.order_item || order.order_item.length === 0) {
+            return false; // Không có sản phẩm nào để kiểm tra
+        }
 
-                temp = false; // Có ít nhất một sản phẩm không đủ hàng
+        const stockChecks = order.order_item.map(async (item) => {
+            const product = productMap[item?.product_id];
+            if (!product) return true; // Nếu không tìm thấy sản phẩm, bỏ qua kiểm tra
+
+            try {
+                const stockInfo = await getProductStock(product?.id); // Đợi lấy dữ liệu tồn kho
+                const quantityInStock = stockInfo.reduce((sum, stock) => sum + stock.stock, 0);
+
+                console.log(quantityInStock, item?.quantity);
+                console.log(Array.isArray(stockInfo));
+
+                // Nếu không có dữ liệu tồn kho hoặc tổng số lượng tồn kho nhỏ hơn số lượng đặt hàng
+                return Array.isArray(stockInfo) && quantityInStock >= item?.quantity;
+            } catch (error) {
+                console.error(`Lỗi khi lấy tồn kho cho sản phẩm ${product?.id}:`, error);
+                return false; // Nếu có lỗi, giả định sản phẩm không đủ hàng
             }
-            temp = true;
         });
-        console.log(temp)
-        return temp
-    }
+
+        const results = await Promise.all(stockChecks); // Đợi tất cả các Promise hoàn tất
+        return results.every(status => status); // Trả về `true` nếu tất cả sản phẩm đều đủ hàng
+    };
+
     const checkStatus = () => {
 
     }
 
     const handleCreateShipping = async () => {
-        if (!selectedValue) {
+        if (!selectedValue && (order?.status == 'PARTIALLY_PAID' || order?.status == 'PENDING')) {
             toast.error("Vui lòng chọn đề xuất khi nhận hàng")
             return
         }
         setLoading(true)
         console.log(order)
         const parts = order.houseNumber.split(",").map((part) => part.trim());
-        const productIds = order.order_item.map(item => item.product_id);
+        const productIds = order.order_item?.map(item => item?.product_id);
         const queryString = productIds.join(",");
         const res3 = await getProductsByListId(queryString)
 
-        const filteredProducts = order.order_item.map(item => {
-            const product = res3.data?.find(p => p.id === item.product_id);
+        const filteredProducts = order.order_item?.map(item => {
+            const product = res3.data?.find(p => p.id === item?.product_id);
             return {
-                product_id: product?.product_id || item.product_id,
+                product_id: product?.product_id || item?.product_id,
                 name: product?.name || "Unknown",
                 weight: product?.weight || 0,
-                quantity: item.quantity,
-                price: item.price
+                quantity: item?.quantity,
+                price: item?.price
             };
         });
 
@@ -151,15 +163,15 @@ export default function OrderDetailsModal({ order, onClose }) {
         const orderData = {
             note: "",
             required_note: selectedValue,
-            to_name: "TinTest124",
-            to_phone: "0987654321",
+            to_name: user?.firstName + " " + user?.lastName,
+            to_phone: user?.phone,
             to_address: order.houseNumber + ', Vietnam',
             to_ward_name: parts[1] || "",
             to_district_name: parts[2] || "",
             to_province_name: parts[3] || "",
             order_name: productNames,
             // cod_amount: order.total_amount,
-            cod_amount: 3000000,
+            cod_amount: order?.payment_method == 'PAYPAL' ? 0 : order?.payment_method == 'COD' && order?.status == 'PARTIALLY_PAID' ? order?.total_amount - order?.prepaid_amount : order?.total_amount,
             length: 4,
             width: 4,
             height: 4,
@@ -194,15 +206,40 @@ export default function OrderDetailsModal({ order, onClose }) {
         } finally {
             setLoading(false)
         }
-
+        try {
+            order.status = 'SHIPPED';
+            const res2 = await updateOrder(order?.order_id, order);
+        } catch (error) {
+            console.error("Lỗi trong quá trình cập nhật đơn hàng:", error);
+        }
         toast.success("Lên đơn thành công!");
         onClose()
+
+    };
+    const statusColors = {
+        "PENDING": " text-yellow-800",
+        "PAID": " text-blue-800",
+        "SHIPPED": " text-purple-800",
+        "DELIVERED": " text-green-800",
+        "CANCELLED": " text-red-800",
+        "PENDING_PAYMENT": "b text-orange-800",
+        "PARTIALLY_PAID": "text-cyan-800"
+    };
+
+    const statusMap = {
+        "PENDING": "Đặt hàng thành công",
+        "PAID": "Đã thanh toán",
+        "SHIPPED": "Đang giao hàng",
+        "DELIVERED": "Giao hàng thành công",
+        "CANCELLED": "Đã hủy",
+        "PENDING_PAYMENT": "Chờ thanh toán tiền cọc",
+        "PARTIALLY_PAID": "Thanh toán một phần"
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 ">
             {loading && <Loading />}
-            <div className="bg-white rounded-lg max-w-7xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg max-w-7xl w-full max-h-[90vh] min-h-fit overflow-y-auto">
                 <div className="p-6">
                     <h2 className="text-2xl font-bold mb-4">Chi Tiết Đơn Hàng {order.order_id}</h2>
                     <h3 className="text-lg font-semibold mb-2"><strong>Thông Tin Khách Hàng</strong></h3>
@@ -214,15 +251,34 @@ export default function OrderDetailsModal({ order, onClose }) {
                         </div>
                         <div className='leading-7'>
                             <p><strong>Phương thức thanh toán:</strong> {order?.payment_method == 'COD' ? 'Thanh toán khi nhận hàng' : 'Thanh toán bằng Paypal'}</p>
-                            <h2 >Chọn đề xuất khi nhận hàng</h2>
-                            <select value={selectedValue} onChange={handleChange} className='p-2 border rounded-lg border-black mt-2'>
-                                <option value="">Chọn đề xuất</option>
-                                {Object.entries(requiredNoteOptions).map(([key, value]) => (
-                                    <option key={key} value={key}>
-                                        {value}
-                                    </option>
-                                ))}
-                            </select>
+                            {order?.payment_method === 'COD' && (
+                                <p>
+                                    <strong>Trạng thái:</strong>{' '}
+                                    {order?.status === 'PARTIALLY_PAID' ? (
+                                        'Thanh toán 1 phần'
+                                    ) : (
+                                        <span
+                                            className={` inline-flex font-semibold ${statusColors[order?.status] || ' text-gray-800'
+                                                }`}
+                                        >
+                                            {statusMap[order?.status] || 'Không xác định'}
+                                        </span>
+                                    )}
+                                </p>
+                            )}
+
+
+                            {(order?.status == 'PENDING' || order?.status == 'PARTIALLY_PAID') && <div>
+                                <h2 >Chọn đề xuất khi nhận hàng</h2>
+                                <select value={selectedValue} onChange={handleChange} className='p-2 border rounded-lg border-black mt-2'>
+                                    <option value="">Chọn đề xuất</option>
+                                    {Object.entries(requiredNoteOptions).map(([key, value]) => (
+                                        <option key={key} value={key}>
+                                            {value}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>}
                         </div>
                     </div>
 
@@ -239,29 +295,29 @@ export default function OrderDetailsModal({ order, onClose }) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {order?.order_item.map((item, index) => {
-                                    const product = productMap[item.product_id];
+                                {order?.order_item?.map((item, index) => {
+                                    const product = productMap[item?.product_id];
                                     const stockList = getProductStock(product?.id); // Gọi 1 lần duy nhất
 
                                     return (
                                         <tr key={index} className="border-b">
                                             <td className="p-2">{product?.name || 'Sản phẩm'}</td>
-                                            <td className="p-2 text-right">{item.quantity}</td>
+                                            <td className="p-2 text-right">{item?.quantity}</td>
                                             <td className="p-2 text-right">
                                                 <ul className="mt-1 ml-12 text-gray-600 leading-relaxed">
                                                     {Array.isArray(stockList) && stockList.length > 0 ? (() => {
-                                                        const totalStock = stockList.reduce((sum, item) => sum + item.stock, 0); // Tính tổng stock
+                                                        const totalStock = stockList.reduce((sum, item) => sum + item?.stock, 0); // Tính tổng stock
                                                         console.log(stockList)
-                                                        if (totalStock >= item.quantity) {
+                                                        if (totalStock >= item?.quantity) {
                                                             return stockList.map((item, index) => (
                                                                 <li key={index}>
-                                                                    {item.name}: <strong>{item.stock} sản phẩm</strong>
+                                                                    {item?.name}: <strong>{item?.stock} sản phẩm</strong>
                                                                 </li>
                                                             ));
                                                         } else if (totalStock > 0) {
-                                                            return <li className='text-red-500'>Cần nhập thêm {item.quantity - totalStock} sản phẩm</li>;
+                                                            return <li className='text-red-500'>Cần nhập thêm {item?.quantity - totalStock} sản phẩm</li>;
                                                         } else {
-                                                            return <li className='text-red-500'>Cần nhập thêm {item.quantity} sản phẩm</li>;
+                                                            return <li className='text-red-500'>Cần nhập thêm {item?.quantity} sản phẩm</li>;
                                                         }
                                                     })() : <li >0</li>}
                                                 </ul>
@@ -288,6 +344,12 @@ export default function OrderDetailsModal({ order, onClose }) {
                         <p className="text-lg font-semibold">Tổng Giá Trị: {order?.total_amount.toLocaleString()}đ</p>
                         {/* {order.notes && <p className="mt-2">Ghi chú: {order.notes}</p>} */}
                     </div>
+                    {order?.status == 'PARTIALLY_PAID' && <div className="mb-6 flex justify-end">
+                        <div className='leading-10'>
+                            <p className="text-lg font-semibold mb-6">Đã trả trước: {order?.prepaid_amount.toLocaleString()}đ</p>
+                            <p className="text-lg font-semibold">Còn lại: {(order?.total_amount - order?.prepaid_amount).toLocaleString()}đ</p>
+                        </div>
+                    </div>}
                     {order?.payment_method != 'COD' && <div className="mb-6">
                         <h3 className="text-lg font-semibold mb-2">Lịch Sử Thanh Toán</h3>
                         <table className="w-full border-collapse border border-gray-200 ">
@@ -333,27 +395,32 @@ export default function OrderDetailsModal({ order, onClose }) {
                         </table>
                     </div>}
 
-
-
                     <div className="flex justify-end gap-2">
-                        {!isHaveStock ? <button
-                            className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-200 flex justify-center items-center"
-                            onClick={() => handleCreateShipping()}
-                            disabled={true}
-                        >
-
-                            <FcCancel className="inline mr-2 font-bold text-xl" />
-                            Không đủ số lượng
-                        </button> :
-                            <button
-                                className="px-4 py-2 bg-green-500  rounded text-white hover:bg-green-600 flex justify-center items-center"
-                                onClick={() => handleCreateShipping()}
-
-                            >
-
-                                <FaShippingFast className="inline mr-2 font-bold text-xl " />
-                                Lên đơn vận chuyển
-                            </button>}
+                        {order?.status !== 'PENDING' && order?.status !== 'PARTIALLY_PAID' ? (
+                            <span className="px-4 py-2 bg-gray-300 text-gray-700 rounded flex justify-center items-center">
+                                Đơn hàng {statusMap[order?.status]?.toLowerCase() || 'không xác định'}
+                            </span>
+                        ) : (
+                            <>
+                                {!isHaveStock ? (
+                                    <button
+                                        className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-200 flex justify-center items-center"
+                                        disabled
+                                    >
+                                        <FcCancel className="inline mr-2 font-bold text-xl" />
+                                        Không đủ số lượng
+                                    </button>
+                                ) : (
+                                    <button
+                                        className="px-4 py-2 bg-green-500 rounded text-white hover:bg-green-600 flex justify-center items-center"
+                                        onClick={handleCreateShipping}
+                                    >
+                                        <FaShippingFast className="inline mr-2 font-bold text-xl" />
+                                        Lên đơn vận chuyển
+                                    </button>
+                                )}
+                            </>
+                        )}
 
                         <button
                             onClick={onClose}

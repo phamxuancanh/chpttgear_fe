@@ -361,14 +361,14 @@ export default function Payment() {
         );
 
         await Promise.all(orderItemPromises);
-
+        console.log(cartItems)
         const emailContext = {
-          orderId: orderData.order.id,
-          orderDate: orderData.order.createdAt,
-          orderTotal: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.order.total_amount),
-          shippingFee: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.order.shipping_amount),
-          totalAmount: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.order.total_amount + orderData.order.shipping_amount),
-          address: orderData.order.houseNumber,
+          orderId: orderData.order_id,
+          orderDate: orderData.createdAt,
+          orderTotal: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.total_amount),
+          shippingFee: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.shipping_amount),
+          totalAmount: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.total_amount + orderData.shipping_amount),
+          address: orderData.houseNumber,
           products: cartItems.map(item => ({
             imageUrl: item.image.split(',')[0],
             name: item.name,
