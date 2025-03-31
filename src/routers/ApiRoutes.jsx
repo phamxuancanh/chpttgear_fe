@@ -590,14 +590,15 @@ export const getRatingById = async (productId) => {
     return await requestWithJwt.get(`/review/${productId}`);
 };
 
-export const postReview = async ({ productId, userId, rating, review }) => {
+export const postReview = async ({ productId, userId, rating, review, replyId }) => {
     try {
         const response = await requestWithJwt.post("/review", {
             productId,
             userId,
             rating,
             review,
-            createDate: new Date()
+            createDate: new Date(), 
+            replyId
         });
         return response.data;
     } catch (error) {

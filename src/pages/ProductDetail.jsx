@@ -34,6 +34,7 @@ import { useModal } from "../context/ModalProvider";
 
 export default function ProductDetail() {
     const [userRating, setUserRating] = useState(0);
+    const [isReply, setIsReply] = useState(null);
     const [hover, setHover] = useState(0);
     const [comment, setComment] = useState("");
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -57,13 +58,20 @@ export default function ProductDetail() {
     const user_id = useSelector((state) => {
         return state.auth.user.id;
     });
+    const user_name = useSelector((state) => {
+        return state.auth.user.first_name + state.auth.user.last_name;
+    });
+    const user_role = useSelector((state) => {
+        return state.auth.user;
+    });
+    console.log("role:      " + JSON.stringify(user_role, null, 2))
     const [images, setImages] = useState([])
     const [loading, setLoading] = useState(false)
     const [specs, setspecs] = useState([])
 
     const scrollToReviews = () => {
-        if (reviewsRef.current) {
-            reviewsRef.current.scrollIntoView({ behavior: "smooth" });
+        if (review.current) {
+            review.current.scrollIntoView({ behavior: "smooth" });
         }
     };
 
@@ -91,14 +99,16 @@ export default function ProductDetail() {
     //     if (id) fetchData();
     // }, [id]); // Gọi lại khi id thay đổi
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (reply) => {
         try {
             const newReview = {
                 productId: id,
                 userId: user_id,
                 rating: rating,
                 review: comment,
-                createDate: new Date().toISOString(), // Định dạng chuẩn
+                name: user_name,
+                replyId: reply,
+                createDate: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })).toISOString(), // Định dạng chuẩn
             };
 
             console.log(newReview);
@@ -107,13 +117,16 @@ export default function ProductDetail() {
             await postReview(newReview);
 
             // Cập nhật state `review` ngay lập tức mà không cần fetch lại API
-            setReview(prevReviews => [...prevReviews, newReview]);
-
-            // Cập nhật trung bình rating từ state mới
-            const updatedReviews = [...review, newReview];
-            const total = updatedReviews.reduce((sum, r) => sum + (r.rating ?? 0), 0);
-            const average = total / updatedReviews.length;
-            setRating(Math.round(average));
+            // setReview(prevReviews => {
+            //     const updatedReviews = [...prevReviews, newReview];
+            //     console.log(updatedReviews)
+            //     // Tính toán trung bình rating từ state mới
+            //     const total = updatedReviews.reduce((sum, r) => sum + (r.rating ?? 0), 0);
+            //     const average = total / updatedReviews.length;
+            //     setRating(Math.round(average)); // Cập nhật trung bình rating
+            //     return updatedReviews;
+            // });
+            fetchData()
 
             // Hiển thị thông báo
             openModal(`Bạn đã đánh giá ${rating} sao với nội dung: ${comment}`);
@@ -121,6 +134,7 @@ export default function ProductDetail() {
             // ✅ Reset lại comment và rating
             setComment("");
             setRating(0);
+            setIsReply(null);
 
         } catch (error) {
             alert("Lỗi khi gửi đánh giá: " + error.message);
@@ -130,13 +144,13 @@ export default function ProductDetail() {
     const fetchData = async () => {
         try {
             setLoading(true)
-            const [productRes, quantityInStockRes, specRes, ratingRes] = await Promise.all([
+            const [productRes, specRes, ratingRes, ratingResquantityInStockRes] = await Promise.all([
                 findProductById(id),
-                getQuantityInStock(id),
                 findSpecificationsByProductId(id),
-                getRatingById(id)
-
+                getRatingById(id),
+                //getQuantityInStock(id)
             ]);
+            console.log("rating: " + ratingRes)
             if (ratingRes?.data) {
                 const data = ratingRes?.data
                 setReview(data); // Lưu vào state
@@ -148,12 +162,12 @@ export default function ProductDetail() {
 
             if (productRes?.data) {
                 setProduct(productRes.data);
-                console.log(productRes.data.image.split(','))
+                console.log("image: " + productRes.data.image.split(','))
                 setImages(productRes.data.image.split(','))
                 setspecs(specRes.data)
             }
 
-            if (quantityInStockRes) setQuantityInStock(quantityInStockRes.quantityInStock);
+            //if (quantityInStockRes) setQuantityInStock(quantityInStockRes.quantityInStock);
             setLoading(false)
         } catch (error) {
             console.error("Error fetching product data:", error);
@@ -162,9 +176,9 @@ export default function ProductDetail() {
         }
     };
     useEffect(() => {
-
         if (id) {
             fetchData()
+            console.log("Fetching")
         }
     }, [id]); // Gọi lại khi id thay đổi
     useEffect(() => {
@@ -201,15 +215,6 @@ export default function ProductDetail() {
         };
         fetchDataSimilarProducts();
     }, [id]);
-    
-    const ratings = [
-        { product_id: 4090, user: "John Doe", score: 2, comment: "được tặng 2 thanh ram là có lắp vô máy chưa ad, nếu mua thêm ổ cứng ssd thì có gắn vô dùm không? hay phải tự mình gắn, còn cài win nữa?", date: "2024-01-15" },
-        { product_id: 4090, user: "Jane Smith", score: 2.5, comment: "Lên tảng nước aio thì sao admin nhỉ", date: "2024-01-10" },
-        { product_id: 4090, user: "Alice Johnson", score: 4.8, comment: "Nâng lên i512400 được k ạ", date: "2024-02-05" },
-        { product_id: 4090, user: "Bob Williams", score: 2.2, comment: "Good but a bit pricey.", date: "2024-02-01" },
-        { product_id: 4090, user: "Charlie Brown", score: 2, comment: "Worth every penny!", date: "2024-02-08" }
-    ];
-
 
     const renderStars = (rating) => {
         const stars = [];
@@ -438,7 +443,9 @@ export default function ProductDetail() {
                             <div className="flex flex-col items-center">
                                 <h2 className="text-4xl font-bold text-red-500">{rating || 0}/5</h2>
                                 <div className="flex justify-center my-2">{renderStars(rating)}</div>
-                                <h2 className="text-sm font-bold">({review.length}) đánh giá & nhận xét</h2>
+                                <h2 className="text-sm font-bold">
+                                    ({review.filter(rating => rating.parentId === null || rating.parentId === 0).length}) đánh giá & nhận xét
+                                </h2>
                             </div>
                             <div className="w-full mt-6 ">
                                 {[5, 4, 3, 2, 1].map((star) => (
@@ -448,8 +455,7 @@ export default function ProductDetail() {
                                             <div
                                                 className="h-full bg-yellow-400"
                                                 style={{
-                                                    width: `${(calculateStarDistribution(review)[star] / ratings.length) * 100 || 0
-                                                        }%`,
+                                                    width: `${(calculateStarDistribution(review)[star] / review.filter(rating => rating.parentId === null || rating.parentId === 0).length) * 100 || 0}%`,
                                                 }}
                                             ></div>
                                         </div>
@@ -459,68 +465,125 @@ export default function ProductDetail() {
                             </div>
                         </div>
                     </div>
-
-                    <div className="py-10 " ref={reviewsRef}>
-                        {review.map((rating, index) => (
-                            <div key={index} className="w-8/12 border-b border-gray-200">
-                                <div className="w-full flex justify-start items-center">
-                                    <p className="mr-3 font-semibold">{rating.name}</p>
-                                    <p className="text-gray-400">{DateConverter(rating.createDate)}</p>
-                                </div>
-                                <div className="w-full flex justify-start my-3">
-                                    <div className="w-1/6">
-                                        {renderStars(rating.rating)}
+                    
+                    <div className="py-10 " ref={review}> 
+                        {review.filter(rating => rating.replyId === null || rating.replyId === 0) //Đánh giá & nhận xét
+                            .map((rating, index) => (
+                                <div key={index} className="w-8/12 border-b border-gray-200">
+                                    <div className="w-full flex justify-start items-center">
+                                        <p className="mr-3 font-semibold">{rating.name}</p>
+                                        <p className="text-gray-400">{DateConverter(rating.createDate)}</p>
                                     </div>
-                                    <div className="w-10/12">
-                                        <p className="text-sm">{rating.review}</p>
-                                        <div className="mt-3 rounded-md bg-gray-200 w-full p-3">
-                                            <div className="w-full flex justify-start items-center">
-                                                <p className="mr-3 font-semibold text-red-500">{"Admin"}</p>
-                                                <p className="text-gray-400">{"26-11-2024"}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-sm leading-6 mt-3">{"Dạ RAM mới lúc lắp máy mình cho lắp luôn ạ, hoặc nếu Anh Minh Tiến có nhu cầu nâng cấp mình có thể nâng cấp ngay lúc lắp máy, về việc gắn thêm ổ cứng GEARVN sẽ hộ trợ mình gắn luôn, cài win cũng vậy ạ. Anh Tiến để lại thông tin (SĐT ...) để GEARVN gọi lại tư vấn cho mình rõ hơn ạ."}</p>
-                                            </div>
+                                    <div className="w-full flex justify-start my-3">
+                                        <div className="w-1/6">
+                                            {renderStars(rating.rating)}
+                                        </div>
+                                        <div className="w-10/12">
+                                            <p className="text-sm">{rating.review}</p>
+                                            
+                                            {user_role === 1 && ( //Chỉ Admin được phản hồi
+                                                <div>
+                                                    
+                                                    {!review.some(reply => reply.replyId === rating.id) && isReply !== rating.id && ( //Hiện nếu chưa có Reply
+                                                        <button
+                                                            className="bg-blue-500 text-white text-sm font-semibold rounded-md flex justify-center items-center px-2 py-1"
+                                                            onClick={() => { setIsReply(rating.id) }} //Mở ô Reply
+                                                        >
+                                                            <div className="text-l mr-1" />Phản hồi
+                                                        </button>
+                                                    )}
+                                                    
+                                                    {isReply === rating.id && ( //Reply
+                                                        <div>
+                                                            <textarea
+                                                                className="w-full p-2 border rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                placeholder="Nhập đánh giá của bạn..."
+                                                                rows="4"
+                                                                value={comment}
+                                                                onChange={(e) => setComment(e.target.value)}
+                                                            ></textarea>
+                                                            <div className="flex space-x-2">
+                                                                <button
+                                                                    className="bg-red-500 text-white text-sm font-semibold rounded-md flex justify-center items-center px-2 py-1"
+                                                                    onClick={() => { setIsReply(null) }}
+                                                                >
+                                                                    <div className="text-l mr-1" />Huy
+                                                                </button>
+                                                                <button
+                                                                    className="bg-blue-500 text-white text-sm font-semibold rounded-md flex justify-center items-center px-2 py-1"
+                                                                    onClick={() => { handleSubmit(rating.id) }}
+                                                                >
+                                                                    <div className="text-l mr-1" />Phản hồi
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {/* <p className="text-sm leading-6 mt-3">{"Dạ RAM mới lúc lắp máy mình cho lắp luôn ạ, hoặc nếu Anh Minh Tiến có nhu cầu nâng cấp mình có thể nâng cấp ngay lúc lắp máy, về việc gắn thêm ổ cứng GEARVN sẽ hộ trợ mình gắn luôn, cài win cũng vậy ạ. Anh Tiến để lại thông tin (SĐT ...) để GEARVN gọi lại tư vấn cho mình rõ hơn ạ."}</p> */}
+                                                    
+                                                    {review.some(reply => reply.replyId === rating.id) && ( //Hiện Reply
+                                                        <div className="ml-10 mt-4">
+                                                            {review
+                                                                .filter(reply => reply.replyId === rating.id) // Lọc các phản hồi của đánh giá này
+                                                                .map((reply, replyIndex) => (
+                                                                    <div key={replyIndex} className="w-full border-l-2 border-gray-300 pl-4 mt-4">
+                                                                        <div className="w-full flex justify-start items-center">
+                                                                            <p className="mr-3 font-semibold text-red-500">{"Admin"}</p>
+                                                                            <p className="text-gray-400">{DateConverter(reply.createDate)}</p>
+                                                                        </div>
+                                                                        <div className="w-full flex justify-start my-3">
+                                                                            <div className="w-10/12">
+                                                                                <p className="text-sm">{reply.review}</p>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                        </div>
+                                                    )}
+
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
                     </div>
-                    <div className="w-full">
-                        {/* <button className="bg-blue-500 text-white text-sm font-semibold rounded-md flex justify-center items-center px-4 py-2 w-4/12">
+                    
+                    {user_role !== 1 && user_role !== 2 && ( //Hiện đánh giá nếu role user
+                        <div className="w-full">
+                            {/* <button className="bg-blue-500 text-white text-sm font-semibold rounded-md flex justify-center items-center px-4 py-2 w-4/12">
                             <BiSolidCommentEdit className="text-2xl mr-2" />Gửi đánh giá của bạn
                         </button> */}
-                        <div className="w-full mx-auto p-4 border rounded-lg shadow-md bg-white">
-                            <h2 className="text-lg font-semibold mb-2">Gửi đánh giá của bạn</h2>
-                            <div className="flex mb-4">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                    <button
-                                        key={star}
-                                        onClick={() => setRating(star)}
-                                        onMouseEnter={() => setHover(star)}
-                                        onMouseLeave={() => setHover(0)}
-                                        className="text-2xl text-yellow-400 mx-1"
-                                    >
-                                        {star <= (hover || rating) ? <BiSolidStar /> : <BiStar />}
-                                    </button>
-                                ))}
+                            <div className="w-full mx-auto p-4 border rounded-lg shadow-md bg-white">
+                                <h2 className="text-lg font-semibold mb-2">Gửi đánh giá của bạn</h2>
+                                <div className="flex mb-4">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <button
+                                            key={star}
+                                            onClick={() => setRating(star)}
+                                            onMouseEnter={() => setHover(star)}
+                                            onMouseLeave={() => setHover(0)}
+                                            className="text-2xl text-yellow-400 mx-1"
+                                        >
+                                            {star <= (hover || rating) ? <BiSolidStar /> : <BiStar />}
+                                        </button>
+                                    ))}
+                                </div>
+                                <textarea
+                                    className="w-full p-2 border rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Nhập đánh giá của bạn..."
+                                    rows="4"
+                                    value={comment}
+                                    onChange={(e) => setComment(e.target.value)}
+                                ></textarea>
+                                <button
+                                    className="bg-blue-500 text-white text-sm font-semibold rounded-md flex justify-center items-center px-3 py-1"
+                                    onClick={() => { handleSubmit() }}
+                                >
+                                    <BiSolidCommentEdit className="text-xl mr-2" />Gửi đánh giá của bạn.
+                                </button>
                             </div>
-                            <textarea
-                                className="w-full p-2 border rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Nhập đánh giá của bạn..."
-                                rows="4"
-                                value={comment}
-                                onChange={(e) => setComment(e.target.value)}
-                            ></textarea>
-                            <button
-                                className="bg-blue-500 text-white text-sm font-semibold rounded-md flex justify-center items-center px-3 py-1"
-                                onClick={handleSubmit}
-                            >
-                                <BiSolidCommentEdit className="text-xl mr-2" />Gửi đánh giá của bạn.
-                            </button>
                         </div>
-                    </div>
+                    )}
                 </div>
             </main>}
         </div>
