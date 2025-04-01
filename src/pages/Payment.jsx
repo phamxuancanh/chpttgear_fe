@@ -14,6 +14,7 @@ import { PiApproximateEqualsThin } from "react-icons/pi";
 import { FaDongSign } from "react-icons/fa6";
 import { toast } from "react-toastify";
 import { updateUser } from "../redux/authSlice";
+import { clearCart } from "../redux/cartSlice";
 
 export default function Payment() {
 
@@ -287,6 +288,7 @@ export default function Payment() {
             totalAmount: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(paypalResponse.data.order.total_amount + paypalResponse.data.order.shipping_amount),
           }
           await sendEmail(formData.email, emailContext);
+          dispatch(clearCart());
           window.location.href = paypalResponse.data.approvalUrl;
           return;
         } else {
@@ -378,7 +380,7 @@ export default function Payment() {
         };
 
         await sendEmail(formData.email, emailContext);
-
+        dispatch(clearCart());
 
         if (formData.paymentMethod === "PAYPAL") {
           if (approvalUrl) {
