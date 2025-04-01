@@ -130,7 +130,6 @@ export default function Home() {
         const stockOut = stockOuts
             .filter(item => item.product_id === productId)
             .reduce((acc, item) => acc + item.quantity, 0);
-        console.log(stockIn - stockOut)
         return stockIn - stockOut;
     };
     const categoryBanner = [
@@ -142,7 +141,6 @@ export default function Home() {
         { name: "CASE", banner: BANNER10 },
         { name: "PSU", banner: BANNER11 }
     ];
-
 
     return (
         <div className="min-h-screen bg-gray-100 py-10">
