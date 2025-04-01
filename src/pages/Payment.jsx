@@ -361,7 +361,7 @@ export default function Payment() {
         );
 
         await Promise.all(orderItemPromises);
-
+        console.log(cartItems)
         const emailContext = {
           orderId: orderId,
           orderDate: orderData.order.createdAt,

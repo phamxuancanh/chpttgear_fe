@@ -1,30 +1,47 @@
 import React, { useEffect, useState } from "react";
-import { FaBox, FaCheckCircle, FaTruck, FaShippingFast, FaMapMarkerAlt } from "react-icons/fa";
+import { FaBox, FaCheckCircle, FaTruck, FaShippingFast, FaMapMarkerAlt, FaBan, FaStar } from "react-icons/fa";
 import { Link, useParams } from "react-router-dom";
-import { findUserById, getOrderById, getProductsByListId } from "../routers/ApiRoutes";
+import { findUserById, getOrderById, getProductsByListId, getShippingByOrderId } from "../routers/ApiRoutes";
 import { IoIosArrowBack } from "react-icons/io";
 import Loading from "../utils/Loading";
 
 export default function OrderTracking() {
 
   const { orderId } = useParams();
-  const [order, setOrder] = useState(null);
+  const [order, setOrder] = useState({});
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState([]);
+  const [updatedOrderStages, setUpdatedOrderStages] = useState([]);
+  const [progressPercentage, setProgressPercentage] = useState(0);
+
+  const [shippingStatus, setShippingStatus] = useState("WATIING");
+  const statusMap = {
+    "WAITING": "Đang chuẩn bị hàng",
+    "CONFIRMED": "Đã gửi cho ĐVVC",
+    "SHIPPED": "Đang giao hàng",
+    "RECEIVED": "Đã nhận hàng",
+    "CANCELLED": "Đã hủy",
+    "RATING": "Đánh giá"
+  };
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
+      setLoading(true);
       if (!orderId) return;
-      setLoading(true); // Bắt đầu loading
+      // Bắt đầu loading
       try {
         const res = await getOrderById(orderId);
-
         const data = res.data;
-        setOrder(res.data);
+        console.log(data)
+        setOrder(data);
+
+        // Xử lý trạng thái đơn hàng
+        await processOrderStatus(data);
+
         const productIds = data.order_item.map(item => item.product_id);
         if (productIds.length > 0) {
-          fetchProducts(productIds)
+          fetchProducts(productIds);
         }
       } catch (error) {
         console.error("Error fetching order details:", error);
@@ -35,6 +52,56 @@ export default function OrderTracking() {
 
     fetchOrderDetails();
   }, [orderId]);
+
+  const processOrderStatus = async (order) => {
+    setLoading(true);
+    let shippingStatus = "WAITING";
+    try {
+      const shippingOrder = await getShippingByOrderId(order.order_id);
+      if (shippingOrder && shippingOrder.status !== 404) {
+        shippingStatus = shippingOrder.data.data?.status; // Nếu có shipping, cập nhật trạng thái
+      }
+
+      console.log("Shipping Status:", shippingStatus);
+    } catch (error) {
+      console.error("Error fetching shipping order:", error);
+      // Không cần gán lại `shippingStatus = "CONFIRMED"` ở đây vì đã có giá trị mặc định
+    } finally {
+      // Luôn hiển thị đủ 6 trạng thái
+      const orderStages = [
+        { id: 1, name: "Đang chuẩn bị hàng", icon: <FaBox />, completed: false },
+        { id: 2, name: "Đã gửi cho ĐVVC", icon: <FaTruck />, completed: false },
+        { id: 3, name: "Đang giao hàng", icon: <FaShippingFast />, completed: false },
+        { id: 4, name: "Đã nhận hàng", icon: <FaCheckCircle />, completed: false },
+        { id: 5, name: "Đã hủy", icon: <FaBan />, completed: false },
+        { id: 6, name: "Đánh giá", icon: <FaStar />, completed: false }
+      ];
+
+      const statusOrderMap = {
+        "CONFIRMED": 2,
+        "SHIPPED": 3,
+        "RECEIVED": 4,
+        "CANCELLED": 5,
+        "RATING": 6
+      };
+      const currentStageIndex = statusOrderMap[shippingStatus] || 1;
+      const progressPercentage = (currentStageIndex / orderStages.length) * 100;
+
+      const updatedOrderStages = orderStages.map((stage, index) => ({
+        ...stage,
+        completed: index < currentStageIndex
+      }));
+
+      console.log("Updated Order Stages:", updatedOrderStages);
+      setUpdatedOrderStages(updatedOrderStages);
+      setProgressPercentage(progressPercentage);
+      console.log(shippingStatus)
+      setShippingStatus(shippingStatus);
+      setLoading(false);
+    }
+  };
+
+
 
   useEffect(() => {
     const fetchUserById = async () => {
@@ -68,54 +135,7 @@ export default function OrderTracking() {
     return acc;
   }, {});
 
-  const orderStages = [
-    { id: 1, name: "Đang chuẩn bị hàng", icon: <FaBox />, completed: true },
-    { id: 2, name: "Đã gửi cho bên vận chuyển", icon: <FaCheckCircle />, completed: true },
-    { id: 3, name: "Đang giao hàng", icon: <FaTruck />, completed: true },
-    { id: 4, name: "Giao hàng thành công", icon: <FaShippingFast />, completed: false },
-    { id: 5, name: "Đã nhận được hàng", icon: <FaCheckCircle />, completed: false }
-  ];
 
-  const getStatusColor = (status) => {
-    switch (status.toUpperCase()) {
-      case "PENDING":
-        return "text-yellow-800";
-      case "PAID":
-        return "text-blue-800";
-      case "SHIPPED":
-        return "text-purple-800";
-      case "DELIVERED":
-        return "text-green-800";
-      case "CANCELLED":
-        return "text-red-800";
-      default:
-        return "text-gray-800";
-    }
-  };
-
-  const statusMap = {
-    "PENDING": "Đang chuẩn bị hàng",
-    "PAID": "Đã gửi cho bên vận chuyển",
-    "SHIPPED": "Đang giao hàng",
-    "DELIVERED": "Giao hàng thành công",
-    "CANCELLED": "Đã hủy"
-  };
-  const statusOrderMap = {
-    "PENDING": 1,   // Đơn hàng đã đặt
-    "PAID": 2,      // Đã xác nhận đơn hàng
-    "SHIPPED": 3,   // Bàn giao cho đơn vị vận chuyển
-    "DELIVERED": 4, // Đang vận chuyển
-    "CANCELLED": 0  // Đã hủy (hoặc không hiển thị progress)
-  };
-
-  const currentStageIndex = statusOrderMap[order?.status] || 0;
-  const progressPercentage = (currentStageIndex / orderStages.length) * 100;
-
-  // Cập nhật danh sách stages với trạng thái completed
-  const updatedOrderStages = orderStages.map((stage, index) => ({
-    ...stage,
-    completed: index < currentStageIndex // Nếu index nhỏ hơn trạng thái hiện tại => Đã hoàn thành
-  }));
 
   return (
     <div className="min-h-screen bg-gray-100 py-10 px-4 sm:px-6 lg:px-8">
@@ -138,8 +158,8 @@ export default function OrderTracking() {
               <div className="flex items-center space-x-4">
                 <h2 className="text-gray-700 font-semibold text-md">MÃ ĐƠN HÀNG: {order.order_id}</h2>
                 <span className="text-gray-500">|</span>
-                <h2 className={`text-md font-semibold uppercase ${getStatusColor(order.status)}`}>
-                  TRẠNG THÁI: {statusMap[order.status] || "Không xác định"}
+                <h2 className={`text-md font-semibold uppercase `}>
+                  TRẠNG THÁI: {statusMap[shippingStatus] || "Không xác định"}
                 </h2>
               </div>
             ) : (
@@ -212,6 +232,34 @@ export default function OrderTracking() {
             </div>
           </div>
         )}
+
+        <div className="w-full justify-end items-center flex">
+          <div className="bg-white p-6 rounded-lg  w-full max-w-lg flex justify-end items-end">
+            <table className="w-full text-sm text-gray-600">
+              <tbody>
+                <tr className="border-b">
+                  <td className="py-2">Tổng tiền hàng</td>
+                  <td className="py-2 text-right font-medium">
+
+                    {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.total_amount - order.shipping_amount)}
+                  </td>
+                </tr>
+                <tr className="border-b">
+                  <td className="py-2">Phí vận chuyển</td>
+                  <td className="py-2 text-right">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.shipping_amount)}</td>
+                </tr>
+                <tr className="border-b font-semibold text-lg">
+                  <td className="py-2">Thành tiền</td>
+                  <td className="py-2 text-right text-red-500">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.total_amount)}</td>
+                </tr>
+                <tr>
+                  <td className="py-2">Phương thức Thanh toán</td>
+                  <td className="py-2 text-right font-medium">{order.payment_method == 'COD' ? "Thanh toán khi nhận hàng" : "Thanh toán qua Paypal"}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
         <div className="p-6 flex justify-start space-x-2">
           <p className="text-sm text-gray-500">
             * Nếu hàng nhận được có vấn đề, bạn có thể gửi yêu cầu trả hàng/hoàn tiền trước ngày{" "}

@@ -153,14 +153,14 @@ export default function Order() {
                     </div>
                 </div>
 
-                <div className="flex space-x-2 border-b pb-2 justify-between px-2">
+                <div className="flex space-x-1 border-b pb-2 justify-between">
                     {uniqueStatuses.map((status) => {
                         const count = orderCounts[status] ?? 0;
                         return (
                             <button
                                 key={status}
                                 onClick={() => setSelectedStatus(status)}
-                                className={`px-4 py-2 rounded-t-lg border-b-2 transition-colors duration-200 ${selectedStatus === status
+                                className={`text-base  px-4 py-2 rounded-t-lg border-b-2 transition-colors duration-200 ${selectedStatus === status
                                     ? "border-orange-600 text-orange-600 font-semibold"
                                     : "border-transparent text-gray-600 hover:text-orange-600"
                                     }`}
