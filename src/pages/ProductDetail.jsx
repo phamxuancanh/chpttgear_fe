@@ -15,7 +15,7 @@ import Loading from "../utils/Loading";
 import { FiShoppingCart } from "react-icons/fi";
 import ImageGallery from "react-image-gallery";
 import "react-image-gallery/styles/css/image-gallery.css";
-
+import CryptoJS from 'crypto-js';
 import LightGallery from "lightgallery/react";
 import "lightgallery/css/lightgallery.css";
 import "lightgallery/css/lg-zoom.css";
@@ -31,40 +31,29 @@ import { Navigation } from "swiper/modules";
 import translationMap from "../assets/Menu/translate.json";
 import { toast } from "react-toastify";
 import { useModal } from "../context/ModalProvider";
+import { getFromLocalStorage } from "../utils/functions";
+import { FaReplyAll } from "react-icons/fa";
 
 export default function ProductDetail() {
-    const [userRating, setUserRating] = useState(0);
+
     const [isReply, setIsReply] = useState(null);
-    const [hover, setHover] = useState(0);
     const [comment, setComment] = useState("");
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    const [quantity, setQuantity] = useState(1);
-    const [sortBy, setSortBy] = useState("recent");
     const [review, setReview] = useState([]);
     const { id } = useParams();
     const [product, setProduct] = useState({})
     const [quantityInStock, setQuantityInStock] = useState(0)
-    const [stockIns, setStockIns] = useState([]);
-    const [stockOuts, setStockOuts] = useState([]);
+    const [totalRating, setTotalRating] = useState(0);
     const [rating, setRating] = useState(0);
-    const reviewsRef = useRef(null);
-    const API_URL = process.env.REACT_APP_API_URL;
-
     const dispatch = useDispatch();
     const cart = useSelector(state => state.shoppingCart.cart);
     const cartItems = useSelector(state => state.shoppingCart.items);
     const selectedItems = useSelector(state => state.shoppingCart.selectItems);
+    const stockIns = useSelector(state => state.inventory.stockIns)
+    const stockOuts = useSelector(state => state.inventory.stockOuts)
+    const user = useSelector(state => state.auth.user)
     const { openModal } = useModal();
-    const user_id = useSelector((state) => {
-        return state.auth.user.id;
-    });
-    const user_name = useSelector((state) => {
-        return state.auth.user.first_name + state.auth.user.last_name;
-    });
-    const user_role = useSelector((state) => {
-        return state.auth.user;
-    });
-    console.log("role:      " + JSON.stringify(user_role, null, 2))
+    const [user_role, setUserRole] = useState("")
     const [images, setImages] = useState([])
     const [loading, setLoading] = useState(false)
     const [specs, setspecs] = useState([])
@@ -77,97 +66,70 @@ export default function ProductDetail() {
 
     const translate = (key) => translationMap[key] || key;
 
-    // useEffect(() => {
-    //     const fetchData = async () => {
-    //         try {
-    //             const [productRes, stockInRes, stockOutRes] = await Promise.all([
-    //                 findProductById(id),
-    //                 getStockInByProductId(id),
-    //                 getStockOutByProductId(id),
-    //             ]);
-
-    //             if (productRes?.data) setProduct(productRes.data);
-    //             if (Array.isArray(stockInRes)) setStockIns(stockInRes);
-    //             if (Array.isArray(stockOutRes)) setStockOuts(stockOutRes);
-    //             setQuantityInStock(getProductStock())
-    //             console.log(getProductStock())
-    //         } catch (error) {
-    //             console.error("Error fetching product data:", error);
-    //         }
-    //     };
-
-    //     if (id) fetchData();
-    // }, [id]); // Gọi lại khi id thay đổi
-
-    const handleSubmit = async (reply) => {
-        try {
-            const newReview = {
-                productId: id,
-                userId: user_id,
-                rating: rating,
-                review: comment,
-                name: user_name,
-                replyId: reply,
-                createDate: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })).toISOString(), // Định dạng chuẩn
-            };
-
-            console.log(newReview);
-
-            // Gửi đánh giá lên server
-            await postReview(newReview);
-
-            // Cập nhật state `review` ngay lập tức mà không cần fetch lại API
-            // setReview(prevReviews => {
-            //     const updatedReviews = [...prevReviews, newReview];
-            //     console.log(updatedReviews)
-            //     // Tính toán trung bình rating từ state mới
-            //     const total = updatedReviews.reduce((sum, r) => sum + (r.rating ?? 0), 0);
-            //     const average = total / updatedReviews.length;
-            //     setRating(Math.round(average)); // Cập nhật trung bình rating
-            //     return updatedReviews;
-            // });
-            fetchData()
-
-            // Hiển thị thông báo
-            openModal(`Bạn đã đánh giá ${rating} sao với nội dung: ${comment}`);
-
-            // ✅ Reset lại comment và rating
-            setComment("");
-            setRating(0);
-            setIsReply(null);
-
-        } catch (error) {
-            alert("Lỗi khi gửi đánh giá: " + error.message);
-        }
+    const setRatingStar = (star) => {
+        console.log(star)
+        setRating(star);
     };
+
+    const fetchRating = async () => {
+        try {
+            const ratingRes = await getRatingById(id)
+            console.log("rating: " + ratingRes)
+            if (ratingRes?.data) {
+                const data = ratingRes?.data
+
+                setReview(data); // Lưu vào state
+                const total = data.reduce((sum, r) => r.replyId == null ? sum + (r.rating ?? 0) : sum, 0);
+                console.log(total)
+                const average = total / data.filter(r => r.replyId == null).length;
+                setTotalRating(parseFloat(average.toFixed(1)));
+                console.log("Fetched data:", data);
+            }
+        } catch (err) {
+            console.log("Lỗi lấy rating")
+        }
+    }
+
 
     const fetchData = async () => {
         try {
             setLoading(true)
-            const [productRes, specRes, ratingRes, ratingResquantityInStockRes] = await Promise.all([
+            console.log(user)
+            const [productRes, specRes] = await Promise.all([
                 findProductById(id),
                 findSpecificationsByProductId(id),
-                getRatingById(id),
-                //getQuantityInStock(id)
             ]);
-            console.log("rating: " + ratingRes)
-            if (ratingRes?.data) {
-                const data = ratingRes?.data
-                setReview(data); // Lưu vào state
-                const total = data.reduce((sum, r) => sum + (r.rating ?? 0), 0);
-                const average = total / data.length;
-                setRating(Math.round(average));
-                console.log("Fetched data:", data);
-            }
-
+            await fetchRating()
             if (productRes?.data) {
                 setProduct(productRes.data);
                 console.log("image: " + productRes.data.image.split(','))
                 setImages(productRes.data.image.split(','))
                 setspecs(specRes.data)
             }
+            const stockIn = stockIns
+                .filter(item => item.product_id === id)
+                .reduce((acc, item) => acc + item.quantity, 0);
 
-            //if (quantityInStockRes) setQuantityInStock(quantityInStockRes.quantityInStock);
+            const stockOut = stockOuts
+                .filter(item => item.product_id === id)
+                .reduce((acc, item) => acc + item.quantity, 0);
+            setQuantityInStock(stockIn - stockOut);
+            const authen = getFromLocalStorage('persist:auth');
+            const user1 = authen?.user ? JSON.parse(authen.user) : null;
+            const userRoleEncrypted = user1?.key;
+            let userRole;
+            if (userRoleEncrypted) {
+                try {
+                    const decrypted = CryptoJS.AES.decrypt(
+                        userRoleEncrypted,
+                        process.env.REACT_APP_CRYPTO
+                    );
+                    userRole = decrypted.toString(CryptoJS.enc.Utf8);
+                    setUserRole(userRole)
+                } catch (error) {
+                    console.error('Decryption error:', error);
+                }
+            }
             setLoading(false)
         } catch (error) {
             console.error("Error fetching product data:", error);
@@ -185,18 +147,7 @@ export default function ProductDetail() {
         console.log("Updated rating:", rating);
     }, [rating]);
 
-    const getProductStock = () => {
-        return (
-            stockIns.reduce(
-                (acc, item) => (item.product_id === id ? acc + item.quantity : acc),
-                0
-            ) -
-            stockOuts.reduce(
-                (acc, item) => (item.product_id === id ? acc + item.quantity : acc),
-                0
-            )
-        );
-    };
+
 
     // Added similar products data
     const [similarProducts, setSimilarProducts] = useState([]);
@@ -215,6 +166,41 @@ export default function ProductDetail() {
         };
         fetchDataSimilarProducts();
     }, [id]);
+    const handleSubmit = async (reply, type) => {
+        try {
+            const newReview = {
+                productId: id,
+                userId: user?.id,
+                rating: rating,
+                review: comment,
+                name: user?.firstName + " " + user?.lastName,
+                replyId: reply || null,
+                createDate: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })).toISOString(), // Định dạng chuẩn
+            };
+            // Gửi đánh giá lên server
+            await postReview(newReview);
+            setReview(prevReviews => [...prevReviews, newReview]);
+            const updatedReviews = [...review, newReview];
+            const total = updatedReviews.reduce((sum, r) => r.replyId === null ? sum + (r.rating ?? 0) : sum, 0);
+
+            const average = total / updatedReviews.filter(r => r.replyId == null).length;
+            setTotalRating(parseFloat(average.toFixed(1)));
+            // Hiển thị thông báo
+            if (type == 'reply') {
+                openModal(`Bạn đã phản hồi thành công`);
+            }
+            if (type == 'rating') {
+                openModal(`Bạn đã đánh giá ${rating} sao thành công`);
+            }
+            // ✅ Reset lại comment và rating
+            setComment("");
+            setRating(0);
+            setIsReply(null);
+
+        } catch (error) {
+            alert("Lỗi khi gửi đánh giá: " + error.message);
+        }
+    };
 
     const renderStars = (rating) => {
         const stars = [];
@@ -307,6 +293,7 @@ export default function ProductDetail() {
         }
     };
 
+
     return (
 
         <div className="min-h-screen bg-gray-50 -mt-20">
@@ -374,7 +361,7 @@ export default function ProductDetail() {
                     <div>
                         <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
                         <div className="flex items-center mb-4 text-lg text-orange-400">
-                            <p className="font-bold mr-1 ">{rating || 0}</p>
+                            <p className="font-bold mr-1 ">{totalRating || 0}</p>
                             <FaStar className="mr-10 " />
                             <p
                                 className="font-bold text-blue-500 cursor-pointer "
@@ -441,8 +428,8 @@ export default function ProductDetail() {
                         <div className="w-full  p-6 shadow-sm text-center ">
                             <h2 className="text-2xl font-bold mb-6">Đánh giá & Nhận xét</h2>
                             <div className="flex flex-col items-center">
-                                <h2 className="text-4xl font-bold text-red-500">{rating || 0}/5</h2>
-                                <div className="flex justify-center my-2">{renderStars(rating)}</div>
+                                <h2 className="text-4xl font-bold text-red-500">{totalRating || 0}/5</h2>
+                                <div className="flex justify-center my-2">{renderStars(totalRating)}</div>
                                 <h2 className="text-sm font-bold">
                                     ({review.filter(rating => rating.parentId === null || rating.parentId === 0).length}) đánh giá & nhận xét
                                 </h2>
@@ -465,8 +452,7 @@ export default function ProductDetail() {
                             </div>
                         </div>
                     </div>
-                    
-                    <div className="py-10 " ref={review}> 
+                    <div className="py-10 " ref={review}>
                         {review.filter(rating => rating.replyId === null || rating.replyId === 0) //Đánh giá & nhận xét
                             .map((rating, index) => (
                                 <div key={index} className="w-8/12 border-b border-gray-200">
@@ -479,22 +465,24 @@ export default function ProductDetail() {
                                             {renderStars(rating.rating)}
                                         </div>
                                         <div className="w-10/12">
-                                            <p className="text-sm">{rating.review}</p>
-                                            
-                                            {user_role === 1 && ( //Chỉ Admin được phản hồi
+                                            <div className="flex">
+                                                <p className="text-sm mr-6">{rating.review}</p>
+                                                {!review.some(reply => reply.replyId === rating.id) && isReply !== rating.id && ( //Hiện nếu chưa có Reply
+                                                    <button
+                                                        className="  text-base font-semibold rounded-md flex justify-center items-center px-2 py-1 text-gray-500"
+                                                        onClick={() => { setIsReply(rating.id) }} //Mở ô Reply
+                                                    >
+                                                        <FaReplyAll />
+
+                                                    </button>
+                                                )}
+                                            </div>
+
+
+                                            {user_role == 'R1' && ( //Chỉ Admin được phản hồi
                                                 <div>
-                                                    
-                                                    {!review.some(reply => reply.replyId === rating.id) && isReply !== rating.id && ( //Hiện nếu chưa có Reply
-                                                        <button
-                                                            className="bg-blue-500 text-white text-sm font-semibold rounded-md flex justify-center items-center px-2 py-1"
-                                                            onClick={() => { setIsReply(rating.id) }} //Mở ô Reply
-                                                        >
-                                                            <div className="text-l mr-1" />Phản hồi
-                                                        </button>
-                                                    )}
-                                                    
                                                     {isReply === rating.id && ( //Reply
-                                                        <div>
+                                                        <div className="mt-2">
                                                             <textarea
                                                                 className="w-full p-2 border rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                                 placeholder="Nhập đánh giá của bạn..."
@@ -507,11 +495,11 @@ export default function ProductDetail() {
                                                                     className="bg-red-500 text-white text-sm font-semibold rounded-md flex justify-center items-center px-2 py-1"
                                                                     onClick={() => { setIsReply(null) }}
                                                                 >
-                                                                    <div className="text-l mr-1" />Huy
+                                                                    <div className="text-l mr-1" />Hủy
                                                                 </button>
                                                                 <button
                                                                     className="bg-blue-500 text-white text-sm font-semibold rounded-md flex justify-center items-center px-2 py-1"
-                                                                    onClick={() => { handleSubmit(rating.id) }}
+                                                                    onClick={() => { handleSubmit(rating.id, 'reply') }}
                                                                 >
                                                                     <div className="text-l mr-1" />Phản hồi
                                                                 </button>
@@ -519,23 +507,22 @@ export default function ProductDetail() {
                                                         </div>
                                                     )}
                                                     {/* <p className="text-sm leading-6 mt-3">{"Dạ RAM mới lúc lắp máy mình cho lắp luôn ạ, hoặc nếu Anh Minh Tiến có nhu cầu nâng cấp mình có thể nâng cấp ngay lúc lắp máy, về việc gắn thêm ổ cứng GEARVN sẽ hộ trợ mình gắn luôn, cài win cũng vậy ạ. Anh Tiến để lại thông tin (SĐT ...) để GEARVN gọi lại tư vấn cho mình rõ hơn ạ."}</p> */}
-                                                    
+
                                                     {review.some(reply => reply.replyId === rating.id) && ( //Hiện Reply
-                                                        <div className="ml-10 mt-4">
+                                                        <div className=" mt-4">
                                                             {review
                                                                 .filter(reply => reply.replyId === rating.id) // Lọc các phản hồi của đánh giá này
                                                                 .map((reply, replyIndex) => (
-                                                                    <div key={replyIndex} className="w-full border-l-2 border-gray-300 pl-4 mt-4">
+                                                                    <div key={replyIndex} className="mt-3 rounded-md bg-gray-200 w-full p-3">
                                                                         <div className="w-full flex justify-start items-center">
                                                                             <p className="mr-3 font-semibold text-red-500">{"Admin"}</p>
                                                                             <p className="text-gray-400">{DateConverter(reply.createDate)}</p>
                                                                         </div>
-                                                                        <div className="w-full flex justify-start my-3">
-                                                                            <div className="w-10/12">
-                                                                                <p className="text-sm">{reply.review}</p>
-                                                                            </div>
+                                                                        <div>
+                                                                            <p className="text-sm leading-6 mt-3">{reply.review}</p>
                                                                         </div>
                                                                     </div>
+
                                                                 ))}
                                                         </div>
                                                     )}
@@ -547,43 +534,38 @@ export default function ProductDetail() {
                                 </div>
                             ))}
                     </div>
-                    
-                    {user_role !== 1 && user_role !== 2 && ( //Hiện đánh giá nếu role user
-                        <div className="w-full">
-                            {/* <button className="bg-blue-500 text-white text-sm font-semibold rounded-md flex justify-center items-center px-4 py-2 w-4/12">
+                    <div className="w-full">
+                        {/* <button className="bg-blue-500 text-white text-sm font-semibold rounded-md flex justify-center items-center px-4 py-2 w-4/12">
                             <BiSolidCommentEdit className="text-2xl mr-2" />Gửi đánh giá của bạn
                         </button> */}
-                            <div className="w-full mx-auto p-4 border rounded-lg shadow-md bg-white">
-                                <h2 className="text-lg font-semibold mb-2">Gửi đánh giá của bạn</h2>
-                                <div className="flex mb-4">
-                                    {[1, 2, 3, 4, 5].map((star) => (
-                                        <button
-                                            key={star}
-                                            onClick={() => setRating(star)}
-                                            onMouseEnter={() => setHover(star)}
-                                            onMouseLeave={() => setHover(0)}
-                                            className="text-2xl text-yellow-400 mx-1"
-                                        >
-                                            {star <= (hover || rating) ? <BiSolidStar /> : <BiStar />}
-                                        </button>
-                                    ))}
-                                </div>
-                                <textarea
-                                    className="w-full p-2 border rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Nhập đánh giá của bạn..."
-                                    rows="4"
-                                    value={comment}
-                                    onChange={(e) => setComment(e.target.value)}
-                                ></textarea>
-                                <button
-                                    className="bg-blue-500 text-white text-sm font-semibold rounded-md flex justify-center items-center px-3 py-1"
-                                    onClick={() => { handleSubmit() }}
-                                >
-                                    <BiSolidCommentEdit className="text-xl mr-2" />Gửi đánh giá của bạn.
-                                </button>
+                        <div className="w-full mx-auto p-4 border rounded-lg shadow-md bg-white">
+                            <h2 className="text-lg font-semibold mb-2">Gửi đánh giá của bạn</h2>
+                            <div className="flex mb-4">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <button
+                                        key={star}
+                                        onClick={() => setRatingStar(star)}
+                                        className="text-2xl text-yellow-400 mx-1"
+                                    >
+                                        {star <= (rating) ? <BiSolidStar /> : <BiStar />}
+                                    </button>
+                                ))}
                             </div>
+                            <textarea
+                                className="w-full p-2 border rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Nhập đánh giá của bạn..."
+                                rows="4"
+                                value={comment}
+                                onChange={(e) => setComment(e.target.value)}
+                            ></textarea>
+                            <button
+                                className="bg-blue-500 text-white text-sm font-semibold rounded-md flex justify-center items-center px-3 py-1"
+                                onClick={() => { handleSubmit(null, 'rating') }}
+                            >
+                                <BiSolidCommentEdit className="text-xl mr-2" />Gửi đánh giá của bạn.
+                            </button>
                         </div>
-                    )}
+                    </div>
                 </div>
             </main>}
         </div>
