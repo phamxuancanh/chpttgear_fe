@@ -14,6 +14,7 @@ import { PiApproximateEqualsThin } from "react-icons/pi";
 import { FaDongSign } from "react-icons/fa6";
 import { toast } from "react-toastify";
 import { updateUser } from "../redux/authSlice";
+import { clearCart } from "../redux/cartSlice";
 
 export default function Payment() {
 
@@ -287,6 +288,7 @@ export default function Payment() {
             totalAmount: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(paypalResponse.data.order.total_amount + paypalResponse.data.order.shipping_amount),
           }
           await sendEmail(formData.email, emailContext);
+          dispatch(clearCart());
           window.location.href = paypalResponse.data.approvalUrl;
           return;
         } else {
@@ -347,7 +349,7 @@ export default function Payment() {
           orderId = orderData.order.order_id;
           approvalUrl = orderData.approvalUrl;
         } else {
-          orderId = orderData.order_id;
+          orderId = orderData.order.order_id;
         }
 
         const orderItemPromises = cartItems.map(item =>
@@ -363,12 +365,12 @@ export default function Payment() {
         await Promise.all(orderItemPromises);
         console.log(cartItems)
         const emailContext = {
-          orderId: orderData.order_id,
-          orderDate: orderData.createdAt,
-          orderTotal: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.total_amount),
-          shippingFee: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.shipping_amount),
-          totalAmount: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.total_amount + orderData.shipping_amount),
-          address: orderData.houseNumber,
+          orderId: orderId,
+          orderDate: orderData.order.createdAt,
+          orderTotal: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.order.total_amount),
+          shippingFee: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.order.shipping_amount),
+          totalAmount: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.order.total_amount + orderData.order.shipping_amount),
+          address: orderData.order.houseNumber,
           products: cartItems.map(item => ({
             imageUrl: item.image.split(',')[0],
             name: item.name,
@@ -378,7 +380,7 @@ export default function Payment() {
         };
 
         await sendEmail(formData.email, emailContext);
-
+        dispatch(clearCart());
 
         if (formData.paymentMethod === "PAYPAL") {
           if (approvalUrl) {
