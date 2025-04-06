@@ -82,6 +82,20 @@ export default function Login() {
             }
         }
     };
+    const checkCartExists = async (userId) => {
+        try {
+            const response = await findCartByUserId(userId);
+            if (!response.data.id) {
+                const responseCart = await createCart(userId);
+                if (responseCart.status === 200) {
+                    console.log("Create cart successfully");
+                }
+            }
+        } catch (error) {
+            console.error("Error checking cart:", error);
+        }
+    };
+
     const handleGoogleSignIn = async () => {
         try {
             const result = await googleSignIn();
@@ -89,15 +103,7 @@ export default function Login() {
                 const { accessToken, currentUser } = result;
                 let userRole = currentUser?.key;
                 let data;
-                const cartExists = await findCartByUserId(currentUser.id);
-                if (cartExists.data.id) {
-                    console.log("Cart exists", cartExists.data);
-                } else {
-                    const responseCart = await createCart(currentUser.id);
-                    if (responseCart.status === 200) {
-                        console.log("Create cart successfully");
-                    }
-                }
+                checkCartExists(currentUser.id);
                 if (userRole) {
                     try {
                         const decrypted = CryptoJS.AES.decrypt(

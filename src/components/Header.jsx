@@ -21,10 +21,6 @@ import { setCartRedux, setCartItemsRedux, clearCart } from "../redux/cartSlice";
 import { findCartByUserId, findCartItemsByCartId, findAllProduct } from "../routers/ApiRoutes";
 import MenuModal from "./Modal/MenuModal";
 
-// import { setCartRedux, setCartItemsRedux, removeItemFromCart, increaseQuantityItem, decrementQuantityItem } from "../redux/cartSlice";
-// import { findCartByUserId, findCartItemsByCartId, findAllProduct, updateQuantityCartItem, deleteCartItem } from "../routers/ApiRoutes";
-// import MenuModal from "./Modal/MenuModal";
-
 export default function Header() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -93,29 +89,6 @@ export default function Header() {
         }
     };
 
-    // const [cartItems, setCartItems] = useState([
-    //     {
-    //         id: 1,
-    //         name: "Wireless Headphones",
-    //         price: 199.99,
-    //         quantity: 1,
-    //         image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e"
-    //     },
-    //     {
-    //         id: 2,
-    //         name: "Smart Watch",
-    //         price: 299.99,
-    //         quantity: 1,
-    //         image: "https://images.unsplash.com/photo-1546868871-7041f2a55e12"
-    //     },
-    //     {
-    //         id: 3,
-    //         name: "Wireless Earbuds",
-    //         price: 149.99,
-    //         quantity: 1,
-    //         image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df"
-    //     }
-    // ]);
     const updateQuantity = (id, action) => {
         setCartItems(prevItems =>
             prevItems.map(item => {
@@ -129,7 +102,6 @@ export default function Header() {
             }).filter(item => item.quantity > 0)
         );
     };
-
 
     const setDropdownProduct = () => {
         setIsCategoryOpen(!isCategoryOpen)
@@ -199,39 +171,6 @@ export default function Header() {
     };
 
     useEffect(() => {
-        const fetchCart = async () => {
-            try {
-                const cartResponse = await findCartByUserId(user.id);
-                if (cartResponse.data) {
-                    // Gọi API song song để tăng tốc độ
-                    const [cartItemResponse, productsResponse] = await Promise.all([
-                        findCartItemsByCartId(cartResponse.data.id),
-                        findAllProduct()
-                    ]);
-                    const cartItemsMapped = cartItemResponse.data.map(item => {
-                        const product = productsResponse.data.find(p => p.id === item.productId);
-                        return {
-                            itemId: item.id,
-                            productId: item.productId,
-                            name: product?.name,
-                            price: parseFloat(product?.price),
-                            quantity: parseInt(item.quantity),
-                            image: product?.image
-                        };
-                    });
-                    setCartItems(cartItemsMapped);
-                    dispatch(setCartRedux({ cart: cartResponse.data }));
-                    dispatch(setCartItemsRedux({ items: cartItemsMapped }));
-                }
-            } catch (error) {
-            }
-        };
-        if (user?.id) {
-            fetchCart();
-        }
-    }, [user?.id]);
-
-    useEffect(() => {
         const token = localStorage.getItem("token");
         if (token) {
             dispatch(setToken(token))
@@ -247,9 +186,8 @@ export default function Header() {
     useEffect(() => {
         const fetchCart = async () => {
             try {
-
                 const cartResponse = await findCartByUserId(user.id);
-
+                console.log(user.id);
                 if (cartResponse.data) {
                     // Gọi API song song để tăng tốc độ
                     const [cartItemResponse, productsResponse] = await Promise.all([
@@ -268,13 +206,11 @@ export default function Header() {
                         };
                     });
                     setCartItems(cartItemsMapped);
-
                     dispatch(setCartRedux({ cart: cartResponse.data }));
                     dispatch(setCartItemsRedux({ items: cartItemsMapped }));
                 }
             } catch (error) {
-
-                toast.error("2 Lỗi load dữ liệu giỏ hàng");
+                toast.error("Lỗi load dữ liệu giỏ hàng");
             }
         };
         if (user?.id) {
