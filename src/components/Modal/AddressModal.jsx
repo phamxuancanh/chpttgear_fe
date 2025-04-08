@@ -7,8 +7,8 @@ import Loading from "../loading";
 import { useSelector } from "react-redux";
 
 const AddressModal = ({ isOpen, onClose, user, onSelect, setShippingFee }) => {
-    const addresses = user.address.split(";;") // Tách địa chỉ
-    const [selectedAddress, setSelectedAddress] = useState(addresses[0]);
+    const addresses = user?.address ? user.address.split(";;").map(addr => addr.trim()) : [];
+    const [selectedAddress, setSelectedAddress] = useState(addresses[0] || "");
     const [loading, setLoading] = useState(false)
     const selectedItems = useSelector(state => state.shoppingCart.selectItems)
     if (!isOpen) return null; // Ẩn modal khi không mở
