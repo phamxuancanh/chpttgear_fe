@@ -151,7 +151,17 @@ export default function ProductDetail() {
 
     // Added similar products data
     const [similarProducts, setSimilarProducts] = useState([]);
+    const filterProductsInStock = similarProducts.filter((product) => {
+        const stockIn = stockIns
+            .filter(item => item.product_id === product.id)
+            .reduce((acc, item) => acc + item.quantity, 0);
 
+        const stockOut = stockOuts
+            .filter(item => item.product_id === product.id)
+            .reduce((acc, item) => acc + item.quantity, 0);
+
+        return stockIn - stockOut > 0;  // Nếu còn hàng
+    });
     useEffect(() => {
         const fetchDataSimilarProducts = async () => {
             try {
@@ -415,7 +425,7 @@ export default function ProductDetail() {
                 <div className="mb-12">
                     <h2 className="text-2xl font-bold mb-6">Sản phẩm tương tự</h2>
                     <div className="grid md:grid-cols-5 gap-6">
-                        {similarProducts.map((similarProduct) => (
+                        {filterProductsInStock.map((similarProduct) => (
                             <ProductCard key={similarProduct.id} product={similarProduct} />
                         ))}
                     </div>
