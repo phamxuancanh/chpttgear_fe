@@ -14,6 +14,7 @@ import SOLD_OUT_TAG from "../assets/sold-out_tag.png"
 export default function ProductCard({ product }) {
 
     const dispatch = useDispatch();
+    const user = useSelector((state) => state.auth.user);
     const cart = useSelector(state => state.shoppingCart.cart);
     const cartItems = useSelector(state => state.shoppingCart.items);
     const { openModal } = useModal();
@@ -22,7 +23,10 @@ export default function ProductCard({ product }) {
     const stockOuts = useSelector(state => state.inventory.stockOuts)
 
     const handlerAddToCart = async ({ product }) => {
-
+        if (!user) {
+            toast.error("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!");
+            return;
+        }
         const item = cartItems.find(item => item.productId === product.id);
         if (item) {
             const updatedItems = selectedItems.map(i =>
