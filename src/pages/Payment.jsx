@@ -4,7 +4,7 @@ import { TbTruckDelivery } from "react-icons/tb";
 import { Link, useNavigate } from "react-router-dom";
 import provinceData from "../assets/address/province.json";
 import { useDispatch, useSelector } from "react-redux";
-import { calculateShippingFee, createOrder, createOrderItem, createPayment, createPaypalDeposit, createTransaction, editUserById, sendEmail } from "../routers/ApiRoutes";
+import { calculateShippingFee, createOrder, createOrderItem, createPayment, createPaypalDeposit, createTransaction, deleteCartItem, editUserById, sendEmail } from "../routers/ApiRoutes";
 import Loading from "../utils/Loading";
 import AddressModal from "../components/Modal/AddressModal";
 import { useModal } from "../context/ModalProvider";
@@ -14,7 +14,7 @@ import { PiApproximateEqualsThin } from "react-icons/pi";
 import { FaDongSign } from "react-icons/fa6";
 import { toast } from "react-toastify";
 import { updateUser } from "../redux/authSlice";
-import { clearCart } from "../redux/cartSlice";
+import { clearCart, removeItemFromCart } from "../redux/cartSlice";
 
 export default function Payment() {
 
@@ -30,9 +30,9 @@ export default function Payment() {
   const [wards, setWards] = useState([]);
   const [shippingFee, setShippingFee] = useState(0);
   const userFromRedux = useSelector((state) => state.auth.user);
-  const addresses = userFromRedux?.address?.split(";;").map((addr) => addr.split("|")[0].trim()); // Tách địa chỉ
-  const [selectedAddress, setSelectedAddress] = useState(addresses[0]);
-  const selectedCodeAddress = userFromRedux?.address?.split(";;").map((addr) => addr.split("|")[1].trim())[0]
+  const addresses = userFromRedux?.address ? userFromRedux.address.split(";;").map((addr) => addr.split("|")[0].trim()) : [];
+  const [selectedAddress, setSelectedAddress] = useState(addresses[0] || "");
+  const selectedCodeAddress = userFromRedux?.address ? userFromRedux.address.split(";;").map((addr) => addr.split("|")[1].trim())[0] : "";
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { openModal } = useModal();
   const [date, setDate] = useState("");
@@ -255,44 +255,64 @@ export default function Payment() {
         const orderId = paypalResponse.data.order.order_id;
         console.log(orderId);
 
-        const orderItemPromises = cartItems.map(item =>
-          createOrderItem({
-            order_id: orderId,
-            product_id: item.productId,
-            quantity: item.quantity,
-            price: item.price,
-            profit: item.profit,
-          })
-        );
+        try {
+          const orderItemResponses = await Promise.all(
+            cartItems.map((item) =>
+              createOrderItem({
+                order_id: orderId,
+                product_id: item.productId,
+                quantity: item.quantity,
+                price: item.price,
+                profit: item.profit,
+              })
+            )
+          );
 
-        const orderItemsResponses = await Promise.all(orderItemPromises);
+          const allItemsCreated = orderItemResponses.every((res) => res.status === 201);
+          const paypalData = paypalResponse?.data;
 
-        const allItemsCreated = orderItemsResponses.every(res => res.status === 201);
+          if (!paypalData?.approvalUrl || !allItemsCreated) {
+            throw new Error("Không tìm thấy approvalUrl từ PayPal hoặc tạo order item thất bại");
+          }
 
-        console.log(paypalResponse.data);
-        console.log(orderItemsResponses);
-
-        if (paypalResponse?.data.approvalUrl && allItemsCreated) {
           const emailContext = {
             orderId: orderId,
-            orderDate: paypalResponse.data.order.createdAt,
-            orderTotal: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(paypalResponse.data.order.total_amount),
-            address: paypalResponse.data.order.houseNumber,
+            orderDate: paypalData.order.createdAt,
+            orderTotal: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(paypalData.order.total_amount),
+            address: paypalData.order.houseNumber,
             products: cartItems.map(item => ({
               imageUrl: item.image.split(',')[0],
               name: item.name,
               price: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price),
               quantity: item.quantity
             })),
-            shippingFee: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(paypalResponse.data.order.shipping_amount),
-            totalAmount: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(paypalResponse.data.order.total_amount + paypalResponse.data.order.shipping_amount),
-          }
-          await sendEmail(formData.email, emailContext);
-          dispatch(clearCart());
-          window.location.href = paypalResponse.data.approvalUrl;
-          return;
-        } else {
-          throw new Error("Không tìm thấy approvalUrl từ PayPal hoặc tạo order item thất bại");
+            shippingFee: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(paypalData.order.shipping_amount),
+            totalAmount: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
+              paypalData.order.total_amount + paypalData.order.shipping_amount
+            ),
+          };
+
+          sendEmail(formData.email, emailContext).catch(err => {
+            console.error("Lỗi khi gửi email:", err);
+          });
+
+          await Promise.all(
+            cartItems.map(async item => {
+              try {
+                await deleteCartItem(item.itemId);
+                dispatch(removeItemFromCart({ itemId: item.itemId }));
+              } catch (error) {
+                console.error("Lỗi xoá item:", item.itemId, error);
+              }
+            })
+          );
+
+          window.location.href = paypalData.approvalUrl;
+
+        } catch (error) {
+          console.error("Lỗi khi tạo đơn đặt cọc:", error);
+          alert("Đã xảy ra lỗi khi tạo đơn đặt cọc. Vui lòng thử lại!");
+          setLoading(false);
         }
       } catch (error) {
         console.error("Lỗi khi tạo đơn đặt cọc:", error);
@@ -352,35 +372,59 @@ export default function Payment() {
           orderId = orderData.order.order_id;
         }
 
-        const orderItemPromises = cartItems.map(item =>
-          createOrderItem({
-            order_id: orderId,
-            product_id: item.productId,
-            quantity: item.quantity,
-            price: item.price,
-            profit: item.profit,
-          })
-        );
+        try {
+          await Promise.all(
+            cartItems.map(item =>
+              createOrderItem({
+                order_id: orderId,
+                product_id: item.productId,
+                quantity: item.quantity,
+                price: item.price,
+                profit: item.profit,
+              })
+            )
+          );
 
-        await Promise.all(orderItemPromises);
-        console.log(cartItems)
-        const emailContext = {
-          orderId: orderId,
-          orderDate: orderData.order.createdAt,
-          orderTotal: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.order.total_amount),
-          shippingFee: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.order.shipping_amount),
-          totalAmount: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.order.total_amount + orderData.order.shipping_amount),
-          address: orderData.order.houseNumber,
-          products: cartItems.map(item => ({
-            imageUrl: item.image.split(',')[0],
-            name: item.name,
-            price: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price),
-            quantity: item.quantity
-          }))
-        };
+          console.log(cartItems);
 
-        await sendEmail(formData.email, emailContext);
-        dispatch(clearCart());
+          const emailContext = {
+            orderId: orderId,
+            orderDate: orderData.order.createdAt,
+            orderTotal: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.order.total_amount),
+            shippingFee: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.order.shipping_amount),
+            totalAmount: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
+              orderData.order.total_amount + orderData.order.shipping_amount
+            ),
+            address: orderData.order.houseNumber,
+            products: cartItems.map(item => ({
+              imageUrl: item.image.split(',')[0],
+              name: item.name,
+              price: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price),
+              quantity: item.quantity,
+            })),
+          };
+
+          sendEmail(formData.email, emailContext).catch((err) => {
+            console.error("Gửi email thất bại:", err);
+          });
+
+          await Promise.all(
+            cartItems.map(async item => {
+              try {
+                await deleteCartItem(item.itemId);
+                dispatch(removeItemFromCart({ itemId: item.itemId }));
+              } catch (error) {
+                console.error("Lỗi xoá item:", item.itemId, error);
+              }
+            })
+          );
+
+        } catch (error) {
+          console.error("Lỗi khi tạo đơn đặt hàng:", error);
+          alert("Đã xảy ra lỗi khi tạo đơn hàng. Vui lòng thử lại!");
+          setLoading(false);
+        }
+
 
         if (formData.paymentMethod === "PAYPAL") {
           if (approvalUrl) {
