@@ -20,6 +20,7 @@ import CryptoJS from 'crypto-js';
 import { setCartRedux, setCartItemsRedux, clearCart } from "../redux/cartSlice";
 import { findCartByUserId, findCartItemsByCartId, findAllProduct } from "../routers/ApiRoutes";
 import MenuModal from "./Modal/MenuModal";
+import { removeAllLocalStorage } from "../utils/functions";
 
 export default function Header() {
     const dispatch = useDispatch();
@@ -156,7 +157,7 @@ export default function Header() {
         try {
             const response = await signOut()
             if (response) {
-
+                removeAllLocalStorage()
                 // removeAllLocalStorage()
                 navigate(ROUTES.LOGIN_PAGE.path)
                 toast.success('Đăng xuất thành công!')
@@ -230,376 +231,393 @@ export default function Header() {
 
     }, []);
     return (
-        <div>
-            {loading ? <Loading /> : <nav className="bg-black text-white shadow-lg py-2 sticky flex items-center justify-center z-20 ">
-                <div className="w-11/12">
-                    <div className="w-full flex items-center justify-between h-16  ">
-                        <div className="w-1/12 ">
-                            <Link to="/">
-                                <img src={LOGO} width={150} height={150} />
-                            </Link>
-                        </div>
-                        <div className="hidden md:flex w-8/12 items-center space-x-5  justify-between px-8">
-                            <Link
-                                to="/"
-                                onClick={handleLinkClick}
-                                className="relative  font-semibold text-white px-4 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-indigo-500 hover:to-blue-500 transition-all duration-300 shadow-lg hover:shadow-xl text-base w-2/12 flex justify-center items-center"
-                            >
-                                <p className="text-base">Trang chủ</p>
-                            </Link>
-                            <div className="relative w-3/12 ">
-                                <button
-                                    className="relative group flex items-center gap-2 font-semibold text-white px-4 py-3 rounded-lg bg-gradient-to-r from-red-500 to-pink-500 hover:from-pink-500 hover:to-red-500 transition-all duration-300 shadow-lg hover:shadow-xl text-base  "
-                                    onClick={() => setDropdownProduct()}
-                                >
-                                    <IoMenu className={`text-xl  transition-transform duration-300 ${showProductDropdown ? "rotate-90" : ""}`} />
-                                    <span>Danh mục</span>
-                                </button>
-                                {isCategoryOpen && location.pathname !== ROUTES.HOME_PAGE.path && (
-                                    <div className="absolute top-full -left-48 w-[35vh] mt-5">
-                                        <MenuModal />
-                                    </div>
-                                )}
-                            </div>
+<div>
+      {loading ? <Loading /> : (
+        <nav className="bg-black text-white shadow-lg py-2 sticky top-0 left-0 right-0 flex items-center justify-center z-20">
+          <div className="w-11/12">
+            <div className="w-full flex items-center justify-between h-16">
+              {/* Logo */}
+              <div className="flex-shrink-0">
+                <Link to="/">
+                  <img src={LOGO} width={130} height={130} alt="logo" className="h-12 w-auto" />
+                </Link>
+              </div>
 
-                            <div className="container w-7/12 mx-auto px-4 py-4 flex items-center justify-between text-black ">
-                                <div className="flex-1 w-10/12 flex items-center" ref={searchRef}>
-
-                                    <div className="relative flex-grow">
-                                        <input
-                                            type="text"
-                                            value={searchTerm}
-                                            onChange={handleSearch}
-                                            onKeyDown={handleKeyPress}
-                                            placeholder="Tìm kiếm sản phẩm..."
-                                            className="w-full py-2 px-4 pr-10 text-base rounded-md border border-input focus:outline-none focus:ring-2 focus:ring-ring bg-card text-foreground"
-                                        />
-                                        <FiSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-
-                                        {suggestions?.length > 0 && (
-                                            <ul className="absolute left-0 top-full mt-1 bg-white border border-gray-300 max-h-96 min-w-[500px] max-w-[500px] overflow-y-auto z-50 shadow-2xl rounded-b-lg">
-                                                {suggestions.map((suggestion) => (
-                                                    <li
-                                                        key={suggestion.id}
-                                                        className="p-2 hover:bg-gray-100 hover:font-bold cursor-pointer truncate"
-                                                        onClick={() => setSearchTerm(suggestion.name)}
-                                                    >
-                                                        {suggestion.name}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        )}
-                                    </div>
-                                    <button
-                                        onClick={handleSearchClick}
-                                        className="ml-1 px-4 py-2 w-[15vh] bg-green-200 text-base font-semibold  text-black rounded-md hover:bg-primary-dark transition-colors"
-                                    >
-                                        Tìm kiếm
-                                    </button>
-                                </div>
-                            </div>
-                            <a
-                                href="#"
-                                className="relative font-semibold w-[17vh] flex justify-center items-center text-white px-4 py-3 rounded-lg bg-gradient-to-r from-green-500 to-teal-500 hover:from-teal-500 hover:to-green-500 transition-all duration-300 shadow-lg hover:shadow-xl"
-                            >
-                                Tin tức
-                            </a>
-                        </div>
-
-                        <div className="w-3/12 hidden md:flex items-center justify-between px-10 space-x-6 ">
-                            <div className="relative">
-                                <button
-                                    className="hover:text-blue-400 transition duration-300"
-                                    onClick={() => setDropdownBell()}
-                                >
-                                    <FiBell className="h-6 w-6" />
-
-                                </button>
-                                {showBellDropdown && (
-                                    <div
-                                        className="absolute  z-50 right-0 mt-2 w-72 rounded-md shadow-lg bg-white text-black"
-                                    >
-                                        <div className="p-4 min-h-[40vh] max-h-[40vh]">
-                                            <span className="font-bold w-full flex justify-center items-center text-[15px]">THÔNG BÁO</span>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="relative">
-                                <button
-                                    className="hover:text-blue-400 transition duration-300"
-                                    onClick={() => setDropdownCart()}
-                                >
-                                    <FiShoppingCart className="h-6 w-6" />
-
-                                    {cartItemRedux.length >= 0 && (
-                                        <span className="absolute -top-3 -right-3 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                                            {cartItemRedux.length}
-                                        </span>
-                                    )}
-                                </button>
-                                {showCartDropdown && (
-                                    <div
-                                        className="absolute  z-50 right-0 mt-2 w-[48vh]  rounded-md shadow-lg bg-white text-black"
-                                    >
-                                        <div className="py-4 px-2">
-                                            <h3 className="font-medium mb-3 text-base text-gray-400 ml-2">Sản phẩm mới thêm</h3>
-                                            {cartItemRedux.length > 0 && cartItemRedux.slice(0, 3).map((item) => (
-                                                <div
-                                                    key={item.id}
-                                                    className="p-4 border-b border-gray-200 flex items-center gap-4"
-                                                >
-                                                    <img
-                                                        src={item.image ? item.image.split(',')[0] : "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3"}
-                                                        alt={item.name}
-                                                        className="w-20 h-20 object-cover rounded-lg"
-                                                        onError={(e) => {
-                                                            e.target.onerror = null;
-                                                            e.target.src = "https://images.unsplash.com/photo-1576566588028-4147f3842f27";
-                                                        }}
-                                                    />
-                                                    <div className="flex-1 w-8/12 ">
-                                                        <h3 className="font-medium text-gray-800 truncate ">{item.name}</h3>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                            <div className="w-full flex justify-between items-center px-2">
-                                                <h5 className="font-normal mb-3 text-xs text-gray-500 mt-5">{cartItemRedux.length} sản phẩm thêm vào giỏ hàng</h5>
-                                                <Link to="/cart" onClick={handleLinkClick}>
-                                                    <button className=" bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 mt-3">
-                                                        Xem giỏ hàng
-                                                    </button>
-                                                </Link>
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="relative">
-                                <button
-                                    className="hover:text-blue-400 transition duration-300"
-                                    onClick={() => setDropdownUser()}
-                                >
-                                    <div className="p-2 flex items-center space-x-2 border border-white rounded-lg">
-                                        {isLoggedIn ? (
-                                            <>
-                                                <img src={user.avatar ? user?.avatar : "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3"} alt="avatar" className="w-8 h-8 rounded-full" referrerPolicy="no-referrer" />
-                                                <div>
-                                                    <div>Xin chào</div>
-                                                    <div className="font-bold">
-                                                        {user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.username}
-                                                    </div>
-                                                </div>
-                                            </>
-                                        ) : (
-                                            <div className="flex items-center space-x-2">
-                                                <FiUser className="h-6 w-6" />
-                                                <div className="font-bold">Đăng nhập</div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </button>
-                                {showUserDropdown && user && (
-                                    <div className="absolute z-50 right-0 mt-2 w-48 rounded-md shadow-lg bg-white text-black">
-                                        {!user ? (
-                                            <>
-                                                <Link onClick={handleLinkClick}
-                                                    to="/login"
-                                                    className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
-                                                >
-                                                    Đăng nhập
-                                                </Link>
-                                                <Link onClick={handleLinkClick}
-                                                    to="/register"
-                                                    className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
-                                                >
-                                                    Đăng kí
-                                                </Link>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Link onClick={handleLinkClick}
-                                                    to="/profile"
-                                                    className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
-                                                >
-                                                    Hồ sơ
-                                                </Link>
-
-                                                {userRole === 'R1' && (
-                                                    <Link
-                                                        onClick={handleLinkClick}
-                                                        to="/dashboard"
-                                                        className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
-                                                    >
-                                                        Vào trang quản lý
-                                                    </Link>
-                                                )}
-
-                                                <Link
-                                                    onClick={handleLinkClick}
-                                                    to="/orders"
-                                                    className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
-                                                >
-                                                    Đơn đã đặt
-                                                </Link>
-                                                <button
-                                                    onClick={handleLogout}
-                                                    className="flex w-full items-start px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
-                                                >
-                                                    Đăng xuất
-                                                </button>
-                                            </>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="md:hidden flex items-center">
-                            <button
-                                onClick={() => setIsOpen(!isOpen)}
-                                className="inline-flex items-center justify-center p-2 rounded-md hover:text-blue-400 hover:bg-black focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
-                            >
-                                <FiMenu className="h-6 w-6" />
-                            </button>
-                        </div>
+              {/* Menu trên desktop và laptop */}
+              <div className="hidden lg:flex flex-1 items-center justify-between space-x-2 xl:space-x-4 mx-4">
+                {/* Trang chủ */}
+                <Link
+                  to="/"
+                  onClick={handleLinkClick}
+                  className="relative font-semibold text-white px-3 py-2 xl:px-4 xl:py-3 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-indigo-500 hover:to-blue-500 transition-all duration-300 shadow-lg hover:shadow-xl text-sm xl:text-base whitespace-nowrap flex items-center justify-center"
+                >
+                  <p>Trang chủ</p>
+                </Link>
+                
+                {/* Danh mục */}
+                <div className="relative">
+                  <button
+                    className="flex items-center gap-1 xl:gap-2 font-semibold text-white px-3 py-2 xl:px-4 xl:py-3 rounded-lg bg-gradient-to-r from-red-500 to-pink-500 hover:from-pink-500 hover:to-red-500 transition-all duration-300 shadow-lg hover:shadow-xl text-sm xl:text-base whitespace-nowrap"
+                    onClick={() => setDropdownProduct()}
+                  >
+                    <IoMenu className={`text-lg xl:text-xl transition-transform duration-300 ${showProductDropdown ? "rotate-90" : ""}`} />
+                    <span>Danh mục</span>
+                  </button>
+                  {isCategoryOpen && location.pathname !== ROUTES.HOME_PAGE.path && (
+                    <div className="absolute top-full -left-20 xl:-left-48 w-[280px] xl:w-[35vh] mt-2 z-50">
+                      <MenuModal />
                     </div>
+                  )}
                 </div>
 
-                {isOpen && (
-                    <div className="md:hidden">
-                        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                            <Link to="/"
+                {/* Search */}
+                <div className="flex-grow px-1 flex items-center" ref={searchRef}>
+                  <div className="relative flex-grow">
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={handleSearch}
+                      onKeyDown={handleKeyPress}
+                      placeholder="Tìm kiếm sản phẩm..."
+                      className="w-full py-1.5 xl:py-2 px-3 xl:px-4 pr-8 xl:pr-10 text-sm xl:text-base rounded-md border focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black"
+                    />
+                    <FiSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                    
+                    {suggestions?.length > 0 && (
+                      <ul className="absolute left-0 top-full mt-1 bg-white border border-gray-300 w-full max-h-96 overflow-y-auto z-50 shadow-2xl rounded-b-lg">
+                        {suggestions.map((suggestion) => (
+                          <li
+                            key={suggestion.id}
+                            className="p-2 hover:bg-gray-100 hover:font-bold cursor-pointer truncate text-black"
+                            onClick={() => setSearchTerm(suggestion.name)}
+                          >
+                            {suggestion.name}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleSearchClick}
+                    className="ml-1 px-3 py-1.5 xl:px-4 xl:py-2 bg-green-200 text-sm xl:text-base font-medium text-black rounded-md hover:bg-green-300 transition-colors whitespace-nowrap"
+                  >
+                    Tìm kiếm
+                  </button>
+                </div>
+                
+                {/* Tin tức */}
+              </div>
 
-                                className="block px-3 py-2 rounded-md hover:bg-gray-900 transition duration-300"
-                            >
-                                Trang chủ
-                            </Link>
-
-                            <button
-                                onClick={() => setToggle()}
-                                className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-900 transition duration-300 flex items-center justify-between"
-                            >
-                                Sản phẩm
-                                <IoMdArrowDropdown />
-                            </button>
-                            <a
-                                href="#"
-                                className="block px-3 py-2 rounded-md hover:bg-gray-900 transition duration-300"
-                            >
-                                Tin tức
-                            </a>
-                            <div className=" space-x-4 px-3 py-2">
-                                <button
-                                    onClick={() => setToggleCart()}
-                                    className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-900 transition duration-300 flex items-center justify-between"
-                                >
-                                    <FiShoppingCart className="h-6 w-6" />
-                                    <IoMdArrowDropdown />
-                                </button>
-
-                                {isDropdownOpenCart && (
-                                    <div className="pl-4 space-y-1">
-                                        {cartItems.map((item) => (
-                                            <div key={item.id} className="flex items-center gap-3 mb-3">
-                                                <img src={item.image ? item.image.split(',')[0] : "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3"} alt={item.name} className="w-12 h-12 object-cover rounded" />
-                                                <div>
-                                                    <p className="font-medium">{item.name}</p>
-                                                    <p className="text-white">{item.price}</p>
-                                                </div>
-                                                <button className="ml-auto bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600">
-                                                    Add
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                            <div className=" space-x-4 px-3 py-2">
-                                <button
-                                    onClick={() => setToggleUser()}
-                                    className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-900 transition duration-300 flex items-center justify-between"
-                                >
-                                    <div className="p-2 flex items-center space-x-2 border border-white rounded-lg">
-                                        {user ? (
-                                            <>
-                                                <img src={user.avatar ? user.avatar : "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3"} alt="avatar" className="w-8 h-8 rounded-full" />
-                                                <div>
-                                                    <div>Xin chào</div>
-                                                    <div className="font-bold">{user.firstName} {user.lastName}</div>
-                                                </div>
-                                            </>
-                                        ) : (
-                                            <div className="flex items-center space-x-2">
-                                                <FiUser className="h-6 w-6" />
-                                                <div className="font-bold">Đăng nhập</div>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <IoMdArrowDropdown />
-                                </button>
-
-                                {isDropdownOpenUser && (
-                                    <div className="pl-4 space-y-1">
-                                        {!user ? (
-                                            <>
-                                                <Link
-                                                    onClick={handleLinkClick}
-                                                    to="/login"
-                                                    className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
-                                                >
-                                                    Đăng nhập
-                                                </Link>
-                                                <Link
-                                                    onClick={handleLinkClick}
-                                                    to="/register"
-                                                    className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
-                                                >
-                                                    Đăng kí
-                                                </Link>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Link
-                                                    onClick={handleLinkClick}
-                                                    to="/profile"
-                                                    className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
-                                                >
-                                                    Hồ sơ
-                                                </Link>
-                                                <Link
-                                                    onClick={handleLinkClick}
-                                                    to="/dashboard"
-                                                    className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
-                                                >
-                                                    Vào trang quản lý
-                                                </Link>
-                                                <Link
-                                                    onClick={handleLinkClick}
-                                                    to="/orders"
-                                                    className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
-                                                >
-                                                    Đơn đã đặt
-                                                </Link>
-                                                <button
-                                                    onClick={() => {
-                                                        handleLogout();
-                                                    }}
-                                                    className="flex items-start w-full px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
-                                                >
-                                                    Đăng xuất
-                                                </button>
-                                            </>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-
-                        </div>
+              {/* Vùng Icon cho desktop & laptop */}
+              <div className="hidden lg:flex items-center space-x-3 xl:space-x-5">
+                {/* Notification icon */}
+                <div className="relative">
+                  <button
+                    className="p-1.5 rounded-full hover:bg-gray-800 transition duration-300"
+                    onClick={() => setDropdownBell()}
+                  >
+                    <FiBell className="h-5 w-5" />
+                  </button>
+                  {showBellDropdown && (
+                    <div className="absolute z-50 right-0 mt-2 w-72 rounded-md shadow-lg bg-white text-black">
+                      <div className="p-4 min-h-[40vh] max-h-[40vh]">
+                        <span className="font-bold w-full flex justify-center items-center text-[15px]">THÔNG BÁO</span>
+                      </div>
                     </div>
-                )}
-            </nav>}
-        </div>
+                  )}
+                </div>
+                
+                {/* Cart icon */}
+                <div className="relative">
+                  <button
+                    className="p-1.5 rounded-full hover:bg-gray-800 transition duration-300"
+                    onClick={() => setDropdownCart()}
+                  >
+                    <FiShoppingCart className="h-5 w-5" />
+                    {cartItemRedux.length > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        {cartItemRedux.length}
+                      </span>
+                    )}
+                  </button>
+                  {showCartDropdown && (
+                    <div className="absolute z-50 right-0 mt-2 w-72 xl:w-[48vh] rounded-md shadow-lg bg-white text-black">
+                      <div className="py-4 px-2">
+                        <h3 className="font-medium mb-3 text-base text-gray-400 ml-2">Sản phẩm mới thêm</h3>
+                        {cartItemRedux.length > 0 && cartItemRedux.slice(0, 3).map((item) => (
+                          <div
+                            key={item.id}
+                            className="p-4 border-b border-gray-200 flex items-center gap-4"
+                          >
+                            <img
+                              src={item.image ? item.image.split(',')[0] : "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3"}
+                              alt={item.name}
+                              className="w-16 h-16 xl:w-20 xl:h-20 object-cover rounded-lg"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = "https://images.unsplash.com/photo-1576566588028-4147f3842f27";
+                              }}
+                            />
+                            <div className="flex-1">
+                              <h3 className="font-medium text-gray-800 truncate">{item.name}</h3>
+                            </div>
+                          </div>
+                        ))}
+                        <div className="w-full flex justify-between items-center px-2">
+                          <h5 className="font-normal mb-3 text-xs text-gray-500 mt-5">{cartItemRedux.length} sản phẩm thêm vào giỏ hàng</h5>
+                          <Link to="/cart" onClick={handleLinkClick}>
+                            <button className="bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600 mt-3">
+                              Xem giỏ hàng
+                            </button>
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* User profile */}
+                <div className="relative">
+                  <button
+                    className="hover:bg-gray-800 rounded-lg transition duration-300"
+                    onClick={() => setDropdownUser()}
+                  >
+                    <div className="p-1.5 xl:p-2 flex items-center space-x-1 xl:space-x-2 border border-white rounded-lg">
+                      {isLoggedIn ? (
+                        <>
+                          <img
+                            src={user.avatar || "https://images.unsplash.com/photo-1587202372634-32705e3bf49c"}
+                            alt="avatar"
+                            className="w-6 h-6 xl:w-7 xl:h-7 rounded-full"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="hidden xl:block">
+                            <div className="text-xs">Xin chào</div>
+                            <div className="font-bold text-sm truncate max-w-[100px]">
+                              {user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.username}
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex items-center space-x-1 xl:space-x-2">
+                          <FiUser className="h-5 w-5" />
+                          <div className="font-bold text-sm hidden xl:block">Đăng nhập</div>
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                  {showUserDropdown && user && (
+                    <div className="absolute z-50 right-0 mt-2 w-48 rounded-md shadow-lg bg-white text-black">
+                      {!user ? (
+                        <>
+                          <Link
+                            onClick={handleLinkClick}
+                            to="/login"
+                            className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
+                          >
+                            Đăng nhập
+                          </Link>
+                          <Link
+                            onClick={handleLinkClick}
+                            to="/register"
+                            className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
+                          >
+                            Đăng kí
+                          </Link>
+                        </>
+                      ) : (
+                        <>
+                          <Link
+                            onClick={handleLinkClick}
+                            to="/profile"
+                            className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
+                          >
+                            Hồ sơ
+                          </Link>
+                          {userRole === 'R1' && (
+                            <Link
+                              onClick={handleLinkClick}
+                              to="/dashboard"
+                              className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
+                            >
+                              Vào trang quản lý
+                            </Link>
+                          )}
+                          <Link
+                            onClick={handleLinkClick}
+                            to="/orders"
+                            className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
+                          >
+                            Đơn đã đặt
+                          </Link>
+                          <button
+                            onClick={handleLogout}
+                            className="flex w-full items-start px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition duration-300 rounded-md"
+                          >
+                            Đăng xuất
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Mobile menu button */}
+              <div className="lg:hidden flex items-center">
+                <button
+                  onClick={() => setIsOpen(!isOpen)}
+                  className="inline-flex items-center justify-center p-2 rounded-md hover:text-blue-400 focus:outline-none"
+                >
+                  <FiMenu className="h-6 w-6" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile menu */}
+          {isOpen && (
+            <div className="lg:hidden absolute top-16 left-0 w-full bg-black z-30">
+              <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <Link
+                  to="/"
+                  className="block px-3 py-2 rounded-md hover:bg-gray-900 transition duration-300"
+                >
+                  Trang chủ
+                </Link>
+                <button
+                  onClick={() => setToggle()}
+                  className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-900 transition duration-300 flex items-center justify-between"
+                >
+                  Sản phẩm
+                  <IoMdArrowDropdown />
+                </button>
+                <a
+                  href="#"
+                  className="block px-3 py-2 rounded-md hover:bg-gray-900 transition duration-300"
+                >
+                  Tin tức
+                </a>
+                <div className="space-x-4 px-3 py-2">
+                  <button
+                    onClick={() => setToggleCart()}
+                    className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-900 transition duration-300 flex items-center justify-between"
+                  >
+                    <FiShoppingCart className="h-6 w-6" />
+                    <IoMdArrowDropdown />
+                  </button>
+
+                  {isDropdownOpenCart && (
+                    <div className="pl-4 space-y-1">
+                      {cartItems.map((item) => (
+                        <div key={item.id} className="flex items-center gap-3 mb-3">
+                          <img
+                            src={item.image ? item.image.split(',')[0] : "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3"}
+                            alt={item.name}
+                            className="w-12 h-12 object-cover rounded"
+                          />
+                          <div>
+                            <p className="font-medium">{item.name}</p>
+                            <p className="text-white">{item.price}</p>
+                          </div>
+                          <button className="ml-auto bg-blue-500 text-white px-2 py-1 rounded text-sm hover:bg-blue-600">
+                            Add
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="space-x-4 px-3 py-2">
+                  <button
+                    onClick={() => setToggleUser()}
+                    className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-900 transition duration-300 flex items-center justify-between"
+                  >
+                    <div className="p-2 flex items-center space-x-2 border border-white rounded-lg">
+                      {user ? (
+                        <>
+                          <img
+                            src={user.avatar || "https://images.unsplash.com/photo-1587202372634-32705e3bf49c?ixlib=rb-4.0.3"}
+                            alt="avatar"
+                            className="w-8 h-8 rounded-full"
+                          />
+                          <div>
+                            <div>Xin chào</div>
+                            <div className="font-bold truncate max-w-[120px]">
+                              {user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.username}
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <FiUser className="h-6 w-6" />
+                          <div className="font-bold">Đăng nhập</div>
+                        </div>
+                      )}
+                    </div>
+                    <IoMdArrowDropdown />
+                  </button>
+
+                  {isDropdownOpenUser && (
+                    <div className="pl-4 space-y-1">
+                      {!user ? (
+                        <>
+                          <Link
+                            onClick={handleLinkClick}
+                            to="/login"
+                            className="block px-4 py-2 text-sm font-medium text-gray-200 hover:bg-gray-800 transition duration-300 rounded-md"
+                          >
+                            Đăng nhập
+                          </Link>
+                          <Link
+                            onClick={handleLinkClick}
+                            to="/register"
+                            className="block px-4 py-2 text-sm font-medium text-gray-200 hover:bg-gray-800 transition duration-300 rounded-md"
+                          >
+                            Đăng kí
+                          </Link>
+                        </>
+                      ) : (
+                        <>
+                          <Link
+                            onClick={handleLinkClick}
+                            to="/profile"
+                            className="block px-4 py-2 text-sm font-medium text-gray-200 hover:bg-gray-800 transition duration-300 rounded-md"
+                          >
+                            Hồ sơ
+                          </Link>
+                          <Link
+                            onClick={handleLinkClick}
+                            to="/dashboard"
+                            className="block px-4 py-2 text-sm font-medium text-gray-200 hover:bg-gray-800 transition duration-300 rounded-md"
+                          >
+                            Vào trang quản lý
+                          </Link>
+                          <Link
+                            onClick={handleLinkClick}
+                            to="/orders"
+                            className="block px-4 py-2 text-sm font-medium text-gray-200 hover:bg-gray-800 transition duration-300 rounded-md"
+                          >
+                            Đơn đã đặt
+                          </Link>
+                          <button
+                            onClick={() => {
+                              handleLogout();
+                            }}
+                            className="flex items-start w-full px-4 py-2 text-sm font-medium text-gray-200 hover:bg-gray-800 transition duration-300 rounded-md"
+                          >
+                            Đăng xuất
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </nav>
+      )}
+    </div>
     );
 }
