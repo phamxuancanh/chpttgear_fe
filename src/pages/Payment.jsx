@@ -188,21 +188,33 @@ export default function Payment() {
   };
 
   const validateForm = () => {
-    const newErrors = {};
-    if (!formData.fullName.trim()) newErrors.fullName = "Full name is required";
-    if (!formData.phoneNumber.trim())
-      newErrors.phoneNumber = "Phone number is required";
-    // if (!formData.deliveryAddress.trim())
-    //   newErrors.deliveryAddress = "Delivery address is required";
-    if (!formData.email.trim()) newErrors.email = "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Invalid email format";
-    }
-    if (!formData.paymentMethod)
-      newErrors.paymentMethod = "Please select a payment method";
+    const errors = {};
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    if (!(formData.fullName || "").trim()) {
+      errors.fullName = "Họ và tên không được để trống.";
+    }
+
+    if (!(formData.phoneNumber || "").trim()) {
+      errors.phoneNumber = "Số điện thoại không được để trống.";
+    } else if (!/^\d{10}$/.test(formData.phoneNumber)) {
+      errors.phoneNumber = "Số điện thoại phải gồm 10 chữ số.";
+    }
+
+    if (!(formData.streetAddress || "").trim()) {
+      errors.streetAddress = "Địa chỉ không được để trống.";
+    }
+
+    if (!(formData.email || "").trim()) {
+      errors.email = "Email không được để trống.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = "Email không đúng định dạng.";
+    }
+
+    if (!(formData.paymentMethod || "").trim()) {
+      errors.paymentMethod = "Vui lòng chọn phương thức thanh toán.";
+    }
+
+    return errors;
   };
 
   const handleInputChange = (e) => {
@@ -217,8 +229,9 @@ export default function Payment() {
     e.preventDefault();
     setLoading(true);
 
-    if (!validateForm()) {
-      alert("Vui lòng kiểm tra lại thông tin đơn hàng!");
+    const validationErrors = validateForm();
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) {
       setLoading(false);
       return;
     }
