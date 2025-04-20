@@ -603,14 +603,48 @@ export const postReview = async ({ productId, userId, rating, review, replyId })
         return response.data;
     } catch (error) {
         console.error("Error posting review:", error);
-        throw error;
     }
 };
+export const getAllParentReviews = async (page = 0, size = 10) => {
+    try {
+        const response = await requestWithJwt.get(`/review/parent`, {
+            params: { page, size }
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching all parent reviews:", error);
+        return [];
+    }
+};
+
+
+export const getParentReviewsByProductId = async (productId, page = 0, size = 10) => {
+    try {
+        const response = await requestWithJwt.get(`/review/parent/${productId}`, {
+            params: { page, size }
+        });
+        return response.data;
+    } catch (error) {
+        console.error(`Error fetching parent reviews for product ${productId}:`, error);
+        return [];
+    }
+};
+
 // notificationService
 
 // recommendationService
 export const generateChat = async (prompt) => {
-    return await requestWithoutJwt.post('/recommendations/recommendations/generate', {
+    return await requestWithoutJwt.post('/recommendations/recommendations/GPT/generate', {
         prompt,
     });
 };
+export const generateAIDescription = async (data) => {
+    return await requestWithoutJwt.post('/recommendations/recommendations/GPT/generateAIDescription', {
+        data,
+    });
+}
+export const classifyReview = async (content) => {
+    return await requestWithoutJwt.post('/recommendations/recommendations/GPT/classify_review', {
+        content,
+    });
+}

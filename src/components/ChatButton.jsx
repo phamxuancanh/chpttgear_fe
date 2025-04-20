@@ -77,65 +77,72 @@ export default function ChatButton() {
     }, [messages]);
 
     return (
-        <>
-            {/* Nút mở chat */}
-            <div
-                onClick={toggleChatWindow}
-                className="fixed bottom-8 right-8 bg-gray-500 text-white w-16 h-16 rounded-full flex items-center justify-center shadow-2xl cursor-pointer z-10"
-            >
-                <div className="bg-white h-14 w-14 rounded-full flex justify-center items-center">
-                    <img src={LOGO} alt="Chat" className="w-12 h-12 rounded-full" />
+<>
+    {/* Nút mở chat */}
+    <div
+        onClick={toggleChatWindow}
+        className="fixed bottom-8 right-8 bg-gradient-to-r from-indigo-500 to-blue-600 text-white w-16 h-16 rounded-full flex items-center justify-center shadow-2xl cursor-pointer z-10 hover:scale-105 transition-all duration-300"
+    >
+        <div className="text-3xl">🤖</div>
+    </div>
+
+    {/* Cửa sổ chat */}
+    {isChatOpen && (
+        <div className="fixed bottom-0 right-28 bg-gray-800 text-white w-96 h-[60vh] rounded-lg shadow-2xl flex flex-col p-4 z-40">
+            {/* Header */}
+            <div className="flex justify-between items-center border-b border-gray-600 pb-3 mb-2">
+                <div className="flex items-center space-x-2 text-xl font-semibold">
+                    <span>🤖</span>
+                    <span>Chatbot Tư Vấn</span>
                 </div>
+                <button
+                    onClick={toggleChatWindow}
+                    className="text-white hover:text-red-400 transition duration-300"
+                >
+                    <IoIosCloseCircleOutline className="text-2xl" />
+                </button>
             </div>
 
-            {/* Cửa sổ chat */}
-            {isChatOpen && (
-                <div className="fixed bottom-0 right-28 bg-gray-700 text-white w-96 h-[60vh] rounded-lg shadow-2xl flex flex-col p-4 z-40">
-                    <div className="flex justify-end items-center pb-2 border-b border-gray-600">
-                        <button onClick={toggleChatWindow} className="text-gray-400">
-                            <IoIosCloseCircleOutline className="text-2xl hover:text-red-500" />
-                        </button>
+            {/* Nội dung tin nhắn */}
+            <div className="flex-1 overflow-y-auto pr-1">
+                {messages.map((msg, index) => (
+                    <div
+                        key={index}
+                        className={`p-2 rounded-md mb-2 max-w-[80%] ${msg.isUser
+                            ? "bg-green-400 text-black ml-auto"
+                            : "bg-gray-200 text-black"
+                            }`}
+                    >
+                        <p className="break-words">{msg.text}</p>
                     </div>
+                ))}
+                {loading && (
+                    <div className="flex items-center space-x-2 bg-gray-300 text-black px-4 py-2 rounded-lg mb-2 self-start shadow-md">
+                        <div className="w-4 h-4 border-2 border-t-transparent border-blue-500 rounded-full animate-spin"></div>
+                        <p className="break-words text-gray-700 animate-pulse">Đang tải...</p>
+                    </div>
+                )}
+                <div ref={messagesEndRef} />
+            </div>
 
-                    {/* Nội dung tin nhắn */}
-                    <div className="flex-1 mt-4 overflow-y-auto">
-                        {messages.map((msg, index) => (
-                            <div
-                                key={index}
-                                className={`p-2 rounded-md mb-2 ${msg.isUser
-                                    ? "bg-green-400 text-black self-end"
-                                    : "bg-gray-200 text-black self-start"
-                                    }`}
-                            >
-                                <p className="break-words">{msg.text}</p>
-                            </div>
-                        ))}
-                        {loading && (
-                            <div className="flex items-center space-x-2 bg-gray-300 text-black px-4 py-2 rounded-lg mb-2 self-start shadow-md">
-                                <div className="w-4 h-4 border-2 border-t-transparent border-blue-500 rounded-full animate-spin"></div>
-                                <p className="break-words text-gray-700 animate-pulse">Đang tải...</p>
-                            </div>
-                        )}
-                        <div ref={messagesEndRef} />
-                    </div>
+            {/* Ô nhập và nút gửi */}
+            <div className="pt-2 flex items-center">
+                <input
+                    type="text"
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    placeholder="Nhập tin nhắn..."
+                    className="w-full px-3 py-2 border border-gray-600 rounded-lg text-black"
+                    onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                />
+                <IoIosSend
+                    className="text-3xl cursor-pointer text-white ml-3 hover:text-blue-400"
+                    onClick={handleSendMessage}
+                />
+            </div>
+        </div>
+    )}
+</>
 
-                    {/* Ô nhập và nút gửi */}
-                    <div className="pt-2 flex items-center">
-                        <input
-                            type="text"
-                            value={inputMessage}
-                            onChange={(e) => setInputMessage(e.target.value)}
-                            placeholder="Nhập tin nhắn..."
-                            className="w-full px-3 py-2 border border-gray-600 rounded-lg text-black"
-                            onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                        />
-                        <IoIosSend
-                            className="text-3xl cursor-pointer text-white ml-3 hover:text-blue-400"
-                            onClick={handleSendMessage}
-                        />
-                    </div>
-                </div>
-            )}
-        </>
     );
 }

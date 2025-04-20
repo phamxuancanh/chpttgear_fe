@@ -67,12 +67,12 @@ export default function Login() {
             } catch (error) {
                 console.error("Login error:", error);
                 toast.error('Đăng nhập thất bại');
-                if (error.message.includes("Username")) {
+                if (error?.message?.includes("Username")) {
                     setErrors({
                         username: "Username is incorrect",
                     });
                 }
-                if (error.message.includes("Password")) {
+                if (error?.message?.includes("Password")) {
                     setErrors({
                         password: "Password is incorrect",
                     });

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FiHome, FiUsers, FiBox, FiShoppingCart, FiEdit, FiTrash2, FiLogOut, FiPackage, FiEye, FiX, FiMessageCircle } from "react-icons/fi";
+import { FiHome, FiUsers, FiBox, FiShoppingCart, FiEdit, FiTrash2, FiLogOut, FiPackage, FiEye, FiX, FiMessageCircle, FiBookmark  } from "react-icons/fi";
 import LOGO from '../assets/logo.png'
 import Employee from "../components/Dashboard/Employee";
 import Products from "../components/Dashboard/Products";
@@ -15,6 +15,7 @@ import Chats from "../components/Dashboard/Chats";
 import Loading from "../utils/Loading";
 import { useDispatch } from "react-redux";
 import { setAllProductsInInventory, setSelectedInventory } from "../redux/inventorySlice";
+import Reviews from "../components/Dashboard/Reviews";
 
 export default function Dashboard() {
     const [activeTab, setActiveTab] = useState("analysis");
@@ -83,6 +84,7 @@ export default function Dashboard() {
                         <NavItem icon={FiShoppingCart} text="Quản lý đơn hàng" tabName="orders" />
                         <NavItem icon={FiPackage} text="Quản lý kho" tabName="inventories" />
                         {/* <NavItem icon={FiMessageCircle} text="Quản lý tin nhắn" tabName="chats" /> */}
+                        <NavItem icon={FiBookmark} text="Phân tích đánh giá" tabName="reviews" />
                         <NavItem icon={FiLogOut} text="Đăng xuất" tabName="logout" />
                     </nav>
                 </div>
@@ -93,6 +95,7 @@ export default function Dashboard() {
                     {activeTab === "orders" && <Order />}
                     {activeTab === "analysis" && <Analysis />}
                     {activeTab === "inventories" && <Inventory />}
+                    {activeTab === "reviews" && <Reviews />}
                     {activeTab === "chats" && <Chats />}
                 </div>
             </div>}
