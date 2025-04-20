@@ -19,7 +19,7 @@ export default function Order() {
     const [limit] = useState(5); // Số lượng đơn hàng mỗi trang
     const [totalPages, setTotalPages] = useState(1);
     const [expandedOrders, setExpandedOrders] = useState({});
-    const userId = userFromRedux.id;
+    const userId = userFromRedux ? userFromRedux.id : "";
     const [loading, setLoading] = useState(false);
     const [products, setProducts] = useState([]);
 
@@ -31,11 +31,13 @@ export default function Order() {
     };
 
     useEffect(() => {
-        setLoading(true);
-        fetchOrder(page)
-            .then(() => setLoading(false))
-            .catch(() => setLoading(false));
-    }, [page]);
+        if (userId) {
+            setLoading(true);
+            fetchOrder(page)
+                .then(() => setLoading(false))
+                .catch(() => setLoading(false));
+        }
+    }, [page, userId]);
 
     const fetchOrder = async (pageNumber) => {
         try {
