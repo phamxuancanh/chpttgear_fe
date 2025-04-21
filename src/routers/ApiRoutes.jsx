@@ -367,15 +367,19 @@ export const getQuantityInStock = async (product_id) => {
 };
 
 // cartService
-
 export const findCartByUserId = async (userId) => {
     return await requestWithJwt.get(`/carts/findByUserId/${userId}`);
 };
 export const createCart = async (payload) => {
-
-    return await requestWithJwt.post(`/carts/createCart`, {
-        userId: payload
-    });
+    try {
+        const response = await requestWithJwt.post(`/carts/createCart`, {
+            userId: payload
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error creating cart:', error);
+        throw error;
+    }
 };
 export const findCartItemsByCartId = async (cartId) => {
     return await requestWithJwt.get(`/carts/cart_items/findByCartId/${cartId}`);

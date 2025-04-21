@@ -188,7 +188,6 @@ export default function Header() {
         const fetchCart = async () => {
             try {
                 const cartResponse = await findCartByUserId(user.id);
-                console.log(user.id);
                 if (cartResponse.data) {
                     // Gọi API song song để tăng tốc độ
                     const [cartItemResponse, productsResponse] = await Promise.all([
@@ -214,6 +213,9 @@ export default function Header() {
                 toast.error("Lỗi load dữ liệu giỏ hàng");
             }
         };
+        // if (user?.id !== null && user?.id !== undefined) {
+        //     fetchCart();
+        // }
         if (user?.id) {
             fetchCart();
         }
@@ -228,7 +230,6 @@ export default function Header() {
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-
     }, []);
     return (
         <div>

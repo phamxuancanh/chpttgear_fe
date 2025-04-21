@@ -12,6 +12,7 @@ const cartSlice = createSlice({
   },
   reducers: {
     setCartRedux: (state, action) => {
+      console.log("1 cart redux", action.payload.cart);
       state.cart = action.payload.cart;
     },
     setCartItemsRedux: (state, action) => {
