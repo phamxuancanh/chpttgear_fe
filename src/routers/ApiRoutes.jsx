@@ -629,7 +629,15 @@ export const getParentReviewsByProductId = async (productId, page = 0, size = 10
         return [];
     }
 };
-
+export const countReviewRatingGroups = async() => {
+    try {
+        const response = await requestWithJwt.get(`/review/parent/statistics`);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching review rating groups:", error);
+        return [];
+    }
+}
 // notificationService
 
 // recommendationService

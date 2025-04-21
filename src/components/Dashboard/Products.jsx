@@ -626,10 +626,25 @@ export default function Products() {
                             }
                         }}
                         muiTableHeadCellProps={{
+                            align: 'center', // Thêm thuộc tính này
                             sx: {
                                 fontWeight: "bold",
                                 backgroundColor: "#f1f5f9",
-                                textAlign: "center" // Căn giữa tiêu đề
+                                textAlign: "center",
+                                // Xóa display: "flex" nếu nó gây xung đột
+                                justifyContent: "center",
+                                alignItems: "center",
+                                "& .MRT-column-header-content": { // Thay đổi selector này
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    width: "100%",
+                                },
+                                "& .MRT-column-title": { // Thêm selector này
+                                    textAlign: "center",
+                                    width: "100%",
+                                    display: "flex",
+                                    justifyContent: "center"
+                                }
                             }
                         }}
                         muiTableBodyCellProps={{
