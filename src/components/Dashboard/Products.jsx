@@ -380,7 +380,7 @@ export default function Products() {
                     />
                 ),
                 justifyContent: "center",
-                size: 150,
+                size: 100,
                 grow: false,
             },
             {
@@ -402,8 +402,8 @@ export default function Products() {
                     </Tooltip>
                 ),
                 headerProps: { sx: { textAlign: "center" } }, // Căn giữa tiêu đề của cột này
-                grow: 2,
-                size: 360
+                grow: 1,
+                size: 280
             },
 
             {
@@ -417,7 +417,7 @@ export default function Products() {
                     return colorObj ? colorObj.value : colorKey;
                 },
                 grow: 1,
-                size: 10
+                size: 5
             },
             {
                 accessorKey: "price",
@@ -429,7 +429,7 @@ export default function Products() {
                     </Box>
                 ),
                 grow: 1,
-                size: 50
+                size: 20
             },
             {
                 accessorKey: "quantityInStock",
@@ -626,10 +626,25 @@ export default function Products() {
                             }
                         }}
                         muiTableHeadCellProps={{
+                            align: 'center', // Thêm thuộc tính này
                             sx: {
                                 fontWeight: "bold",
                                 backgroundColor: "#f1f5f9",
-                                textAlign: "center" // Căn giữa tiêu đề
+                                textAlign: "center",
+                                // Xóa display: "flex" nếu nó gây xung đột
+                                justifyContent: "center",
+                                alignItems: "center",
+                                "& .MRT-column-header-content": { // Thay đổi selector này
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    width: "100%",
+                                },
+                                "& .MRT-column-title": { // Thêm selector này
+                                    textAlign: "center",
+                                    width: "100%",
+                                    display: "flex",
+                                    justifyContent: "center"
+                                }
                             }
                         }}
                         muiTableBodyCellProps={{

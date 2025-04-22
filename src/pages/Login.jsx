@@ -85,7 +85,8 @@ export default function Login() {
     const checkCartExists = async (userId) => {
         try {
             const response = await findCartByUserId(userId);
-            if (!response.data.id) {
+            if (response.data.id === null) {
+                console.log("Cart not found, creating a new one...");
                 const responseCart = await createCart(userId);
                 if (responseCart.status === 200) {
                     console.log("Create cart successfully");
@@ -103,7 +104,7 @@ export default function Login() {
                 const { accessToken, currentUser } = result;
                 let userRole = currentUser?.key;
                 let data;
-                checkCartExists(currentUser.id);
+                await checkCartExists(currentUser.id);
                 if (userRole) {
                     try {
                         const decrypted = CryptoJS.AES.decrypt(
@@ -115,7 +116,6 @@ export default function Login() {
                         console.error('Decryption error:', error);
                     }
                 }
-
                 const payload = {
                     token: accessToken,
                     user: currentUser
@@ -128,7 +128,6 @@ export default function Login() {
                 } else {
                     navigate(ROUTES.HOME_PAGE.path);
                 }
-
                 toast.success('Đăng nhập thành công');
             }
         } catch (error) {
@@ -136,7 +135,6 @@ export default function Login() {
             toast.error('Đăng nhập thất bại');
         }
     };
-
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-800 py-12 px-4 sm:px-6 lg:px-8">

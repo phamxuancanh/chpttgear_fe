@@ -367,15 +367,19 @@ export const getQuantityInStock = async (product_id) => {
 };
 
 // cartService
-
 export const findCartByUserId = async (userId) => {
     return await requestWithJwt.get(`/carts/findByUserId/${userId}`);
 };
 export const createCart = async (payload) => {
-
-    return await requestWithJwt.post(`/carts/createCart`, {
-        userId: payload
-    });
+    try {
+        const response = await requestWithJwt.post(`/carts/createCart`, {
+            userId: payload
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error creating cart:', error);
+        throw error;
+    }
 };
 export const findCartItemsByCartId = async (cartId) => {
     return await requestWithJwt.get(`/carts/cart_items/findByCartId/${cartId}`);
@@ -585,6 +589,13 @@ export const getShippingByOrderId = async (orderId) => {
 }
 
 // ratingService
+ export const deleteReviewById = (id) => {
+     return axios.delete(`${process.env.REACT_APP_API_URL}/api/v1/review/${id}`);
+ }; // delete
+
+
+
+
 export const getRatingById = async (productId) => {
     console.log("product_id:", productId)
     return await requestWithJwt.get(`/review/${productId}`);
@@ -629,7 +640,15 @@ export const getParentReviewsByProductId = async (productId, page = 0, size = 10
         return [];
     }
 };
-
+export const countReviewRatingGroups = async() => {
+    try {
+        const response = await requestWithJwt.get(`/review/parent/statistics`);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching review rating groups:", error);
+        return [];
+    }
+}
 // notificationService
 
 // recommendationService

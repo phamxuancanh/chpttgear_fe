@@ -29,6 +29,7 @@ export default function Cart() {
     const [stockOuts, setStockOuts] = useState([])
 
     useEffect(() => {
+        console.log("from cart redux from cart ui", cartFromRedux);
         const fetchCart = async () => {
             setLoading(true)
             try {
@@ -37,11 +38,10 @@ export default function Cart() {
                     findAllProduct(),
                     getAllStockIn(),
                     getAllStockOut()
-
                 ]);
-                console.log(stockIns)
-                console.log(stockOuts)
-                console.log(productsResponse)
+                // console.log(stockIns)
+                // console.log(stockOuts)
+                // console.log(productsResponse)
                 const cartItemsMapped = cartItemResponse.data.map(item => {
                     const product = productsResponse.data.find(p => p.id === item.productId);
 
@@ -76,9 +76,10 @@ export default function Cart() {
                 setLoading(false)
             }
         };
-        if (cartFromRedux?.id) {
+        if (cartFromRedux?.id !== null && cartFromRedux?.id !== undefined) {
             fetchCart();
-        }
+        };
+        console.log("from cart");
     }, [cartFromRedux?.id]);
 
 
