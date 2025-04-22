@@ -217,7 +217,7 @@ export default function Reviews() {
                 header: 'STT',
                 accessorKey: 'stt',
                 enableSorting: false,
-                size: 10,
+                size: 5,
                 Cell: ({ row }) => row.index + 1 + (page - 1) * reviewsData.size,
                 grow: false,
                 justifyContent: 'center',
@@ -236,7 +236,7 @@ export default function Reviews() {
                     </Box>
                 ),
                 grow: 1,
-                size: 200,
+                size: 100,
             },
             {
                 accessorKey: 'productId',
@@ -306,7 +306,7 @@ export default function Reviews() {
                     </Tooltip>
                 ),
                 grow: 3,
-                size: 300,
+                size: 250,
             },
             {
                 accessorKey: 'rating',
@@ -323,7 +323,7 @@ export default function Reviews() {
                     </Box>
                 ),
                 grow: 1,
-                size: 150,
+                size: 50,
             },
             {
                 accessorKey: 'createDate',
@@ -334,7 +334,7 @@ export default function Reviews() {
                     return isNaN(date.getTime()) ? 'N/A' : format(date, 'dd/MM/yyyy HH:mm');
                 },
                 grow: 1,
-                size: 150,
+                size: 100,
             },
             {
                 accessorKey: 'trangThai',
@@ -365,7 +365,7 @@ export default function Reviews() {
                     );
                 },
                 grow: 1,
-                size: 150,
+                size: 50,
             },
         ],
         [page, reviewsData.size]
