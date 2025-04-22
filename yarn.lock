@@ -4003,8 +4003,11 @@ chokidar@^3.4.2, chokidar@^3.5.3, chokidar@^3.6.0:
     dotenv "^16.4.7"
     env-cmd "^10.1.0"
     fast-xml-parser "^5.0.8"
+    file-saver "^2.0.5"
     firebase "^10.13.1"
     framer-motion "^12.4.7"
+    jspdf "^3.0.1"
+    jspdf-autotable "^5.0.2"
     jwt-decode "^4.0.0"
     lightgallery "^2.8.2"
     lightgallery.js "^1.4.0"
@@ -4036,6 +4039,7 @@ chokidar@^3.4.2, chokidar@^3.5.3, chokidar@^3.6.0:
     sweetalert2 "^11.12.4"
     swiper "^11.2.4"
     timers-browserify "^2.0.12"
+    xlsx "^0.18.5"
     xml2js "^0.6.2"
 
 chrome-trace-event@^1.0.2:
