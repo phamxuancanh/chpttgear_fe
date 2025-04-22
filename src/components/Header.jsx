@@ -358,7 +358,7 @@ export default function Header() {
                                                                 e.target.src = "https://images.unsplash.com/photo-1576566588028-4147f3842f27";
                                                             }}
                                                         />
-                                                        <div className="flex-1">
+                                                        <div className="flex-1 w-0">
                                                             <h3 className="font-medium text-gray-800 truncate">{item.name}</h3>
                                                         </div>
                                                     </div>

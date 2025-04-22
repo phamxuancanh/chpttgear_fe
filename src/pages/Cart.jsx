@@ -44,7 +44,13 @@ export default function Cart() {
                 console.log(productsResponse)
                 const cartItemsMapped = cartItemResponse.data.map(item => {
                     const product = productsResponse.data.find(p => p.id === item.productId);
-                    const stockIn = stockIns[item.productId] || {};
+
+                    const stockIn = stockIns.find(stock => stock.product_id === item.productId) || {};
+
+                    const profit = (product?.price && stockIn?.price)
+                        ? parseFloat(product.price) - parseFloat(stockIn.price)
+                        : 0;
+
                     return {
                         itemId: item.id,
                         productId: item.productId,
@@ -54,9 +60,10 @@ export default function Cart() {
                         image: product?.image,
                         weight: product?.weight,
                         size: product?.size,
-                        profit: (product.price && stockIn.price) ? parseFloat(product.price) - parseFloat(stockIn.price) : 0
+                        profit: profit
                     };
                 });
+
                 console.log(cartItemsMapped)
                 setStockOuts(stockOuts)
                 setStockIns(stockIns)
