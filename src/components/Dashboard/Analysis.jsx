@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { FiUsers, FiShoppingCart } from "react-icons/fi";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, LabelList } from "recharts";
-import { getAllOrdersNoPaging, getProductsByListId } from "../../routers/ApiRoutes";
+import { findUserById, getAllOrdersNoPaging, getProductsByListId } from "../../routers/ApiRoutes";
 import Loading from "../loading";
 import { RiExchangeDollarFill, RiShoppingCartFill } from "react-icons/ri";
 
@@ -11,7 +11,8 @@ export default function Analysis({ employees, orderDetails }) {
     const [revenue, setRevenue] = useState(null);
     const [selectedTab, setSelectedTab] = useState(TABS[0]);
     const [bestSellingProducts, setBestSellingProducts] = useState([]);
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(false);
+    const [topCustomers, setTopCustomers] = useState([]);
 
     useEffect(() => {
         if (selectedTab === "Doanh thu") {
@@ -107,22 +108,56 @@ export default function Analysis({ employees, orderDetails }) {
     }, [productIds]);
 
 
+    useEffect(() => {
+        const getTopCustomers = async () => {
+            const userStats = {};
 
-    const revenueData = [
-        { name: "Jan", revenue: 4000 },
-        { name: "Feb", revenue: 3000 },
-        { name: "Mar", revenue: 5000 },
-        { name: "Apr", revenue: 7000 },
-        { name: "May", revenue: 6000 },
-        { name: "Jun", revenue: 8000 }
-    ];
+            // Tổng hợp dữ liệu
+            orders.forEach((order) => {
+                const { user_id, total_amount } = order;
+                if (!userStats[user_id]) {
+                    userStats[user_id] = { orderCount: 0, totalSpent: 0 };
+                }
+                userStats[user_id].orderCount += 1;
+                userStats[user_id].totalSpent += total_amount;
+            });
 
-    const topCustomers = [
-        { id: 1, name: "John Doe", totalSpent: "$1200", orders: 15 },
-        { id: 2, name: "Jane Smith", totalSpent: "$950", orders: 12 },
-        { id: 3, name: "Michael Brown", totalSpent: "$850", orders: 10 },
-        { id: 4, name: "Emily Johnson", totalSpent: "$780", orders: 9 }
-    ];
+            // Sắp xếp & chọn top 10
+            const sorted = Object.entries(userStats)
+                .sort((a, b) => b[1].orderCount - a[1].orderCount)
+                .slice(0, 10);
+
+            // Gọi API lấy tên người dùng
+            const results = await Promise.all(
+                sorted.map(async ([userId, stats]) => {
+                    try {
+                        const res = await findUserById(userId);
+                        const { firstName, lastName } = res.data;
+                        const name = `${firstName} ${lastName}`;
+                        return {
+                            id: userId,
+                            name,
+                            totalSpent: stats.totalSpent,
+                            orders: stats.orderCount,
+                        };
+                    } catch (err) {
+                        return {
+                            id: userId,
+                            name: "Không tìm thấy",
+                            totalSpent: stats.totalSpent,
+                            orders: stats.orderCount,
+                        };
+                    }
+                })
+            );
+
+            setTopCustomers(results);
+        };
+
+        if (orders.length > 0 && selectedTab === "Khách hàng nhiều đơn") {
+            getTopCustomers();
+        }
+    }, [orders, selectedTab]);
 
     const COLORS = ["#ff8042", "#0088fe", "#00c49f", "#ffbb28"];
 
@@ -130,7 +165,7 @@ export default function Analysis({ employees, orderDetails }) {
         <div className="h-screen bg-gray-50 flex flex-col items-center justify-center p-6 overflow-hidden">
             {loading && <Loading />}
             {/* Tổng quan hệ thống */}
-            <div className="w-full max-w-7xl mx-auto">
+            <div className="w-full max-w-8xl mx-auto">
                 <h2 className="text-2xl font-semibold mb-6">Tổng quan hệ thống</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <div className="bg-white p-6 rounded-lg shadow-md">
@@ -154,7 +189,7 @@ export default function Analysis({ employees, orderDetails }) {
                     <div className="bg-white p-6 rounded-lg shadow-md">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-gray-500">Tổng doanh thu</p>
+                                <p className="text-gray-500">Tổng lợi nhuận</p>
                                 <h3 className="text-2xl font-bold">{totalProfit.toLocaleString() || "5"}</h3>
                             </div>
                             <FiShoppingCart className="w-8 h-8 text-purple-500" />
@@ -164,7 +199,7 @@ export default function Analysis({ employees, orderDetails }) {
             </div>
 
             {/* Tabs Section */}
-            <div className="flex space-x-6 border-b-2 pb-3 w-full max-w-4xl justify-center">
+            <div className="flex space-x-6 border-b-2 pb-3 w-full max-w-8xl justify-center">
                 {TABS.map((tab) => (
                     <button
                         key={tab}
@@ -178,7 +213,7 @@ export default function Analysis({ employees, orderDetails }) {
             </div>
 
             {/* Content Section */}
-            <div className="w-full max-w-4xl flex-grow flex flex-col justify-center items-center mt-6">
+            <div className="w-full max-w-8xl flex-grow flex flex-col justify-center items-center mt-6">
                 {selectedTab === "Doanh thu" && orders.length > 0 && (
                     <div className="p-6 bg-white rounded-lg shadow-md max-w-5xl mx-auto w-full">
                         <h2 className="text-xl font-semibold text-center mb-4">Doanh thu theo tháng</h2>
@@ -245,25 +280,44 @@ export default function Analysis({ employees, orderDetails }) {
                 )}
 
                 {selectedTab === "Khách hàng nhiều đơn" && (
-                    <div className="w-full max-w-2xl bg-white shadow-md rounded-lg p-6">
-                        <table className="w-full text-center border-collapse">
-                            <thead>
-                                <tr className="bg-orange-500 text-white">
-                                    <th className="py-3 px-4">Khách hàng</th>
-                                    <th className="py-3 px-4">Tổng chi tiêu</th>
-                                    <th className="py-3 px-4">Số đơn</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {topCustomers.map((customer) => (
-                                    <tr key={customer.id} className="border-b hover:bg-gray-100">
-                                        <td className="py-3 px-4">{customer.name}</td>
-                                        <td className="py-3 px-4">{customer.totalSpent}</td>
-                                        <td className="py-3 px-4">{customer.orders}</td>
+                    <div className="w-full max-w-5xl bg-white shadow-xl rounded-2xl p-6 border border-gray-200">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-6">Top 10 Khách Hàng Mua Nhiều Nhất</h2>
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full text-sm text-gray-700">
+                                <thead>
+                                    <tr className="bg-gradient-to-r from-orange-500 to-orange-400 text-white text-xs uppercase tracking-wider rounded-t-xl">
+                                        <th className="px-6 py-4 text-left rounded-tl-xl">Khách hàng</th>
+                                        <th className="px-6 py-4 text-right">Tổng chi tiêu (VNĐ)</th>
+                                        <th className="px-6 py-4 text-center rounded-tr-xl">Số đơn</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {topCustomers.map((customer, index) => (
+                                        <tr
+                                            key={customer.id}
+                                            className={`border-b ${index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                                                } hover:bg-orange-50 transition`}
+                                        >
+                                            <td className="px-6 py-4 flex items-center gap-3 font-medium text-gray-900">
+                                                <div className="w-9 h-9 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-semibold">
+                                                    {customer.name
+                                                        .split(" ")
+                                                        .map((w) => w[0])
+                                                        .join("")
+                                                        .slice(0, 2)
+                                                        .toUpperCase()}
+                                                </div>
+                                                {customer.name}
+                                            </td>
+                                            <td className="px-6 py-4 text-right font-semibold text-blue-600">
+                                                {customer.totalSpent.toLocaleString("vi-VN")}₫
+                                            </td>
+                                            <td className="px-6 py-4 text-center text-gray-700">{customer.orders}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 )}
             </div>

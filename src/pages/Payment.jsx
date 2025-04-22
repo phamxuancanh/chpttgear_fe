@@ -45,6 +45,7 @@ export default function Payment() {
     paymentMethod: "",
   });
   const dispatch = useDispatch();
+  const cartItems = selectedItems;
 
   // Khi chọn Tỉnh/Thành phố, cập nhật danh sách Quận/Huyện
   useEffect(() => {
@@ -466,7 +467,7 @@ export default function Payment() {
     }
   };
 
-  const cartItems = selectedItems;
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
@@ -482,15 +483,15 @@ export default function Payment() {
           <div>
             <div className="flex items-center gap-2 text-gray-700">
               <FaUser className="text-blue-500" />
-              <span className="font-semibold">{userFromRedux.firstName + ' ' + userFromRedux.lastName}</span>
+              <span className="font-semibold">{userFromRedux?.firstName + ' ' + userFromRedux?.lastName}</span>
             </div>
             <div className="flex items-center gap-2 text-gray-500 mt-1">
               <FaEnvelope className="text-green-500" />
-              <span>{userFromRedux.email}</span>
+              <span>{userFromRedux?.email}</span>
             </div>
             <div className="flex items-center gap-2 text-gray-500 mt-1">
               <FaPhone className="text-green-500" />
-              <span>{userFromRedux.phone}</span>
+              <span>{userFromRedux?.phone}</span>
             </div>
             <div className="flex items-center gap-2 text-gray-600 mt-1">
               <FaMapMarkerAlt className="text-red-500" />
