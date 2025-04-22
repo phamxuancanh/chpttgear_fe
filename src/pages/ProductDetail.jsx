@@ -1,4 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+import { deleteReviewById } from "../routers/ApiRoutes";// delete
+
 import React, { useEffect, useRef, useState } from "react";
 import { FaArrowLeft, FaArrowRight, FaStar, FaStarHalfAlt } from "react-icons/fa";
 import ProductCard from "../components/ProductCard";
@@ -178,6 +180,18 @@ export default function ProductDetail() {
     }, [id]);
     const handleSubmit = async (reply, type) => {
         try {
+            // Nếu là đánh giá (không phải reply)
+            if (type === 'rating') {
+                if (rating < 1) {
+                    toast.error("Bạn phải chọn ít nhất 1 sao!");
+                    return;
+                }
+                if (!comment.trim()) {
+                    toast.error("Bạn phải nhập nội dung đánh giá!");
+                    return;
+                }
+            }
+
             const newReview = {
                 productId: id,
                 userId: user?.id,
@@ -185,8 +199,9 @@ export default function ProductDetail() {
                 review: comment,
                 name: user?.firstName + " " + user?.lastName,
                 replyId: reply || null,
-                createDate: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })).toISOString(), // Định dạng chuẩn
+                createDate: new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })).toISOString(),
             };
+
             // Gửi đánh giá lên server
             await postReview(newReview);
             setReview(prevReviews => [...prevReviews, newReview]);
@@ -211,6 +226,20 @@ export default function ProductDetail() {
             alert("Lỗi khi gửi đánh giá: " + error.message);
         }
     };
+
+    const handleDeleteReview = async (reviewId) => {
+        if (window.confirm("Bạn có chắc chắn muốn xoá đánh giá này không?")) {
+            try {
+                await deleteReviewById(reviewId);
+                setReview(prevReviews => prevReviews.filter(r => r.id !== reviewId));
+                openModal("Xoá đánh giá thành công!");
+            } catch (error) {
+                toast.error("Lỗi khi xoá đánh giá!");
+                console.error("Delete error:", error);
+            }
+        }
+    };// delete
+
 
     const renderStars = (rating) => {
         const stars = [];
@@ -469,6 +498,7 @@ export default function ProductDetail() {
                                     <div className="w-full flex justify-start items-center">
                                         <p className="mr-3 font-semibold">{rating.name}</p>
                                         <p className="text-gray-400">{DateConverter(rating.createDate)}</p>
+
                                     </div>
                                     <div className="w-full flex justify-start my-3">
                                         <div className="w-1/6">
@@ -477,6 +507,14 @@ export default function ProductDetail() {
                                         <div className="w-10/12">
                                             <div className="flex">
                                                 <p className="text-sm mr-6">{rating.review}</p>
+                                                {/* {user_role == 'R3' && (
+                                                    <button
+                                                        className="ml-4 text-sm text-red-500 font-semibold hover:underline"
+                                                        onClick={() => handleDeleteReview(rating.id)}
+                                                    >
+                                                        Xoá
+                                                    </button>
+                                                )} */}
                                                 {!review.some(reply => reply.replyId === rating.id) && isReply !== rating.id && ( //Hiện nếu chưa có Reply
                                                     <button
                                                         className="  text-base font-semibold rounded-md flex justify-center items-center px-2 py-1 text-gray-500"
@@ -548,33 +586,35 @@ export default function ProductDetail() {
                         {/* <button className="bg-blue-500 text-white text-sm font-semibold rounded-md flex justify-center items-center px-4 py-2 w-4/12">
                             <BiSolidCommentEdit className="text-2xl mr-2" />Gửi đánh giá của bạn
                         </button> */}
-                        <div className="w-full mx-auto p-4 border rounded-lg shadow-md bg-white">
-                            <h2 className="text-lg font-semibold mb-2">Gửi đánh giá của bạn</h2>
-                            <div className="flex mb-4">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                    <button
-                                        key={star}
-                                        onClick={() => setRatingStar(star)}
-                                        className="text-2xl text-yellow-400 mx-1"
-                                    >
-                                        {star <= (rating) ? <BiSolidStar /> : <BiStar />}
-                                    </button>
-                                ))}
+                        {user_role === 'R3' && (
+                            <div className="w-full mx-auto p-4 border rounded-lg shadow-md bg-white">
+                                <h2 className="text-lg font-semibold mb-2">Gửi đánh giá của bạn</h2>
+                                <div className="flex mb-4">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <button
+                                            key={star}
+                                            onClick={() => setRatingStar(star)}
+                                            className="text-2xl text-yellow-400 mx-1"
+                                        >
+                                            {star <= (rating) ? <BiSolidStar /> : <BiStar />}
+                                        </button>
+                                    ))}
+                                </div>
+                                <textarea
+                                    className="w-full p-2 border rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Nhập đánh giá của bạn..."
+                                    rows="4"
+                                    value={comment}
+                                    onChange={(e) => setComment(e.target.value)}
+                                ></textarea>
+                                <button
+                                    className="bg-blue-500 text-white text-sm font-semibold rounded-md flex justify-center items-center px-3 py-1"
+                                    onClick={() => { handleSubmit(null, 'rating') }}
+                                >
+                                    <BiSolidCommentEdit className="text-xl mr-2" />Gửi đánh giá của bạn.
+                                </button>
                             </div>
-                            <textarea
-                                className="w-full p-2 border rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Nhập đánh giá của bạn..."
-                                rows="4"
-                                value={comment}
-                                onChange={(e) => setComment(e.target.value)}
-                            ></textarea>
-                            <button
-                                className="bg-blue-500 text-white text-sm font-semibold rounded-md flex justify-center items-center px-3 py-1"
-                                onClick={() => { handleSubmit(null, 'rating') }}
-                            >
-                                <BiSolidCommentEdit className="text-xl mr-2" />Gửi đánh giá của bạn.
-                            </button>
-                        </div>
+                        )}
                     </div>
                 </div>
             </main>}
