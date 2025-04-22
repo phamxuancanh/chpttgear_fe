@@ -380,7 +380,7 @@ export default function Products() {
                     />
                 ),
                 justifyContent: "center",
-                size: 150,
+                size: 100,
                 grow: false,
             },
             {
@@ -402,8 +402,8 @@ export default function Products() {
                     </Tooltip>
                 ),
                 headerProps: { sx: { textAlign: "center" } }, // Căn giữa tiêu đề của cột này
-                grow: 2,
-                size: 360
+                grow: 1,
+                size: 280
             },
 
             {
@@ -417,7 +417,7 @@ export default function Products() {
                     return colorObj ? colorObj.value : colorKey;
                 },
                 grow: 1,
-                size: 10
+                size: 5
             },
             {
                 accessorKey: "price",
@@ -429,7 +429,7 @@ export default function Products() {
                     </Box>
                 ),
                 grow: 1,
-                size: 50
+                size: 20
             },
             {
                 accessorKey: "quantityInStock",
