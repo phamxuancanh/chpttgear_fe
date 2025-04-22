@@ -585,6 +585,13 @@ export const getShippingByOrderId = async (orderId) => {
 }
 
 // ratingService
+ export const deleteReviewById = (id) => {
+     return axios.delete(`${process.env.REACT_APP_API_URL}/api/v1/review/${id}`);
+ }; // delete
+
+
+
+
 export const getRatingById = async (productId) => {
     console.log("product_id:", productId)
     return await requestWithJwt.get(`/review/${productId}`);
