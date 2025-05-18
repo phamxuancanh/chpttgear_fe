@@ -1,15 +1,34 @@
 import { useEffect, useState } from "react";
-import { FaPaypal, FaMoneyBillWave, FaChevronDown, FaMapMarkerAlt, FaUser, FaEnvelope, FaEdit, FaPhone } from "react-icons/fa";
+import {
+  FaPaypal,
+  FaMoneyBillWave,
+  FaChevronDown,
+  FaMapMarkerAlt,
+  FaUser,
+  FaEnvelope,
+  FaEdit,
+  FaPhone,
+} from "react-icons/fa";
 import { TbTruckDelivery } from "react-icons/tb";
 import { Link, useNavigate } from "react-router-dom";
 import provinceData from "../assets/address/province.json";
 import { useDispatch, useSelector } from "react-redux";
-import { calculateShippingFee, createOrder, createOrderItem, createPayment, createPaypalDeposit, createTransaction, deleteCartItem, editUserById, sendEmail } from "../routers/ApiRoutes";
+import {
+  calculateShippingFee,
+  createOrder,
+  createOrderItem,
+  createPayment,
+  createPaypalDeposit,
+  createTransaction,
+  deleteCartItem,
+  editUserById,
+  sendEmail,
+} from "../routers/ApiRoutes";
 import Loading from "../utils/Loading";
 import AddressModal from "../components/Modal/AddressModal";
 import { useModal } from "../context/ModalProvider";
 import axios from "axios";
-import { XMLParser } from 'fast-xml-parser';
+import { XMLParser } from "fast-xml-parser";
 import { PiApproximateEqualsThin } from "react-icons/pi";
 import { FaDongSign } from "react-icons/fa6";
 import { toast } from "react-toastify";
@@ -17,28 +36,41 @@ import { updateUser } from "../redux/authSlice";
 import { clearCart, removeItemFromCart } from "../redux/cartSlice";
 
 export default function Payment() {
-
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
-  const [selectedProvince, setSelectedProvince] = useState({ id: "", name: "" });
-  const [selectedDistrict, setSelectedDistrict] = useState({ id: "", name: "" });
+  const [selectedProvince, setSelectedProvince] = useState({
+    id: "",
+    name: "",
+  });
+  const [selectedDistrict, setSelectedDistrict] = useState({
+    id: "",
+    name: "",
+  });
   const [selectedWard, setSelectedWard] = useState({ id: "", name: "" });
-  const selectedItems = useSelector(state => state.shoppingCart.selectItems)
+  const selectedItems = useSelector((state) => state.shoppingCart.selectItems);
   const [provinces, setProvinces] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [wards, setWards] = useState([]);
   const [shippingFee, setShippingFee] = useState(0);
   const userFromRedux = useSelector((state) => state.auth.user);
-  const addresses = userFromRedux?.address ? userFromRedux.address.split(";;").map((addr) => addr.split("|")[0].trim()) : [];
+  const addresses = userFromRedux?.address
+    ? userFromRedux.address.split(";;").map((addr) => addr.split("|")[0].trim())
+    : [];
   const [selectedAddress, setSelectedAddress] = useState(addresses[0] || "");
-  const selectedCodeAddress = userFromRedux?.address ? userFromRedux.address.split(";;").map((addr) => addr.split("|")[1].trim())[0] : "";
+  const selectedCodeAddress = userFromRedux?.address
+    ? userFromRedux.address
+        .split(";;")
+        .map((addr) => addr.split("|")[1].trim())[0]
+    : "";
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { openModal } = useModal();
   const [date, setDate] = useState("");
   const [usdRate, setUsdRate] = useState(null);
   const [formData, setFormData] = useState({
-    fullName: userFromRedux ? userFromRedux.firstName + ' ' + userFromRedux.lastName : "",
+    fullName: userFromRedux
+      ? userFromRedux.firstName + " " + userFromRedux.lastName
+      : "",
     phoneNumber: userFromRedux ? userFromRedux.phone : "",
     streetAddress: "",
     email: userFromRedux ? userFromRedux.email : "",
@@ -65,7 +97,9 @@ export default function Payment() {
             ? jsonData.ExrateList.Exrate
             : [jsonData.ExrateList.Exrate];
 
-          const usdRate = exrateArray.find((rate) => rate["@_CurrencyCode"] === "USD");
+          const usdRate = exrateArray.find(
+            (rate) => rate["@_CurrencyCode"] === "USD"
+          );
 
           if (usdRate) {
             setUsdRate(usdRate["@_Sell"]); // Lấy giá bán USD -> VND
@@ -78,8 +112,8 @@ export default function Payment() {
 
     fetchExchangeRate();
     setProvinces(provinceData);
-    console.log(userFromRedux)
-    console.log(cartItems)
+    console.log(userFromRedux);
+    console.log(cartItems);
   }, []);
 
   useEffect(() => {
@@ -92,35 +126,53 @@ export default function Payment() {
       const wardName = parts[parts.length - 3];
       const houseNumber = parts[parts.length - 4];
 
-      const [toWard, toDistrict] = selectedCodeAddress.split(',')
-      const totalWeight = selectedItems.reduce((sum, item) => sum + item.weight * item.quantity, 1);
-      const res = await calculateShippingFee(parseInt(toDistrict), toWard, totalWeight, 195800);
+      const [toWard, toDistrict] = selectedCodeAddress.split(",");
+      const totalWeight = selectedItems.reduce(
+        (sum, item) => sum + item.weight * item.quantity,
+        1
+      );
+      const res = await calculateShippingFee(
+        parseInt(toDistrict),
+        toWard,
+        totalWeight,
+        195800
+      );
       setShippingFee(res);
 
-      const province = provinces.find((p) =>
-        p.NameExtension?.includes(provinceName) || p.ProvinceName === provinceName
+      const province = provinces.find(
+        (p) =>
+          p.NameExtension?.includes(provinceName) ||
+          p.ProvinceName === provinceName
       );
       if (!province) return;
 
-      setSelectedProvince({ id: province.ProvinceID, name: province.ProvinceName });
+      setSelectedProvince({
+        id: province.ProvinceID,
+        name: province.ProvinceName,
+      });
 
       // Lấy danh sách quận/huyện từ tỉnh
       const filteredDistricts = province.Districts || [];
       setDistricts(filteredDistricts);
 
       // Nếu đã có quận/huyện, tiếp tục set quận/huyện
-      const district = filteredDistricts.find((d) =>
-        d.NameExtension?.includes(districtName) || d.DistrictName === districtName
+      const district = filteredDistricts.find(
+        (d) =>
+          d.NameExtension?.includes(districtName) ||
+          d.DistrictName === districtName
       );
       if (district) {
-        setSelectedDistrict({ id: district.DistrictID, name: district.DistrictName });
+        setSelectedDistrict({
+          id: district.DistrictID,
+          name: district.DistrictName,
+        });
 
         // Lấy danh sách phường/xã từ quận/huyện
         const filteredWards = district.Wards || [];
         setWards(filteredWards);
 
-        const ward = filteredWards.find((w) =>
-          w.NameExtension.includes(wardName) || w.WardName === wardName
+        const ward = filteredWards.find(
+          (w) => w.NameExtension.includes(wardName) || w.WardName === wardName
         );
         if (ward) {
           setSelectedWard({ id: ward.WardCode, name: ward.WardName });
@@ -128,22 +180,32 @@ export default function Payment() {
             ...prev,
             streetAddress: houseNumber,
           }));
-          const totalWeight = selectedItems.reduce((sum, item) => sum + item.weight * item.quantity, 1);
-          const res = await calculateShippingFee(parseInt(district?.DistrictID), ward?.WardCode, totalWeight, 195800);
+          const totalWeight = selectedItems.reduce(
+            (sum, item) => sum + item.weight * item.quantity,
+            1
+          );
+          const res = await calculateShippingFee(
+            parseInt(district?.DistrictID),
+            ward?.WardCode,
+            totalWeight,
+            195800
+          );
           setShippingFee(res);
         }
       }
-
-    }
-    fetchData()
+    };
+    fetchData();
   }, [selectedAddress, provinces]);
 
   const handleProvinceChange = (e) => {
     const provinceID = Number(e.target.value);
-    const province = provinces.find(p => p.ProvinceID === provinceID);
+    const province = provinces.find((p) => p.ProvinceID === provinceID);
 
     if (province) {
-      setSelectedProvince({ id: province.ProvinceID, name: province.ProvinceName });
+      setSelectedProvince({
+        id: province.ProvinceID,
+        name: province.ProvinceName,
+      });
       setDistricts(province.Districts);
     } else {
       setSelectedProvince({ id: "", name: "" });
@@ -155,36 +217,43 @@ export default function Payment() {
     setSelectedWard({ id: "", name: "" });
   };
 
-
   const handleDistrictChange = (e) => {
     const districtID = Number(e.target.value);
-    const district = districts.find(d => d.DistrictID === districtID);
+    const district = districts.find((d) => d.DistrictID === districtID);
 
     if (district) {
-      setSelectedDistrict({ id: district.DistrictID, name: district.DistrictName });
+      setSelectedDistrict({
+        id: district.DistrictID,
+        name: district.DistrictName,
+      });
       setWards(district.Wards);
     } else {
       setSelectedDistrict({ id: "", name: "" });
       setWards([]);
     }
 
-
-
     setSelectedWard({ id: "", name: "" });
   };
 
-
   const handleWardChange = async (e) => {
     const wardID = e.target.value;
-    const ward = wards.find(w => w.WardCode === wardID);
+    const ward = wards.find((w) => w.WardCode === wardID);
 
     if (ward) {
       setSelectedWard({ id: ward.WardCode, name: ward.WardName });
     } else {
       setSelectedWard({ id: "", name: "" });
     }
-    const totalWeight = selectedItems.reduce((sum, item) => sum + item.weight * item.quantity, 1);
-    const res = await calculateShippingFee(parseInt(selectedDistrict.id), wardID, totalWeight, 195800);
+    const totalWeight = selectedItems.reduce(
+      (sum, item) => sum + item.weight * item.quantity,
+      1
+    );
+    const res = await calculateShippingFee(
+      parseInt(selectedDistrict.id),
+      wardID,
+      totalWeight,
+      195800
+    );
     setShippingFee(res);
   };
 
@@ -237,237 +306,185 @@ export default function Payment() {
       return;
     }
 
-    const totalAmountVnd = cartItems.reduce((total, item) => total + item.price * item.quantity, 0) + shippingFee;
-    let status = "PENDING";
+    const totalAmountVnd =
+      cartItems.reduce((total, item) => total + item.price * item.quantity, 0) +
+      shippingFee;
     let prepaidAmount = 0;
+    const isHighValueCOD =
+      formData.paymentMethod === "COD" && totalAmountVnd > 50000000;
 
-    if (formData.paymentMethod === "COD" && totalAmountVnd > 50000000) {
-      const isConfirmed = window.confirm("Giá trị đơn hàng vượt quá 50 triệu, bạn cần đặt cọc 10% giá trị đơn hàng qua PayPal. Bạn có muốn tiếp tục?");
-      if (!isConfirmed) {
+    if (isHighValueCOD) {
+      const confirmed = window.confirm(
+        "Giá trị đơn hàng vượt quá 50 triệu, bạn cần đặt cọc 10% giá trị đơn hàng qua PayPal. Bạn có muốn tiếp tục?"
+      );
+      if (!confirmed) {
         setLoading(false);
         return;
       }
-
       prepaidAmount = Math.ceil(totalAmountVnd * 0.1);
-
-      try {
-        const paypalResponse = await createPaypalDeposit({
-          user_id: userFromRedux.id,
-          total_amount: totalAmountVnd,
-          status: "PENDING_PAYMENT",
-          prepaid_amount: prepaidAmount,
-          payment_method: "COD",
-          shipping_amount: shippingFee,
-          provinceCode: String(selectedProvince.id),
-          districtCode: String(selectedDistrict.id),
-          wardCode: String(selectedWard.id),
-          houseNumber: `${formData.streetAddress}, ${selectedWard.name}, ${selectedDistrict.name}, ${selectedProvince.name}`,
-          email: formData.email,
-          phone: formData.phoneNumber
-        });
-
-        const orderId = paypalResponse.data.order.order_id;
-        console.log(orderId);
-
-        try {
-          const orderItemResponses = await Promise.all(
-            cartItems.map((item) =>
-              createOrderItem({
-                order_id: orderId,
-                product_id: item.productId,
-                quantity: item.quantity,
-                price: item.price,
-                profit: item.profit,
-              })
-            )
-          );
-
-          const allItemsCreated = orderItemResponses.every((res) => res.status === 201);
-          const paypalData = paypalResponse?.data;
-
-          if (!paypalData?.approvalUrl || !allItemsCreated) {
-            throw new Error("Không tìm thấy approvalUrl từ PayPal hoặc tạo order item thất bại");
-          }
-
-          const emailContext = {
-            orderId: orderId,
-            orderDate: paypalData.order.createdAt,
-            orderTotal: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(paypalData.order.total_amount),
-            address: paypalData.order.houseNumber,
-            products: cartItems.map(item => ({
-              imageUrl: item.image.split(',')[0],
-              name: item.name,
-              price: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price),
-              quantity: item.quantity
-            })),
-            shippingFee: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(paypalData.order.shipping_amount),
-            totalAmount: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
-              paypalData.order.total_amount + paypalData.order.shipping_amount
-            ),
-          };
-
-          sendEmail(formData.email, emailContext).catch(err => {
-            console.error("Lỗi khi gửi email:", err);
-          });
-
-          await Promise.all(
-            cartItems.map(async item => {
-              try {
-                await deleteCartItem(item.itemId);
-                dispatch(removeItemFromCart({ itemId: item.itemId }));
-              } catch (error) {
-                console.error("Lỗi xoá item:", item.itemId, error);
-              }
-            })
-          );
-
-          window.location.href = paypalData.approvalUrl;
-
-        } catch (error) {
-          console.error("Lỗi khi tạo đơn đặt cọc:", error);
-          alert("Đã xảy ra lỗi khi tạo đơn đặt cọc. Vui lòng thử lại!");
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error("Lỗi khi tạo đơn đặt cọc:", error);
-        alert("Đã xảy ra lỗi khi tạo đơn đặt cọc. Vui lòng thử lại!");
-        setLoading(false);
-        return;
-      }
-
     }
 
-    const payload = {
+    const basePayload = {
       user_id: userFromRedux.id,
-      status: "PENDING",
-      payment_method: formData.paymentMethod,
       total_amount: totalAmountVnd,
+      payment_method: formData.paymentMethod,
       shipping_amount: shippingFee,
+      status: isHighValueCOD ? "PENDING_PAYMENT" : "PENDING",
       provinceCode: String(selectedProvince.id),
       districtCode: String(selectedDistrict.id),
       wardCode: String(selectedWard.id),
       houseNumber: `${formData.streetAddress}, ${selectedWard.name}, ${selectedDistrict.name}, ${selectedProvince.name}`,
       email: formData.email,
-      phone: formData.phoneNumber
+      phone: formData.phoneNumber,
+      prepaid_amount: prepaidAmount,
     };
 
-    let isConfirmed = false;
-
-    if (!addresses.includes(payload.houseNumber)) {
-      isConfirmed = window.confirm("Có vẻ bạn đang sử dụng một địa chỉ mới. Bạn có muốn lưu địa chỉ này không?");
+    const shouldSaveAddress = !addresses.includes(basePayload.houseNumber);
+    if (shouldSaveAddress) {
+      const confirmed = window.confirm(
+        "Có vẻ bạn đang sử dụng một địa chỉ mới. Bạn có muốn lưu địa chỉ này không?"
+      );
+      if (confirmed) {
+        await saveNewAddress(basePayload.houseNumber);
+      }
     }
 
     try {
-      if (isConfirmed) {
-        const currentUserAddresses = userFromRedux?.address ? userFromRedux.address.split(";;") : [];
-        const newAddressToAdd = payload.houseNumber + '|' + selectedWard.id + ',' + selectedDistrict.id + ',' + selectedProvince.id;
-        currentUserAddresses.push(newAddressToAdd);
-        const updatedAddresses = currentUserAddresses.join(";;");
-        const response = await editUserById(userFromRedux.id, { address: updatedAddresses });
-        if (response.status === 200) {
-          toast.success("Set default address successfully");
-          dispatch(updateUser(response.data));
-        } else {
-          toast.error("Set default address failed");
-        }
-      }
+      const resOrder = await createOrder(basePayload);
+      if (resOrder.status !== 201) throw new Error("Tạo đơn hàng thất bại");
 
-      const resOrder = await createOrder(payload);
+      const orderData = resOrder.data;
+      const orderId = orderData.order.order_id;
 
-      if (resOrder.status === 201) {
-        let orderData = resOrder.data;
-        let orderId;
-        let approvalUrl;
+      await createOrderItems(orderId);
+      await sendOrderConfirmationEmail(formData.email, orderData, cartItems);
+      await clearCart();
 
-        if (formData.paymentMethod === "PAYPAL") {
-          orderId = orderData.order.order_id;
-          approvalUrl = orderData.approvalUrl;
-        } else {
-          orderId = orderData.order.order_id;
-        }
+      if (formData.paymentMethod === "PAYPAL" || isHighValueCOD) {
+        const amount = isHighValueCOD ? prepaidAmount : totalAmountVnd;
 
-        try {
-          await Promise.all(
-            cartItems.map(item =>
-              createOrderItem({
-                order_id: orderId,
-                product_id: item.productId,
-                quantity: item.quantity,
-                price: item.price,
-                profit: item.profit,
-              })
-            )
-          );
-
-          console.log(cartItems);
-
-          const emailContext = {
-            orderId: orderId,
-            orderDate: orderData.order.createdAt,
-            orderTotal: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.order.total_amount),
-            shippingFee: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(orderData.order.shipping_amount),
-            totalAmount: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(
-              orderData.order.total_amount + orderData.order.shipping_amount
-            ),
-            address: orderData.order.houseNumber,
-            products: cartItems.map(item => ({
-              imageUrl: item.image.split(',')[0],
-              name: item.name,
-              price: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price),
-              quantity: item.quantity,
-            })),
-          };
-
-          sendEmail(formData.email, emailContext).catch((err) => {
-            console.error("Gửi email thất bại:", err);
-          });
-
-          await Promise.all(
-            cartItems.map(async item => {
-              try {
-                await deleteCartItem(item.itemId);
-                dispatch(removeItemFromCart({ itemId: item.itemId }));
-              } catch (error) {
-                console.error("Lỗi xoá item:", item.itemId, error);
-              }
-            })
-          );
-
-        } catch (error) {
-          console.error("Lỗi khi tạo đơn đặt hàng:", error);
-          alert("Đã xảy ra lỗi khi tạo đơn hàng. Vui lòng thử lại!");
-          setLoading(false);
-        }
-
-
-        if (formData.paymentMethod === "PAYPAL") {
-          if (approvalUrl) {
-            window.location.href = approvalUrl;
-            return;
-          } else {
-            throw new Error("Không tìm thấy approvalUrl từ PayPal");
-          }
-        }
-        const paymentData = {
+        const payment = await createPayment({
           order_id: orderId,
           user_id: userFromRedux.id,
-          payment_method: "COD",
-          amount: totalAmountVnd
-        }
+          payment_method: "PAYPAL",
+          amount: totalAmountVnd,
+        });
 
-        const res = await createPayment(paymentData);
-        openModal("Tạo đơn hàng thành công")
-        navigate("/orders");
+        const transaction = await createTransaction({
+          payment_id: payment.data.payment_id,
+          user_id: userFromRedux.id,
+          transaction_type: "DEBIT",
+          amount,
+          status: "INIT",
+        });
+
+        const paypalRes = await createPaypalDeposit({
+          ...basePayload,
+          transaction_id: transaction.data.transaction_id,
+          order_id: orderId,
+        });
+
+        const approvalUrl = paypalRes.data.approvalUrl;
+        if (approvalUrl) {
+          window.location.href = approvalUrl;
+          return;
+        } else {
+          throw new Error("Không tìm thấy approvalUrl từ PayPal");
+        }
       }
+
+      await createPayment({
+        order_id: orderId,
+        user_id: userFromRedux.id,
+        payment_method: "COD",
+        amount: totalAmountVnd,
+      });
+
+      openModal("Tạo đơn hàng thành công");
+      navigate("/orders");
     } catch (error) {
-      console.error("Lỗi khi tạo đơn hàng:", error);
+      console.error("Lỗi khi xử lý đơn hàng:", error);
       alert("Đã xảy ra lỗi khi đặt hàng. Vui lòng thử lại!");
     } finally {
       setLoading(false);
     }
   };
 
+  const saveNewAddress = async (addressStr) => {
+    const existingAddresses = userFromRedux?.address
+      ? userFromRedux.address.split(";;")
+      : [];
+    const newAddress = `${addressStr}|${selectedWard.id},${selectedDistrict.id},${selectedProvince.id}`;
+    const updatedAddresses = [...existingAddresses, newAddress].join(";;");
 
+    const response = await editUserById(userFromRedux.id, {
+      address: updatedAddresses,
+    });
+    if (response.status === 200) {
+      toast.success("Đã lưu địa chỉ mới");
+      dispatch(updateUser(response.data));
+    } else {
+      toast.error("Lưu địa chỉ thất bại");
+    }
+  };
+
+  const createOrderItems = async (orderId) => {
+    await Promise.all(
+      cartItems.map((item) =>
+        createOrderItem({
+          order_id: orderId,
+          product_id: item.productId,
+          quantity: item.quantity,
+          price: item.price,
+          profit: item.profit,
+        })
+      )
+    );
+  };
+
+  const sendOrderConfirmationEmail = async (email, orderData, cartItems) => {
+    const formatCurrency = (value) =>
+      new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND",
+      }).format(value);
+
+    const emailContext = {
+      orderId: orderData.order.order_id,
+      orderDate: orderData.order.createdAt,
+      orderTotal: formatCurrency(orderData.order.total_amount),
+      shippingFee: formatCurrency(orderData.order.shipping_amount),
+      totalAmount: formatCurrency(
+        orderData.order.total_amount + orderData.order.shipping_amount
+      ),
+      address: orderData.order.houseNumber,
+      products: cartItems.map((item) => ({
+        imageUrl: item.image.split(",")[0],
+        name: item.name,
+        price: formatCurrency(item.price),
+        quantity: item.quantity,
+      })),
+    };
+
+    try {
+      await sendEmail(email, emailContext);
+    } catch (err) {
+      console.error("Gửi email thất bại:", err);
+    }
+  };
+
+  const clearCart = async () => {
+    await Promise.all(
+      cartItems.map(async (item) => {
+        try {
+          await deleteCartItem(item.itemId);
+          dispatch(removeItemFromCart({ itemId: item.itemId }));
+        } catch (err) {
+          console.error("Xóa item thất bại:", item.itemId, err);
+        }
+      })
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
@@ -483,7 +500,9 @@ export default function Payment() {
           <div>
             <div className="flex items-center gap-2 text-gray-700">
               <FaUser className="text-blue-500" />
-              <span className="font-semibold">{userFromRedux?.firstName + ' ' + userFromRedux?.lastName}</span>
+              <span className="font-semibold">
+                {userFromRedux?.firstName + " " + userFromRedux?.lastName}
+              </span>
             </div>
             <div className="flex items-center gap-2 text-gray-500 mt-1">
               <FaEnvelope className="text-green-500" />
@@ -543,8 +562,9 @@ export default function Payment() {
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${errors.fullName ? "border-red-500" : "border-gray-300"
-                  }`}
+                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                  errors.fullName ? "border-red-500" : "border-gray-300"
+                }`}
               />
               {errors.fullName && (
                 <p className="text-red-500 mt-1 text-sm">{errors.fullName}</p>
@@ -564,8 +584,9 @@ export default function Payment() {
                 name="phoneNumber"
                 value={formData.phoneNumber}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${errors.phoneNumber ? "border-red-500" : "border-gray-300"
-                  }`}
+                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                  errors.phoneNumber ? "border-red-500" : "border-gray-300"
+                }`}
               />
               {errors.phoneNumber && (
                 <p className="text-red-500 mt-1 text-sm">
@@ -576,7 +597,10 @@ export default function Payment() {
 
             {/* Tỉnh/Thành phố */}
             <div>
-              <label htmlFor="province" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="province"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Tỉnh/Thành phố:
               </label>
               <select
@@ -589,15 +613,22 @@ export default function Payment() {
               >
                 <option value="">Chọn Tỉnh/Thành phố</option>
                 {provinces.map((province) => (
-                  <option key={province.ProvinceID} value={province.ProvinceID}>{province.ProvinceName}</option>
+                  <option key={province.ProvinceID} value={province.ProvinceID}>
+                    {province.ProvinceName}
+                  </option>
                 ))}
               </select>
-              {errors.province && <p className="text-red-500 mt-1 text-sm">{errors.province}</p>}
+              {errors.province && (
+                <p className="text-red-500 mt-1 text-sm">{errors.province}</p>
+              )}
             </div>
 
             {/* Quận/Huyện */}
             <div>
-              <label htmlFor="district" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="district"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Quận/Huyện:
               </label>
               <select
@@ -611,15 +642,22 @@ export default function Payment() {
               >
                 <option value="">Chọn Quận/Huyện</option>
                 {districts.map((district) => (
-                  <option key={district.DistrictID} value={district.DistrictID}>{district.DistrictName}</option>
+                  <option key={district.DistrictID} value={district.DistrictID}>
+                    {district.DistrictName}
+                  </option>
                 ))}
               </select>
-              {errors.district && <p className="text-red-500 mt-1 text-sm">{errors.district}</p>}
+              {errors.district && (
+                <p className="text-red-500 mt-1 text-sm">{errors.district}</p>
+              )}
             </div>
 
             {/* Phường/Xã */}
             <div className="md:col-span-2">
-              <label htmlFor="ward" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="ward"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Phường/Xã:
               </label>
               <select
@@ -633,14 +671,21 @@ export default function Payment() {
               >
                 <option value="">Chọn Phường/Xã</option>
                 {wards.map((ward) => (
-                  <option key={ward.WardCode} value={ward.WardCode}>{ward.WardName}</option>
+                  <option key={ward.WardCode} value={ward.WardCode}>
+                    {ward.WardName}
+                  </option>
                 ))}
               </select>
-              {errors.ward && <p className="text-red-500 mt-1 text-sm">{errors.ward}</p>}
+              {errors.ward && (
+                <p className="text-red-500 mt-1 text-sm">{errors.ward}</p>
+              )}
             </div>
 
             <div className="md:col-span-2">
-              <label htmlFor="streetAddress" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="streetAddress"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Số nhà, Tên đường:
               </label>
               <input
@@ -652,7 +697,11 @@ export default function Payment() {
                 className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 
     ${errors.streetAddress ? "border-red-500" : "border-gray-300"}`}
               />
-              {errors.streetAddress && <p className="text-red-500 mt-1 text-sm">{errors.streetAddress}</p>}
+              {errors.streetAddress && (
+                <p className="text-red-500 mt-1 text-sm">
+                  {errors.streetAddress}
+                </p>
+              )}
             </div>
 
             <div className="md:col-span-2">
@@ -668,8 +717,9 @@ export default function Payment() {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${errors.email ? "border-red-500" : "border-gray-300"
-                  }`}
+                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
+                  errors.email ? "border-red-500" : "border-gray-300"
+                }`}
               />
               {errors.email && (
                 <p className="text-red-500 mt-1 text-sm">{errors.email}</p>
@@ -677,17 +727,30 @@ export default function Payment() {
             </div>
           </div>
 
-          <h2 className="text-xl font-semibold text-gray-800">
-            Giỏ hàng
-          </h2>
+          <h2 className="text-xl font-semibold text-gray-800">Giỏ hàng</h2>
           <div className="md:col-span-2 bg-gray-200 p-4 rounded-md shadow-md">
             <div className="flex flex-col gap-4">
               {cartItems.map((item) => (
-                <div key={item.itemId} className="p-4 bg-white rounded-lg shadow flex items-center gap-4">
-                  <img src={item.image.split(',')[0]} alt={item.name} className="w-16 h-16 object-cover rounded-md" />
+                <div
+                  key={item.itemId}
+                  className="p-4 bg-white rounded-lg shadow flex items-center gap-4"
+                >
+                  <img
+                    src={item.image.split(",")[0]}
+                    alt={item.name}
+                    className="w-16 h-16 object-cover rounded-md"
+                  />
                   <div className="flex-1">
-                    <h3 className="text-md font-medium text-gray-900">{item.name}</h3>
-                    <p className="text-gray-700">Đơn giá: {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price)}</p>
+                    <h3 className="text-md font-medium text-gray-900">
+                      {item.name}
+                    </h3>
+                    <p className="text-gray-700">
+                      Đơn giá:{" "}
+                      {new Intl.NumberFormat("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      }).format(item.price)}
+                    </p>
                   </div>
                   <p className="text-gray-700">Số lượng: {item.quantity}</p>
                 </div>
@@ -695,18 +758,35 @@ export default function Payment() {
             </div>
 
             <div className="md:col-span-2 bg-gray-200 p-4 mt-6 rounded-md shadow-md">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">Thanh toán</h2>
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">
+                Thanh toán
+              </h2>
               <div className="p-4 bg-white rounded-lg shadow">
                 {/* Tổng tiền hàng */}
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-md text-gray-900">Tổng tiền hàng:</span>
-                  <span className="text-md font-semibold text-gray-700 flex justify-start items-center">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(cartItems.reduce((total, item) => total + item.price * item.quantity, 0))}  </span>
+                  <span className="text-md font-semibold text-gray-700 flex justify-start items-center">
+                    {new Intl.NumberFormat("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    }).format(
+                      cartItems.reduce(
+                        (total, item) => total + item.price * item.quantity,
+                        0
+                      )
+                    )}{" "}
+                  </span>
                 </div>
 
                 {/* Phí ship */}
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-md text-gray-900">Phí vận chuyển:</span>
-                  <span className="text-md font-semibold text-gray-700 flex justify-start items-center">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(shippingFee)}</span>
+                  <span className="text-md font-semibold text-gray-700 flex justify-start items-center">
+                    {new Intl.NumberFormat("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    }).format(shippingFee)}
+                  </span>
                 </div>
 
                 <hr className="my-2" />
@@ -714,11 +794,21 @@ export default function Payment() {
                 {/* Tổng thanh toán cuối cùng */}
                 <div className="flex justify-between items-center text-lg font-bold text-red-600 ">
                   <span>Tổng cộng:</span>
-                  <span className="flex justify-start items-center"> {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format((cartItems.reduce((total, item) => total + item.price * item.quantity, 0) + shippingFee))}</span>
+                  <span className="flex justify-start items-center">
+                    {" "}
+                    {new Intl.NumberFormat("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    }).format(
+                      cartItems.reduce(
+                        (total, item) => total + item.price * item.quantity,
+                        0
+                      ) + shippingFee
+                    )}
+                  </span>
                 </div>
               </div>
             </div>
-
           </div>
 
           <div>
@@ -727,10 +817,11 @@ export default function Payment() {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-200 rounded-md p-4">
               <label
-                className={`flex items-center p-4 rounded-lg border shadow-sm bg-white ${formData.paymentMethod === "PAYPAL"
-                  ? "border-indigo-500 bg-indigo-200"
-                  : "border-gray-300"
-                  } cursor-pointer hover:shadow-md`}
+                className={`flex items-center p-4 rounded-lg border shadow-sm bg-white ${
+                  formData.paymentMethod === "PAYPAL"
+                    ? "border-indigo-500 bg-indigo-200"
+                    : "border-gray-300"
+                } cursor-pointer hover:shadow-md`}
               >
                 <input
                   type="radio"
@@ -745,17 +836,19 @@ export default function Payment() {
                     <FaPaypal className="text-indigo-500 text-2xl mr-3" />
                     <span className="text-gray-800 font-semibold">PayPal</span>
                   </div>
-                  <span className="text-red-600 text-sm mt-1 flex justify-start items-center">1 USD <PiApproximateEqualsThin className="mx-1" /> {usdRate} VNĐ {date}</span>
-
+                  <span className="text-red-600 text-sm mt-1 flex justify-start items-center">
+                    1 USD <PiApproximateEqualsThin className="mx-1" /> {usdRate}{" "}
+                    VNĐ {date}
+                  </span>
                 </div>
-
               </label>
 
               <label
-                className={`flex items-center p-4 rounded-lg border shadow-sm bg-white ${formData.paymentMethod === "COD"
-                  ? "border-indigo-500 bg-indigo-200"
-                  : "border-gray-300"
-                  } cursor-pointer hover:shadow-md`}
+                className={`flex items-center p-4 rounded-lg border shadow-sm bg-white ${
+                  formData.paymentMethod === "COD"
+                    ? "border-indigo-500 bg-indigo-200"
+                    : "border-gray-300"
+                } cursor-pointer hover:shadow-md`}
               >
                 <input
                   type="radio"
@@ -766,7 +859,9 @@ export default function Payment() {
                   className="hidden"
                 />
                 <FaMoneyBillWave className="text-indigo-500 text-2xl mr-3" />
-                <span className="text-gray-800">Thanh toán khi nhận hàng (COD)</span>
+                <span className="text-gray-800">
+                  Thanh toán khi nhận hàng (COD)
+                </span>
               </label>
             </div>
             {errors.paymentMethod && (
@@ -784,7 +879,8 @@ export default function Payment() {
               </h3>
             </div>
             <p className="text-gray-600 text-sm">
-              Đơn hàng của bạn sẽ được giao bởi GHN Express, đảm bảo dịch vụ giao hàng nhanh chóng và đáng tin cậy trên toàn quốc.
+              Đơn hàng của bạn sẽ được giao bởi GHN Express, đảm bảo dịch vụ
+              giao hàng nhanh chóng và đáng tin cậy trên toàn quốc.
             </p>
           </div>
 
