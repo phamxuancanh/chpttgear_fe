@@ -60,8 +60,8 @@ export default function Payment() {
   const [selectedAddress, setSelectedAddress] = useState(addresses[0] || "");
   const selectedCodeAddress = userFromRedux?.address
     ? userFromRedux.address
-        .split(";;")
-        .map((addr) => addr.split("|")[1].trim())[0]
+      .split(";;")
+      .map((addr) => addr.split("|")[1].trim())[0]
     : "";
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { openModal } = useModal();
@@ -133,7 +133,7 @@ export default function Payment() {
       );
       const res = await calculateShippingFee(
         parseInt(toDistrict),
-        toWard,
+        String(toWard),
         totalWeight,
         195800
       );
@@ -186,7 +186,7 @@ export default function Payment() {
           );
           const res = await calculateShippingFee(
             parseInt(district?.DistrictID),
-            ward?.WardCode,
+            String(ward?.WardCode),
             totalWeight,
             195800
           );
@@ -250,7 +250,7 @@ export default function Payment() {
     );
     const res = await calculateShippingFee(
       parseInt(selectedDistrict.id),
-      wardID,
+      String(wardID),
       totalWeight,
       195800
     );
@@ -562,9 +562,8 @@ export default function Payment() {
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                  errors.fullName ? "border-red-500" : "border-gray-300"
-                }`}
+                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${errors.fullName ? "border-red-500" : "border-gray-300"
+                  }`}
               />
               {errors.fullName && (
                 <p className="text-red-500 mt-1 text-sm">{errors.fullName}</p>
@@ -584,9 +583,8 @@ export default function Payment() {
                 name="phoneNumber"
                 value={formData.phoneNumber}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                  errors.phoneNumber ? "border-red-500" : "border-gray-300"
-                }`}
+                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${errors.phoneNumber ? "border-red-500" : "border-gray-300"
+                  }`}
               />
               {errors.phoneNumber && (
                 <p className="text-red-500 mt-1 text-sm">
@@ -717,9 +715,8 @@ export default function Payment() {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                  errors.email ? "border-red-500" : "border-gray-300"
-                }`}
+                className={`w-full px-4 py-3 rounded-lg border shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${errors.email ? "border-red-500" : "border-gray-300"
+                  }`}
               />
               {errors.email && (
                 <p className="text-red-500 mt-1 text-sm">{errors.email}</p>
@@ -817,11 +814,10 @@ export default function Payment() {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-200 rounded-md p-4">
               <label
-                className={`flex items-center p-4 rounded-lg border shadow-sm bg-white ${
-                  formData.paymentMethod === "PAYPAL"
-                    ? "border-indigo-500 bg-indigo-200"
-                    : "border-gray-300"
-                } cursor-pointer hover:shadow-md`}
+                className={`flex items-center p-4 rounded-lg border shadow-sm bg-white ${formData.paymentMethod === "PAYPAL"
+                  ? "border-indigo-500 bg-indigo-200"
+                  : "border-gray-300"
+                  } cursor-pointer hover:shadow-md`}
               >
                 <input
                   type="radio"
@@ -844,11 +840,10 @@ export default function Payment() {
               </label>
 
               <label
-                className={`flex items-center p-4 rounded-lg border shadow-sm bg-white ${
-                  formData.paymentMethod === "COD"
-                    ? "border-indigo-500 bg-indigo-200"
-                    : "border-gray-300"
-                } cursor-pointer hover:shadow-md`}
+                className={`flex items-center p-4 rounded-lg border shadow-sm bg-white ${formData.paymentMethod === "COD"
+                  ? "border-indigo-500 bg-indigo-200"
+                  : "border-gray-300"
+                  } cursor-pointer hover:shadow-md`}
               >
                 <input
                   type="radio"
