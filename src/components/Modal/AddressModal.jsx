@@ -24,7 +24,7 @@ const AddressModal = ({ isOpen, onClose, user, onSelect, setShippingFee }) => {
         try {
 
             const totalWeight = selectedItems.reduce((sum, item) => sum + item.weight * item.quantity, 1);
-            const res = await calculateShippingFee(parseInt(toDistrict), toWard, totalWeight, 195800);
+            const res = await calculateShippingFee(parseInt(toDistrict), String(toWard), totalWeight, 195800);
             setShippingFee(res);
         } catch (error) {
             console.error("Error calculating shipping fee:", error);
