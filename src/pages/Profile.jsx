@@ -842,7 +842,7 @@ export default function Profile() {
                             </button>
                         </div>
                     </div>
-                    <div className="bg-white rounded-xl shadow-md p-6">
+                    {/* <div className="bg-white rounded-xl shadow-md p-6">
                         <div className="flex items-center gap-2 mb-6">
                             <FiActivity className="text-gray-500 text-xl" />
                             <h2 className="text-2xl font-semibold">Hoạt động gần đây</h2>
@@ -860,7 +860,7 @@ export default function Profile() {
                                 </div>
                             ))}
                         </div>
-                    </div>
+                    </div> */}
                 </div>
             </div>
             <AVTChangeModal
