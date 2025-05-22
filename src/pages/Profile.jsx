@@ -142,23 +142,23 @@ export default function Profile() {
         let addressArray = user?.address ? user.address.split(";;").map(item => item.trim()) : [];
         const addressIndex = addressArray.indexOf(address);
         if (addressIndex === -1) {
-            console.error("Address not found in the list.");
+            console.error("Địa chỉ không tìm thấy.");
             return;
         }
         const updatedAddresses = [address, ...addressArray.filter(item => item !== address)];
         try {
             const response = await editUserById(userFromRedux.id, { ...formData, address: updatedAddresses.join(";;") });
             if (response.status === 200) {
-                toast.success("Set default address successfully");
+                toast.success("Đặt địa chỉ mặc định thành công");
                 setUser(response.data);
                 setFormData(response.data);
                 dispatch(updateUser(response.data));
             } else {
-                toast.error("Set default address failed");
+                toast.error("Đặt địa chỉ mặc định thất bại");
             }
         }
         catch (error) {
-            toast.error("Set default address failed");
+            toast.error("Đặt địa chỉ mặc định thất bại");
         }
         setLoading(false);
     };
@@ -173,7 +173,7 @@ export default function Profile() {
         setLoading(true);
         e.preventDefault();
         if (!selectedProvince.id || !selectedDistrict.id || !selectedWard.id || !formData.address) {
-            toast.error("Please select province, district and ward and enter address");
+            toast.error("Vui lòng chọn đầy đủ thông tin địa chỉ");
             return;
         }
         let currentUserAddresses = user?.address ? user.address.split(";;") : [];
@@ -197,7 +197,7 @@ export default function Profile() {
             address.toLowerCase().trim()
         );
         if (normalizedAddresses.includes(normalizedNewAddress)) {
-            toast.error("This address already exists");
+            toast.error("Địa chỉ đã tồn tại");
             return;
         }
         currentUserAddresses.push(newAddressToAdd);
@@ -208,14 +208,14 @@ export default function Profile() {
             setLoading(true);
             const response = await editUserById(userFromRedux.id, { ...formData, address: updatedAddresses });
             if (response.status === 200) {
-                toast.success("Add address successfully");
+                toast.success("Thêm địa chỉ thành công");
                 setUser(response.data);
                 dispatch(updateUser(response.data));
             } else {
-                toast.error("Add address failed");
+                toast.error("Thêm địa chỉ thất bại");
             }
         } catch (error) {
-            toast.error("Add address failed");
+            toast.error("Thêm địa chỉ thất bại");
         } finally {
             setIsAddingAddress(false);
             setSelectedProvince({});
@@ -237,7 +237,7 @@ export default function Profile() {
         setLoading(true);
         let currentUserAddresses = user?.address ? user.address.split(";;").map(item => item.trim()) : [];
         if (currentUserAddresses.length === 1) {
-            toast.error("You must have at least one address");
+            toast.error("Không thể xóa địa chỉ mặc định");
             handleCloseDeleteAdressModal(addressToDelete);
             return;
         }
@@ -249,12 +249,12 @@ export default function Profile() {
         }));
         const response = await editUserById(userFromRedux.id, { ...formData, address: updatedAddresses });
         if (response.status === 200) {
-            toast.success("Delete address successfully");
+            toast.success("Xóa địa chỉ thành công");
             setUser(response.data);
             setFormData(response.data);
             dispatch(updateUser(response.data));
         } else {
-            toast.error("Delete address failed");
+            toast.error("Xóa địa chỉ thất bại");
         }
         setLoading(false);
         handleCloseDeleteAdressModal(addressToDelete);
@@ -431,7 +431,7 @@ export default function Profile() {
             }
         } catch (error) {
             console.error('An error occurred while changing the avatar:', error);
-            toast.error('An error occurred while changing the avatar');
+            toast.error('Đổi ảnh đại diện thất bại');
         }
         finally {
             setLoading(false);
@@ -483,12 +483,12 @@ export default function Profile() {
 
                     <div className="flex-1 text-center md:text-left">
                         <h1 className="text-3xl font-bold text-gray-800">{user?.firstName} {user?.lastName}</h1>
-                        <div className="flex items-center justify-center md:justify-start gap-2 mt-2">
+                        {/* <div className="flex items-center justify-center md:justify-start gap-2 mt-2">
                             <FiStar className="text-sky-500" />
                             <span className="text-gray-600">Thành viên Bạch Kim</span>
                             <span className="text-gray-600">|</span>
                             <span className="text-gray-600">{user?.score} Điểm</span>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>
@@ -496,10 +496,10 @@ export default function Profile() {
                 <div className="lg:col-span-2">
                     {isEditing ? (
                         <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-md p-6 mb-8">
-                            <h2 className="text-2xl font-semibold mb-6">Edit Profile</h2>
+                            <h2 className="text-2xl font-semibold mb-6">Sửa hồ sơ</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-gray-700 mb-2" htmlFor="name">Name</label>
+                                    <label className="block text-gray-700 mb-2" htmlFor="name">Họ</label>
                                     <input
                                         type="text"
                                         id="firstName"
@@ -511,7 +511,7 @@ export default function Profile() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-gray-700 mb-2" htmlFor="name">Name</label>
+                                    <label className="block text-gray-700 mb-2" htmlFor="name">Tên</label>
                                     <input
                                         type="text"
                                         id="lastName"
@@ -535,7 +535,7 @@ export default function Profile() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-gray-700 mb-2" htmlFor="phone">Phone</label>
+                                    <label className="block text-gray-700 mb-2" htmlFor="phone">SDT</label>
                                     <input
                                         type="tel"
                                         id="phone"
@@ -547,7 +547,7 @@ export default function Profile() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-gray-700 mb-2" htmlFor="birthOfDate">Date of Birth</label>
+                                    <label className="block text-gray-700 mb-2" htmlFor="birthOfDate">Ngày sinh</label>
                                     <input
                                         type="date"
                                         id="birthOfDate"
@@ -565,13 +565,13 @@ export default function Profile() {
                                     onClick={() => setIsEditing(false)}
                                     className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                                 >
-                                    Cancel
+                                    Hủy
                                 </button>
                                 <button
                                     type="submit"
                                     className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                                 >
-                                    Save Changes
+                                    Lưu
                                 </button>
                             </div>
                         </form>
@@ -619,14 +619,14 @@ export default function Profile() {
                                     onClick={() => setIsChangingPassword(false)}
                                     className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                                 >
-                                    Cancel
+                                    Hủy
                                 </button>
                                 <button
                                     type="submit"
                                     className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                                     onClick={handlePasswordChange}
                                 >
-                                    Update Password
+                                    Cập nhật mật khẩu
                                 </button>
                             </div>
                         </form>
@@ -690,7 +690,7 @@ export default function Profile() {
                                                             value: province.id,
                                                             label: province.name,
                                                         }))}
-                                                        placeholder="Select Province"
+                                                        placeholder="Chọn tỉnh"
                                                     />
                                                 </div>
 
@@ -707,7 +707,7 @@ export default function Profile() {
                                                             value: district.id,
                                                             label: district.name,
                                                         }))}
-                                                        placeholder="Select District"
+                                                        placeholder="Chọn huyện/ quận"
                                                         isDisabled={!selectedProvince.id}
                                                     />
 
@@ -725,7 +725,7 @@ export default function Profile() {
                                                             value: ward.id,
                                                             label: ward.name,
                                                         }))}
-                                                        placeholder="Select Ward"
+                                                        placeholder="Chọn xã/ phường"
                                                         isDisabled={!selectedDistrict.id}
                                                     />
                                                 </div>
@@ -736,7 +736,7 @@ export default function Profile() {
                                                         type="text"
                                                         id="address"
                                                         name="address"
-                                                        placeholder="Enter your new address"
+                                                        placeholder="Nhập địa chỉ của bạn"
                                                         onChange={handleInputChange}
                                                         className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                         required
