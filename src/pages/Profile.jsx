@@ -483,12 +483,12 @@ export default function Profile() {
 
                     <div className="flex-1 text-center md:text-left">
                         <h1 className="text-3xl font-bold text-gray-800">{user?.firstName} {user?.lastName}</h1>
-                        <div className="flex items-center justify-center md:justify-start gap-2 mt-2">
+                        {/* <div className="flex items-center justify-center md:justify-start gap-2 mt-2">
                             <FiStar className="text-sky-500" />
                             <span className="text-gray-600">Thành viên Bạch Kim</span>
                             <span className="text-gray-600">|</span>
                             <span className="text-gray-600">{user?.score} Điểm</span>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>
